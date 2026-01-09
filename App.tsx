@@ -695,22 +695,30 @@ const App: React.FC = () => {
               </div>
 
               {/* HUD: Stats (Top Right) - FIXED ALIGNMENT */}
-              <div className="absolute top-2 right-2 z-10 w-28 md:w-48 bg-black/50 backdrop-blur border border-zinc-700 p-2">
-                 <div className="flex justify-between text-[7px] md:text-[8px] text-zinc-400 mb-1">
-                    <span>ОБШИВКА</span>
-                    <span>{state.integrity.toFixed(0)}</span>
-                 </div>
-                 {/* SAME WIDTH AND MARGINS FOR BOTH BARS */}
-                 <div className="w-full h-1.5 md:h-2 bg-zinc-900 border border-zinc-800 mb-2">
-                    <div className={`h-full transition-all duration-300 ${state.integrity < state.drill.hull.baseStats.maxIntegrity * 0.3 ? 'bg-red-600' : 'bg-green-600'}`} style={{ width: `${Math.max(0, (state.integrity / state.drill.hull.baseStats.maxIntegrity) * 100)}%` }} />
+              <div className="absolute top-2 right-2 z-10 w-32 md:w-56 bg-black/60 backdrop-blur-md border border-zinc-700 p-2.5 flex flex-col gap-3 shadow-lg">
+                 {/* Hull Section */}
+                 <div className="flex flex-col gap-1">
+                    <div className="flex justify-between text-[8px] md:text-[10px] font-bold text-zinc-400 font-mono tracking-wider">
+                       <span>ОБШИВКА</span>
+                       <span className={state.integrity < 30 ? 'text-red-500 animate-pulse' : 'text-white'}>{Math.ceil(state.integrity)}/{state.drill.hull.baseStats.maxIntegrity}</span>
+                    </div>
+                    <div className="w-full h-1.5 md:h-2.5 bg-zinc-900 border border-zinc-700/50 relative overflow-hidden group">
+                       <div className={`h-full transition-all duration-300 ${state.integrity < state.drill.hull.baseStats.maxIntegrity * 0.3 ? 'bg-red-600 shadow-[0_0_10px_red]' : 'bg-green-500'}`} style={{ width: `${Math.max(0, (state.integrity / state.drill.hull.baseStats.maxIntegrity) * 100)}%` }} />
+                       {/* Scanline overlay for bar */}
+                       <div className="absolute inset-0 bg-[url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAYAAACp8Z5+AAAAIklEQVQIW2NkQAKrVq36zwjjgzj//v37zaDIfwYgDlmFCAAamxXwSUr1aQAAAABJRU5ErkJggg==')] opacity-20"></div>
+                    </div>
                  </div>
                  
-                 <div className="flex justify-between text-[7px] md:text-[8px] text-zinc-400 mb-1">
-                    <span>НАГРЕВ</span>
-                    <span className={state.heat > 80 ? 'text-red-500 animate-pulse' : ''}>{state.heat.toFixed(0)}%</span>
-                 </div>
-                 <div className="w-full h-1.5 md:h-2 bg-zinc-900 border border-zinc-800">
-                    <div className={`h-full transition-all duration-300 ${state.heat > 80 ? 'bg-red-500' : 'bg-cyan-600'}`} style={{ width: `${state.heat}%` }} />
+                 {/* Heat Section */}
+                 <div className="flex flex-col gap-1">
+                    <div className="flex justify-between text-[8px] md:text-[10px] font-bold text-zinc-400 font-mono tracking-wider">
+                       <span>НАГРЕВ</span>
+                       <span className={state.heat > 80 ? 'text-red-500 animate-pulse' : 'text-white'}>{Math.ceil(state.heat)}%</span>
+                    </div>
+                    <div className="w-full h-1.5 md:h-2.5 bg-zinc-900 border border-zinc-700/50 relative overflow-hidden">
+                       <div className={`h-full transition-all duration-300 ${state.heat > 80 ? 'bg-red-500 shadow-[0_0_15px_red]' : 'bg-cyan-500'}`} style={{ width: `${Math.min(100, state.heat)}%` }} />
+                        <div className="absolute inset-0 bg-[url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAYAAACp8Z5+AAAAIklEQVQIW2NkQAKrVq36zwjjgzj//v37zaDIfwYgDlmFCAAamxXwSUr1aQAAAABJRU5ErkJggg==')] opacity-20"></div>
+                    </div>
                  </div>
               </div>
 
@@ -759,23 +767,23 @@ const App: React.FC = () => {
                   </div>
                </div>
 
-               <div className="flex-1 p-2 md:p-8 overflow-y-auto scrollbar-hide pb-24">
+               <div className="flex-1 p-2 md:p-8 overflow-y-auto scrollbar-hide pb-32 overscroll-contain">
                   {forgeTab === 'DRILL' && (
-                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-4">
+                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-4 space-y-2 md:space-y-0">
                         <UpgradeCard title="НАКОНЕЧНИК" current={state.drill.bit} next={BITS[BITS.findIndex(p=>p.id===state.drill.bit.id)+1]} type="bit" resources={state.resources} onBuy={handleBuyUpgrade} />
                         <UpgradeCard title="ДВИГАТЕЛЬ" current={state.drill.engine} next={ENGINES[ENGINES.findIndex(p=>p.id===state.drill.engine.id)+1]} type="engine" resources={state.resources} onBuy={handleBuyUpgrade} />
                         <UpgradeCard title="ОХЛАЖДЕНИЕ" current={state.drill.cooling} next={COOLERS[COOLERS.findIndex(p=>p.id===state.drill.cooling.id)+1]} type="cooling" resources={state.resources} onBuy={handleBuyUpgrade} />
                      </div>
                   )}
                   {forgeTab === 'SYSTEMS' && (
-                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-4">
+                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-4 space-y-2 md:space-y-0">
                         <UpgradeCard title="ЛОГИКА" current={state.drill.logic} next={LOGIC_CORES[LOGIC_CORES.findIndex(p=>p.id===state.drill.logic.id)+1]} type="logic" resources={state.resources} onBuy={handleBuyUpgrade} />
                         <UpgradeCard title="УПРАВЛЕНИЕ" current={state.drill.control} next={CONTROL_UNITS[CONTROL_UNITS.findIndex(p=>p.id===state.drill.control.id)+1]} type="control" resources={state.resources} onBuy={handleBuyUpgrade} />
                         <UpgradeCard title="РЕДУКТОР" current={state.drill.gearbox} next={GEARBOXES[GEARBOXES.findIndex(p=>p.id===state.drill.gearbox.id)+1]} type="gearbox" resources={state.resources} onBuy={handleBuyUpgrade} />
                      </div>
                   )}
                   {forgeTab === 'HULL' && (
-                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-4">
+                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-4 space-y-2 md:space-y-0">
                         <UpgradeCard title="КАРКАС" current={state.drill.hull} next={HULLS[HULLS.findIndex(p=>p.id===state.drill.hull.id)+1]} type="hull" resources={state.resources} onBuy={handleBuyUpgrade} />
                         <UpgradeCard title="ПИТАНИЕ" current={state.drill.power} next={POWER_CORES[POWER_CORES.findIndex(p=>p.id===state.drill.power.id)+1]} type="power" resources={state.resources} onBuy={handleBuyUpgrade} />
                         <UpgradeCard title="БРОНЯ" current={state.drill.armor} next={ARMORS[ARMORS.findIndex(p=>p.id===state.drill.armor.id)+1]} type="armor" resources={state.resources} onBuy={handleBuyUpgrade} />
@@ -785,7 +793,7 @@ const App: React.FC = () => {
                      <div className="text-center text-zinc-500 font-mono mt-10 text-xs">СИСТЕМА СЛИЯНИЯ АКТИВНА. ОЖИДАНИЕ КОМПОНЕНТОВ.</div>
                   )}
                   {forgeTab === 'DRONES' && (
-                     <div className="grid grid-cols-1 md:grid-cols-3 gap-2 md:gap-4">
+                     <div className="grid grid-cols-1 md:grid-cols-3 gap-2 md:gap-4 space-y-2 md:space-y-0">
                         {DRONES.map(drone => (
                            <div key={drone.id} className="bg-zinc-900 border border-zinc-700 p-3 md:p-4">
                               <h4 className="font-bold pixel-text mb-2 text-xs" style={{ color: drone.color }}>{drone.name}</h4>
