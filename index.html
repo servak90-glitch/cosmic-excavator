@@ -3,9 +3,28 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#000000">
+    
+    <!-- PWA Settings -->
+    <link rel="manifest" href="./manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Drill">
+    
     <title>КОСМИЧЕСКИЙ ЭКСКАВАТОР</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              zinc: { 950: '#09090b' }
+            }
+          }
+        }
+      }
+    </script>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
     <style>
         body {
@@ -15,12 +34,22 @@
             overflow: hidden;
             font-family: 'Space Mono', monospace;
             color: #fff;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
         }
         .pixel-text {
             font-family: 'Press Start 2P', cursive;
         }
         canvas {
             image-rendering: pixelated;
+        }
+        /* Custom Scrollbar Hide */
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
         }
         /* CRT Scanline Effect */
         .crt::before {
