@@ -12,365 +12,442 @@ interface DrillRendererProps {
   activeDrillFX?: DrillFX; 
 }
 
-const DrillRenderer: React.FC<DrillRendererProps> = ({ heat, evolution, spinning, biomeColor, depth, activeVisualEffects, activeDrillFX }) => {
+const DrillRenderer: React.FC<DrillRendererProps> = ({ heat, evolution, spinning, biomeColor, depth, activeVisualEffects }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   
-  const heatRef = useRef(heat);
-  const evolutionRef = useRef(evolution);
-  const spinningRef = useRef(spinning);
-  const biomeColorRef = useRef(biomeColor);
-  const depthRef = useRef(depth);
-  const effectsRef = useRef(activeVisualEffects);
-  const fxRef = useRef(activeDrillFX);
-
-  useEffect(() => { heatRef.current = heat; }, [heat]);
-  useEffect(() => { evolutionRef.current = evolution; }, [evolution]);
-  useEffect(() => { spinningRef.current = spinning; }, [spinning]);
-  useEffect(() => { biomeColorRef.current = biomeColor; }, [biomeColor]);
-  useEffect(() => { depthRef.current = depth; }, [depth]);
-  useEffect(() => { effectsRef.current = activeVisualEffects; }, [activeVisualEffects]);
-  useEffect(() => { fxRef.current = activeDrillFX; }, [activeDrillFX]);
-
-  const getHexToRgb = (hex: string) => {
-    const r = parseInt(hex.slice(1, 3), 16) / 255;
-    const g = parseInt(hex.slice(3, 5), 16) / 255;
-    const b = parseInt(hex.slice(5, 7), 16) / 255;
-    return [r, g, b];
-  };
+  // Parallax stars/debris data
+  const debrisRef = useRef<{x: number, y: number, z: number, size: number, shape: number}[]>([]);
 
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const gl = canvas.getContext('webgl2', { 
-      antialias: false, 
-      depth: false, 
-      preserveDrawingBuffer: true,
-      powerPreference: 'high-performance'
-    });
-    if (!gl) return;
-
-    const vsSource = `#version 300 es
-      in vec4 a_position;
-      void main() { gl_Position = a_position; }
-    `;
-
-    const fsSource = `#version 300 es
-      precision highp float;
-      uniform float u_time;
-      uniform float u_heat;
-      uniform float u_evolution;
-      uniform float u_spinning;
-      uniform float u_depth;
-      uniform vec3 u_biomeColor;
-      uniform vec2 u_resolution;
-      
-      uniform float u_glowPurple;
-      uniform float u_glowGold;
-      uniform float u_glitchRed;
-      uniform float u_matrixGreen;
-      uniform float u_frostBlue;
-
-      uniform int u_fxMode; 
-
-      out vec4 outColor;
-
-      mat2 rot(float a) { float s=sin(a), c=cos(a); return mat2(c, -s, s, c); }
-      float hash(float n) { return fract(sin(n) * 43758.5453123); }
-
-      float dither(vec2 pos, float brightness) {
-          int x = int(mod(pos.x, 4.0));
-          int y = int(mod(pos.y, 4.0));
-          int index = x + y * 4;
-          float limit = 0.0;
-          if (x < 8) {
-             if (index == 0) limit = 0.0625; else if (index == 1) limit = 0.5625;
-             else if (index == 2) limit = 0.1875; else if (index == 3) limit = 0.6875;
-             else if (index == 4) limit = 0.8125; else if (index == 5) limit = 0.3125;
-             else if (index == 6) limit = 0.9375; else if (index == 7) limit = 0.4375;
-             else if (index == 8) limit = 0.25;   else if (index == 9) limit = 0.75;
-             else if (index == 10) limit = 0.125; else if (index == 11) limit = 0.625;
-             else if (index == 12) limit = 1.0;   else if (index == 13) limit = 0.5;
-             else if (index == 14) limit = 0.875; else if (index == 15) limit = 0.375;
-          }
-          return brightness < limit ? 0.0 : 1.0;
-      }
-
-      vec3 applyDither(vec3 color, vec2 uv) {
-         float grid = 4.0; 
-         vec2 ditherUV = gl_FragCoord.xy / grid;
-         float levels = 8.0; 
-         vec3 c = floor(color * levels) / levels;
-         float noise = dither(ditherUV, length(color));
-         return mix(c, c * (0.8 + 0.4 * noise), 0.5); 
-      }
-
-      float sdBox(vec3 p, vec3 b) {
-        vec3 q = abs(p) - b;
-        return length(max(q, 0.0)) + min(max(q.x, max(q.y, q.z)), 0.0);
-      }
-      float sdCylinder(vec3 p, float h, float r) {
-        vec2 d = abs(vec2(length(p.xz), p.y)) - vec2(r, h);
-        return min(max(d.x, d.y), 0.0) + length(max(d, 0.0));
-      }
-      float sdCone(vec3 p, vec2 c, float h) {
-        float q = length(p.xz);
-        return max(dot(c.xy, vec2(q, p.y)), -h - p.y);
-      }
-
-      vec2 map(vec3 p) {
-        float isBroken = (u_heat >= 100.0 ? 1.0 : 0.0);
-        
-        if (u_fxMode == 3) {
-           p.x += sin(p.y * 10.0 + u_time * 5.0) * 0.05;
-           p.z += cos(p.y * 10.0 + u_time * 5.0) * 0.05;
+    // Init debris
+    if (debrisRef.current.length === 0) {
+        for(let i=0; i<30; i++) {
+            debrisRef.current.push({
+                x: (Math.random() - 0.5) * 800,
+                y: Math.random() * 1000,
+                z: Math.random() * 2 + 0.5,
+                size: Math.random() * 3 + 1,
+                shape: Math.floor(Math.random() * 3)
+            });
         }
-
-        float shakeFactor = isBroken * sin(u_time * 180.0) * 0.1;
-        if (u_glitchRed > 0.5) shakeFactor += (hash(u_time * 10.0) - 0.5) * 0.05;
-        if (u_spinning > 0.5 && isBroken < 0.5) shakeFactor += sin(u_time * 80.0) * 0.015;
-        p.x += shakeFactor; p.z += shakeFactor;
-        
-        float d = 1000.0; float m = 0.0;
-        
-        float engineBox = sdBox(p - vec3(0, 0.9, 0), vec3(0.65, 0.2, 0.65));
-        if(engineBox < d) { d = engineBox; m = 1.0; }
-        
-        float body = sdCylinder(p - vec3(0, 0.45, 0), 0.25, 0.6);
-        if(body < d) { d = body; m = 3.0; }
-        
-        vec3 qBit = p - vec3(0, -0.1, 0);
-        qBit.y = -qBit.y; qBit.y -= 0.45;
-        
-        float bitSpin = (isBroken > 0.5 ? 0.0 : u_time * (u_spinning > 0.5 ? 45.0 : 6.0));
-        qBit.xz *= rot(bitSpin);
-        
-        if (u_fxMode == 2) {
-           qBit.xy *= rot(sin(p.z * 5.0 + u_time) * 0.2);
-        }
-
-        float bit = sdCone(qBit, vec2(0.8, 0.6), 1.1);
-        float thread = sin(atan(qBit.z, qBit.x) * (3.0 + floor(u_evolution)) + qBit.y * 12.0);
-        
-        if (u_fxMode == 2) {
-           thread = sin(qBit.y * 50.0 + u_time * 10.0) * 0.1; 
-        }
-
-        bit -= thread * 0.06 * smoothstep(0.8, -1.2, qBit.y);
-        
-        if (u_matrixGreen > 0.5) bit += sin(qBit.y * 40.0 + u_time * 10.0) * 0.01;
-
-        if(bit < d) { d = bit; m = 5.0; }
-        return vec2(d, m);
-      }
-
-      void main() {
-        vec2 res = u_resolution.xy;
-        float pixelSize = 4.0;
-        vec2 pixelCoord = floor(gl_FragCoord.xy / pixelSize) * pixelSize;
-        vec2 uv = (pixelCoord - 0.5 * res) / res.y;
-        
-        if (u_fxMode == 3) {
-           float dist = length(uv);
-           uv *= 1.0 + sin(u_time + dist * 10.0) * 0.02;
-        }
-
-        if (u_glitchRed > 0.5) {
-            vec2 pixelRes = vec2(64.0, 64.0);
-            uv = floor(uv * pixelRes) / pixelRes;
-        }
-        
-        float travelSpeed = (u_spinning > 0.5 && u_heat < 100.0 ? 10.0 : 0.0);
-        float travel = u_depth * 0.01 + u_time * travelSpeed;
-        
-        vec2 backWallUV = uv - vec2(0.0, travel * 0.5);
-        float layerID = floor(backWallUV.y * 4.0);
-        vec3 color = mix(u_biomeColor * 0.08, u_biomeColor * 0.22, hash(layerID));
-        
-        if (u_matrixGreen > 0.5) {
-           float rain = fract(uv.y * 10.0 + u_time * 2.0 + hash(uv.x * 20.0));
-           if (rain > 0.9) color += vec3(0.0, 0.4, 0.0);
-        }
-
-        // --- CAMERA ADJUSTMENT ---
-        // Moved camera further back (-5.8 -> -7.0) to make drill look smaller/compact
-        vec3 ro = vec3(0, 0.4, -7.0); 
-        vec3 rd = normalize(vec3(uv, 1.4)); // FOV
-        
-        float t = 0.0; vec2 resMap;
-        
-        for(int i = 0; i < 32; i++) {
-          resMap = map(ro + rd * t);
-          if(resMap.x < 0.005 || t > 10.0) break;
-          t += resMap.x;
-        }
-
-        if(t < 10.0) {
-          vec3 p = ro + rd * t;
-          vec2 e = vec2(0.01, 0);
-          vec3 n = normalize(vec3(map(p+e.xyy).x - map(p-e.xyy).x, map(p+e.yxy).x - map(p-e.yxy).x, map(p+e.yyx).x - map(p-e.yyx).x));
-          float diff = max(dot(n, normalize(vec3(1, 2, -3))), 0.0);
-          
-          vec3 mat = vec3(0.45);
-          if(resMap.y == 1.0) mat = vec3(0.15, 0.22, 0.4); 
-          if(resMap.y == 3.0) mat = vec3(0.3, 0.35, 0.4); 
-          if(resMap.y == 5.0) {
-             mat = mix(vec3(0.5, 0.6, 0.7), vec3(0.9, 0.95, 1.0), u_evolution/6.0);
-             if (u_fxMode == 1) {
-                float spec = pow(max(dot(reflect(-normalize(vec3(1, 2, -3)), n), -rd), 0.0), 16.0);
-                mat += vec3(0.2, 0.4, 1.0) * spec; 
-             }
-             if (u_fxMode == 2) {
-                mat = vec3(0.0);
-                float pulse = sin(p.y * 20.0 - u_time * 5.0);
-                mat += (pulse > 0.9) ? vec3(1.0, 0.0, 1.0) : vec3(0.1, 0.0, 0.2);
-             }
-             if (u_fxMode == 3) {
-                mat = vec3(0.0);
-                float rim = 1.0 - dot(n, -rd);
-                mat += vec3(1.0) * pow(rim, 4.0); 
-             }
-          } 
-          
-          vec3 drillColor = mat * (diff + 0.45);
-          
-          if (u_glowPurple > 0.5) drillColor = mix(drillColor, vec3(0.6, 0.0, 1.0), 0.3 + sin(u_time * 4.0)*0.1);
-          if (u_glowGold > 0.5) drillColor = mix(drillColor, vec3(1.0, 0.8, 0.0), 0.4);
-          if (u_frostBlue > 0.5) drillColor = mix(drillColor, vec3(0.4, 0.8, 1.0), 0.3);
-          if (u_matrixGreen > 0.5) {
-             float grid = step(0.9, fract(p.y * 10.0 + u_time));
-             drillColor = mix(drillColor, vec3(0.0, 1.0, 0.0), grid * 0.5);
-          }
-
-          float heatPerc = u_heat / 100.0;
-          if (u_heat >= 100.0) {
-            drillColor = vec3(6.0); 
-          } else {
-            vec3 scarlet = vec3(3.5, 0.2, 0.0);
-            vec3 crimson = vec3(1.5, 0.0, 0.0);
-            vec3 tint;
-            if (heatPerc > 0.8) tint = mix(scarlet, vec3(6.0), smoothstep(0.8, 1.0, heatPerc));
-            else if (heatPerc > 0.4) tint = mix(crimson, scarlet, smoothstep(0.4, 0.8, heatPerc));
-            else tint = mix(vec3(0.1, 0.6, 1.0) * 0.12, crimson, smoothstep(0.0, 0.4, heatPerc));
-            drillColor = mix(drillColor, tint, heatPerc * 0.99);
-          }
-          
-          drillColor *= 0.8 + 0.2 * n.y;
-          color = drillColor;
-        }
-
-        if (u_glowPurple > 0.5 && t < 10.0) color += vec3(0.4, 0.0, 0.8) * 0.2 * abs(sin(u_time * 2.0));
-        if (u_glowGold > 0.5 && t < 10.0) color += vec3(0.8, 0.6, 0.1) * 0.3;
-        
-        if (u_fxMode == 2 && t < 10.0) color += vec3(0.5, 0.0, 1.0) * 0.1;
-        if (u_fxMode == 3) color = vec3(1.0) - color;
-
-        color *= 1.4 - length(uv) * 1.0; 
-        color = applyDither(color, uv);
-
-        outColor = vec4(color, 1.0);
-      }
-    `;
-
-    function createShader(gl: WebGL2RenderingContext, type: number, source: string) {
-      const shader = gl.createShader(type);
-      if (!shader) return null;
-      gl.shaderSource(shader, source);
-      gl.compileShader(shader);
-      if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) return null;
-      return shader;
     }
 
-    const vs = createShader(gl, gl.VERTEX_SHADER, vsSource);
-    const fs = createShader(gl, gl.FRAGMENT_SHADER, fsSource);
-    if (!vs || !fs) return;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
 
-    const program = gl.createProgram();
-    gl.attachShader(program, vs);
-    gl.attachShader(program, fs);
-    gl.linkProgram(program);
+    let animationFrameId: number;
+    let tick = 0;
 
-    const positionBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, -1, 1, 1, -1, 1, 1]), gl.STATIC_DRAW);
+    // --- DRAWING HELPERS ---
 
-    const vao = gl.createVertexArray();
-    gl.bindVertexArray(vao);
-    const posLoc = gl.getAttribLocation(program, 'a_position');
-    gl.enableVertexAttribArray(posLoc);
-    gl.vertexAttribPointer(posLoc, 2, gl.FLOAT, false, 0, 0);
-
-    const uniforms = {
-      time: gl.getUniformLocation(program, 'u_time'),
-      heat: gl.getUniformLocation(program, 'u_heat'),
-      evo: gl.getUniformLocation(program, 'u_evolution'),
-      spin: gl.getUniformLocation(program, 'u_spinning'),
-      depth: gl.getUniformLocation(program, 'u_depth'),
-      biome: gl.getUniformLocation(program, 'u_biomeColor'),
-      res: gl.getUniformLocation(program, 'u_resolution'),
-      u_glowPurple: gl.getUniformLocation(program, 'u_glowPurple'),
-      u_glowGold: gl.getUniformLocation(program, 'u_glowGold'),
-      u_glitchRed: gl.getUniformLocation(program, 'u_glitchRed'),
-      u_matrixGreen: gl.getUniformLocation(program, 'u_matrixGreen'),
-      u_frostBlue: gl.getUniformLocation(program, 'u_frostBlue'),
-      u_fxMode: gl.getUniformLocation(program, 'u_fxMode'),
+    const drawTrapezoid = (x: number, y: number, wTop: number, wBot: number, h: number, fill: string | CanvasGradient) => {
+        ctx.beginPath();
+        ctx.moveTo(x - wTop/2, y);
+        ctx.lineTo(x + wTop/2, y);
+        ctx.lineTo(x + wBot/2, y + h);
+        ctx.lineTo(x - wBot/2, y + h);
+        ctx.closePath();
+        ctx.fillStyle = fill;
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+        ctx.stroke();
     };
 
-    let animationFrame: number;
+    const drawCoil = (x: number, y: number, w: number, h: number, color: string, active: boolean) => {
+        // Background
+        ctx.fillStyle = '#111';
+        ctx.fillRect(x, y, w, h);
+        
+        // Coils
+        const coils = 6;
+        const coilH = h / coils;
+        for(let i=0; i<coils; i++) {
+            const cy = y + i * coilH;
+            ctx.fillStyle = active ? color : '#333';
+            if (active) {
+                ctx.shadowColor = color;
+                ctx.shadowBlur = 10;
+            }
+            ctx.fillRect(x + 2, cy + 2, w - 4, coilH - 4);
+            ctx.shadowBlur = 0;
+            
+            // Highlight
+            ctx.fillStyle = 'rgba(255,255,255,0.5)';
+            ctx.fillRect(x + 4, cy + 4, 2, coilH - 8);
+        }
+    };
+
+    const drawPipes = (x: number, y: number, w: number, h: number, count: number) => {
+        const pipeW = w / count;
+        for(let i=0; i<count; i++) {
+            const px = x + i * pipeW;
+            const grad = ctx.createLinearGradient(px, y, px + pipeW, y);
+            grad.addColorStop(0, '#222');
+            grad.addColorStop(0.5, '#666');
+            grad.addColorStop(1, '#222');
+            ctx.fillStyle = grad;
+            ctx.fillRect(px, y, pipeW - 2, h);
+        }
+    };
+
+    const render = () => {
+      tick++;
+      const w = canvas.width;
+      const h = canvas.height;
+      const cx = w / 2;
+      const cy = h * 0.4;
+
+      ctx.clearRect(0, 0, w, h);
+
+      // --- 1. BACKGROUND TUNNEL ---
+      const speed = spinning ? (heat >= 100 ? 0 : 25) : 0;
+      
+      ctx.save();
+      ctx.translate(cx, cy);
+      
+      // Biome Aura
+      const aura = ctx.createRadialGradient(0, 0, 100, 0, 0, h);
+      aura.addColorStop(0, 'rgba(0,0,0,0)');
+      aura.addColorStop(1, `${biomeColor}33`);
+      ctx.fillStyle = aura;
+      ctx.fillRect(-w/2, -cy, w, h);
+
+      // Speed lines / Grid
+      ctx.strokeStyle = biomeColor;
+      ctx.globalAlpha = 0.2;
+      ctx.lineWidth = 1;
+      
+      const gridOffset = (tick * speed) % 80;
+      
+      // Vertical Perspective
+      for(let i = -5; i <= 5; i++) {
+          ctx.beginPath();
+          ctx.moveTo(i * 100, -cy);
+          ctx.lineTo(i * 150 * (2 + depth/10000), h);
+          ctx.stroke();
+      }
+      // Horizontal Moving
+      for(let y = -200; y < h; y += 80) {
+          const dy = y + gridOffset;
+          if (dy > h) continue;
+          ctx.beginPath();
+          ctx.moveTo(-w, dy);
+          ctx.lineTo(w, dy);
+          ctx.stroke();
+      }
+      ctx.globalAlpha = 1.0;
+
+      // Debris
+      debrisRef.current.forEach(d => {
+          d.y -= speed * d.z * 0.1;
+          if (d.y < -cy - 100) {
+              d.y = h;
+              d.x = (Math.random() - 0.5) * w;
+          }
+          const scale = Math.max(0.1, (d.y + cy) / h);
+          ctx.fillStyle = biomeColor;
+          ctx.globalAlpha = scale;
+          const sz = d.size * scale * 2;
+          ctx.fillRect(d.x * scale, d.y, sz, sz * (speed > 0 ? 5 : 1));
+      });
+      ctx.globalAlpha = 1.0;
+      ctx.restore();
+
+
+      // --- 2. DRILL RENDER (Based on Image & Tier) ---
+      
+      let shakeX = 0;
+      let shakeY = 0;
+      if (spinning) {
+         const intensity = heat > 80 ? 4 : 2;
+         shakeX = (Math.random() - 0.5) * intensity;
+         shakeY = (Math.random() - 0.5) * intensity;
+      }
+
+      ctx.save();
+      ctx.translate(cx + shakeX, cy + shakeY);
+
+      // --- CONFIGURATION BASED ON EVOLUTION ---
+      // Tiers: 1-3 (Industrial), 4-6 (Refined), 7-9 (Cyber), 10+ (Void)
+      const tier = Math.floor((evolution - 1) / 3); // 0, 1, 2, 3...
+      
+      let primaryColor = '#71717a'; // Zinc-500
+      let secondaryColor = '#3f3f46'; // Zinc-700
+      let highlightColor = '#d4d4d8'; // Zinc-300
+      let glowColor = '#f59e0b'; // Amber
+      let cageColor = '#52525b'; // Zinc-600
+      
+      if (tier === 1) { // Refined
+          primaryColor = '#475569'; // Slate
+          secondaryColor = '#1e293b';
+          highlightColor = '#94a3b8';
+          glowColor = '#06b6d4'; // Cyan
+          cageColor = '#334155';
+      } else if (tier === 2) { // Cyber
+          primaryColor = '#18181b'; // Black
+          secondaryColor = '#27272a';
+          highlightColor = '#a855f7'; // Purple
+          glowColor = '#d946ef'; // Magenta
+          cageColor = '#a855f7';
+      } else if (tier >= 3) { // Void
+          primaryColor = '#fff';
+          secondaryColor = '#eee';
+          highlightColor = '#fff';
+          glowColor = '#fff';
+          cageColor = '#fff';
+      }
+
+      const heatRatio = Math.min(1, heat / 100);
+
+      // -- A. DRILL BIT (Bottom) --
+      const bitLength = 120 + evolution * 5;
+      const bitWidthTop = 60 + evolution * 2;
+      const spinPhase = spinning ? (tick * 0.5) : 0;
+
+      // Bit Gradient
+      const bitGrad = ctx.createLinearGradient(-bitWidthTop/2, 0, bitWidthTop/2, 0);
+      bitGrad.addColorStop(0, '#000');
+      bitGrad.addColorStop(0.2, tier >= 2 ? '#333' : '#555');
+      bitGrad.addColorStop(0.5, tier >= 3 ? '#fff' : (tier === 2 ? '#444' : '#888')); // Shine
+      bitGrad.addColorStop(0.8, tier >= 2 ? '#333' : '#555');
+      bitGrad.addColorStop(1, '#000');
+
+      ctx.beginPath();
+      // Draw cone
+      const segments = 12;
+      const segmentH = bitLength / segments;
+      
+      // Outline of the bit
+      ctx.moveTo(-bitWidthTop/2, 0);
+      ctx.lineTo(bitWidthTop/2, 0);
+      ctx.lineTo(0, bitLength);
+      ctx.closePath();
+      ctx.fillStyle = bitGrad;
+      ctx.fill();
+
+      // Spiral Threads
+      ctx.save();
+      ctx.clip(); // Clip to cone
+      
+      ctx.strokeStyle = tier >= 2 ? glowColor : 'rgba(0,0,0,0.5)';
+      ctx.lineWidth = 2;
+      if (tier >= 2) ctx.shadowBlur = 5; ctx.shadowColor = glowColor;
+
+      for(let i=0; i<segments * 2; i++) {
+          const yBase = i * 15 - (spinPhase % 30);
+          
+          ctx.beginPath();
+          // Calculate curve for spiral
+          // Simple slanted lines for "screw" effect
+          const y1 = yBase;
+          const y2 = yBase + 20;
+          
+          // Perspective width adjustment
+          const w1 = bitWidthTop * (1 - (y1/bitLength));
+          const w2 = bitWidthTop * (1 - (y2/bitLength));
+          
+          if (y1 < bitLength && y2 > 0) {
+            ctx.moveTo(-w1/2, y1);
+            ctx.lineTo(w2/2, y2);
+          }
+          ctx.stroke();
+      }
+      ctx.restore();
+
+      // Heat Glow (Tip)
+      if (heat > 0) {
+          ctx.globalCompositeOperation = 'lighter';
+          const heatG = ctx.createRadialGradient(0, bitLength - 20, 5, 0, bitLength - 40, 60);
+          heatG.addColorStop(0, '#fff');
+          heatG.addColorStop(0.5, 'rgba(255, 100, 0, 0.8)');
+          heatG.addColorStop(1, 'transparent');
+          ctx.fillStyle = heatG;
+          ctx.beginPath();
+          ctx.moveTo(-bitWidthTop/2, 0);
+          ctx.lineTo(bitWidthTop/2, 0);
+          ctx.lineTo(0, bitLength);
+          ctx.fill();
+          ctx.globalCompositeOperation = 'source-over';
+      }
+
+      // -- B. CHASSIS / HULL (Main Body) --
+      const bodyW = 100 + evolution * 2;
+      const bodyH = 80;
+      const bodyY = -bodyH + 10; // Overlap bit slightly
+
+      // Main Block Gradient
+      const bodyGrad = ctx.createLinearGradient(-bodyW/2, bodyY, bodyW/2, bodyY + bodyH);
+      bodyGrad.addColorStop(0, primaryColor);
+      bodyGrad.addColorStop(1, secondaryColor);
+
+      // Draw Main Box (Chamfered)
+      ctx.beginPath();
+      ctx.moveTo(-bodyW/2 + 10, bodyY); // Top Left
+      ctx.lineTo(bodyW/2 - 10, bodyY);  // Top Right
+      ctx.lineTo(bodyW/2, bodyY + 20);  // Shoulder Right
+      ctx.lineTo(bodyW/2, bodyY + bodyH); // Bottom Right
+      ctx.lineTo(-bodyW/2, bodyY + bodyH); // Bottom Left
+      ctx.lineTo(-bodyW/2, bodyY + 20); // Shoulder Left
+      ctx.closePath();
+      
+      ctx.fillStyle = bodyGrad;
+      ctx.fill();
+      
+      // Detail: Rivets / Panel lines
+      ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      
+      // Side Panels (Rivets)
+      ctx.fillStyle = secondaryColor;
+      for(let side of [-1, 1]) {
+          const px = side * (bodyW/2 - 15);
+          const py = bodyY + 30;
+          ctx.beginPath();
+          ctx.arc(px, py, 3, 0, Math.PI*2);
+          ctx.arc(px, py + 20, 3, 0, Math.PI*2);
+          ctx.fill();
+      }
+
+      // -- C. ENGINE BLOCK (Top Center) --
+      const engineW = 50;
+      const engineH = 30;
+      const engineY = bodyY - engineH + 5;
+      
+      // Engine Housing
+      drawTrapezoid(0, engineY, engineW - 10, engineW, engineH, secondaryColor);
+      
+      // Radiator Grills / Vents
+      ctx.fillStyle = '#111';
+      for(let i=0; i<4; i++) {
+          const gx = -15 + i * 10;
+          ctx.fillRect(gx, engineY + 5, 6, engineH - 10);
+      }
+      
+      // Pipes (Connecting Engine to Core)
+      ctx.beginPath();
+      ctx.strokeStyle = '#555';
+      ctx.lineWidth = 4;
+      ctx.moveTo(engineW/2, engineY + 10);
+      ctx.quadraticCurveTo(bodyW/2 + 10, engineY, bodyW/2 + 15, bodyY + 20); // To Core
+      ctx.stroke();
+      
+      // Exhaust Pipes (Left side)
+      ctx.save();
+      ctx.translate(-bodyW/2 + 10, bodyY + 10);
+      drawPipes(0, 0, 20, 30, 3);
+      if (spinning) {
+          // Smoke puffs
+           ctx.fillStyle = 'rgba(100,100,100,0.5)';
+           if (Math.random() > 0.5) ctx.fillRect(0, -10 - Math.random()*10, 5, 5);
+      }
+      ctx.restore();
+
+      // -- D. POWER CORE (Right Side) --
+      // Attached to the side of the hull
+      const coreW = 25;
+      const coreH = 50;
+      const coreX = bodyW/2;
+      const coreY = bodyY + 10;
+      
+      // Housing
+      ctx.fillStyle = secondaryColor;
+      ctx.fillRect(coreX, coreY - 5, coreW + 5, coreH + 10);
+      
+      // Glowing Coils
+      drawCoil(coreX + 2, coreY, coreW, coreH, glowColor, spinning || heat > 0);
+
+      // -- E. COCKPIT / SCREEN (Front Center) --
+      const screenW = 30;
+      const screenH = 20;
+      const screenX = -screenW/2;
+      const screenY = bodyY + 30;
+      
+      // Bezel
+      ctx.fillStyle = '#222';
+      ctx.fillRect(screenX - 2, screenY - 2, screenW + 4, screenH + 4);
+      
+      // Screen Glow
+      const screenActive = spinning;
+      ctx.fillStyle = screenActive ? (tier >= 2 ? '#f0f' : '#0f0') : '#112';
+      if (screenActive) {
+          ctx.shadowColor = ctx.fillStyle;
+          ctx.shadowBlur = 5;
+      }
+      ctx.fillRect(screenX, screenY, screenW, screenH);
+      
+      // Data lines on screen
+      if (screenActive) {
+          ctx.fillStyle = 'rgba(255,255,255,0.8)';
+          const lineY = screenY + (tick % screenH);
+          ctx.fillRect(screenX, lineY, screenW, 2);
+      }
+      ctx.shadowBlur = 0;
+
+      // -- F. ROLL CAGE (Protective Bars) --
+      ctx.strokeStyle = cageColor;
+      ctx.lineWidth = tier >= 2 ? 2 : 4;
+      ctx.lineCap = 'round';
+      
+      // Left Bar
+      ctx.beginPath();
+      ctx.moveTo(-bodyW/2 - 5, bodyY + bodyH); // Bottom
+      ctx.lineTo(-bodyW/2 - 5, bodyY); // Up
+      ctx.lineTo(-engineW/2 - 5, engineY - 5); // To Top
+      ctx.stroke();
+      
+      // Right Bar
+      ctx.beginPath();
+      ctx.moveTo(bodyW/2 + coreW + 5, bodyY + bodyH);
+      ctx.lineTo(bodyW/2 + coreW + 5, bodyY);
+      ctx.lineTo(engineW/2 + 5, engineY - 5);
+      ctx.stroke();
+      
+      // Top Crossbar
+      ctx.beginPath();
+      ctx.moveTo(-engineW/2 - 5, engineY - 5);
+      ctx.lineTo(engineW/2 + 5, engineY - 5);
+      ctx.stroke();
+
+      // -- G. PARTICLES (Drill Contact) --
+      if (spinning) {
+          const tipX = 0;
+          const tipY = bitLength;
+          
+          ctx.fillStyle = biomeColor;
+          for(let i=0; i<4; i++) {
+             const angle = Math.random() * Math.PI;
+             const dist = Math.random() * 30;
+             const px = tipX + Math.cos(angle) * dist;
+             const py = tipY - Math.abs(Math.sin(angle) * 10);
+             const s = Math.random() * 3;
+             ctx.fillRect(px, py, s, s);
+          }
+      }
+
+      ctx.restore();
+      animationFrameId = requestAnimationFrame(render);
+    };
+
     const handleResize = () => {
-      if (!canvas.parentElement) return;
-      canvas.width = canvas.parentElement.clientWidth;
-      canvas.height = canvas.parentElement.clientHeight;
-      gl.viewport(0, 0, canvas.width, canvas.height);
+       if (canvas.parentElement) {
+          canvas.width = canvas.parentElement.clientWidth;
+          canvas.height = canvas.parentElement.clientHeight;
+       }
     };
     window.addEventListener('resize', handleResize);
     handleResize();
+    render();
 
-    const render = (time: number) => {
-      if (!gl || !program) return;
-      const rgb = getHexToRgb(biomeColorRef.current);
-      gl.useProgram(program);
-      gl.uniform1f(uniforms.time, time * 0.001);
-      gl.uniform1f(uniforms.heat, heatRef.current);
-      gl.uniform1f(uniforms.evo, evolutionRef.current);
-      gl.uniform1f(uniforms.spin, (spinningRef.current && heatRef.current < 100.0) ? 1.0 : 0.0);
-      gl.uniform1f(uniforms.depth, depthRef.current);
-      gl.uniform3f(uniforms.biome, rgb[0], rgb[1], rgb[2]);
-      gl.uniform2f(uniforms.res, canvas.width, canvas.height);
-      
-      gl.uniform1f(uniforms.u_glowPurple, effectsRef.current.includes('GLOW_PURPLE') ? 1.0 : 0.0);
-      gl.uniform1f(uniforms.u_glowGold, effectsRef.current.includes('GLOW_GOLD') ? 1.0 : 0.0);
-      gl.uniform1f(uniforms.u_glitchRed, effectsRef.current.includes('GLITCH_RED') ? 1.0 : 0.0);
-      gl.uniform1f(uniforms.u_matrixGreen, effectsRef.current.includes('MATRIX_GREEN') ? 1.0 : 0.0);
-      gl.uniform1f(uniforms.u_frostBlue, effectsRef.current.includes('FROST_BLUE') ? 1.0 : 0.0);
-
-      let mode = 0;
-      const fx = fxRef.current;
-      if (fx === 'blue_glint' || fx === 'golden_aura_vfx') mode = 1;
-      else if (fx === 'fractal_rainbow_trail' || fx === 'infinite_loop_glow') mode = 2;
-      else if (fx === 'white_hole_distortion') mode = 3;
-      
-      gl.uniform1i(uniforms.u_fxMode, mode);
-
-      gl.bindVertexArray(vao);
-      gl.drawArrays(gl.TRIANGLES, 0, 6);
-      animationFrame = requestAnimationFrame(render);
-    };
-
-    animationFrame = requestAnimationFrame(render);
     return () => {
-      cancelAnimationFrame(animationFrame);
-      window.removeEventListener('resize', handleResize);
-      gl.deleteProgram(program);
+       window.removeEventListener('resize', handleResize);
+       cancelAnimationFrame(animationFrameId);
     };
-  }, []);
+  }, [heat, evolution, spinning, biomeColor, activeVisualEffects]);
 
-  return (
-    <canvas 
-      ref={canvasRef} 
-      className="w-full h-full block"
-      style={{ display: 'block' }}
-    />
-  );
+  return <canvas ref={canvasRef} className="w-full h-full block" />;
 };
 
 export default DrillRenderer;
