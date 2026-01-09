@@ -1,0 +1,7 @@
+{
+  "name": "Cosmic Excavator: Void-Piercer",
+  "description": "A retro-futuristic sci-fi drilling game featuring fractal graphics, generative audio, and advanced deep-core exploration mechanics. Drill to the core, upgrade your system power, and reach the center of the universe!",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}

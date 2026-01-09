@@ -1,0 +1,261 @@
+
+import { Biome, DrillPart, EnginePart, CoolerPart, HullPart, LogicPart, ControlPart, GearboxPart, PowerCorePart, ArmorPart, DroneDefinition, MergeRecipe } from './types';
+
+export const BIOMES: Biome[] = [
+  { 
+    depth: 0, name: "ПОВЕРХНОСТЬ", resource: "clay", color: "#8B4513", 
+    description: "Пыльный горизонт, где всё начинается.", hub: "БАЗА 'ГОРИЗОНТ'",
+    hazard: 'CORROSION', hazardLevel: 1, gemResource: 'rubies'
+  },
+  { 
+    depth: 500, name: "ТВЕРДЫЙ КАМЕНЬ", resource: "stone", color: "#555555", 
+    description: "Непрощающая кора. Проверь свою решимость.",
+    hazard: 'NONE', hazardLevel: 0, gemResource: 'rubies'
+  },
+  { 
+    depth: 1500, name: "МЕДНЫЕ ЖИЛЫ", resource: "copper", color: "#B87333", 
+    description: "Проводящие пути в глубине. Осторожно: ЭМ-поля.",
+    hazard: 'MAGNETIC', hazardLevel: 15, gemResource: 'emeralds'
+  },
+  { 
+    depth: 4000, name: "ЗАЛЕЖИ ЖЕЛЕЗА", resource: "iron", color: "#A19D94", 
+    description: "Позвоночник машины.",
+    hazard: 'CORROSION', hazardLevel: 10, gemResource: 'emeralds' 
+  },
+  { 
+    depth: 10000, name: "КРИСТАЛЬНЫЕ ГРОТЫ", resource: "silver", color: "#00CED1", 
+    description: "Сияние в темноте. Отражают тепло.", hub: "КРИСТАЛЬНАЯ ГАВАНЬ",
+    hazard: 'HEAT_REFLECTION', hazardLevel: 25, gemResource: 'diamonds'
+  },
+  { 
+    depth: 20000, name: "ЗОЛОТАЯ ЗЕМЛЯ", resource: "gold", color: "#FFD700", 
+    description: "Богатства спрессованной пустоты.",
+    hazard: 'MAGNETIC', hazardLevel: 30, gemResource: 'diamonds'
+  },
+  { 
+    depth: 50000, name: "ПЛАСТЫ ПУСТОТЫ", resource: "titanium", color: "#1A1A1A", 
+    description: "Здесь свет гаснет. Давление критическое.", hub: "КУЗНИЦА МАГМЫ",
+    hazard: 'VOID_PRESSURE', hazardLevel: 50, gemResource: 'diamonds'
+  },
+  { 
+    depth: 100000, name: "РАДИОАКТИВНОЕ ЯДРО", resource: "uranium", color: "#32CD32", 
+    description: "Последний барьер. Сердце бытия.", hub: "СВЯТИЛИЩЕ ЯДРА",
+    hazard: 'RADIATION', hazardLevel: 100, gemResource: 'emeralds'
+  }
+];
+
+// --- MODULE DATABASE ---
+
+// 1. BITS (Damage)
+export const BITS: DrillPart[] = [
+  { id: 'bit_1', tier: 1, rarity: 'Common', name: 'Ржавое жало', description: 'Для тех, кому нечего терять.', cost: { clay: 50 }, baseStats: { damage: 1, energyCost: 0 }, fxId: 'pixel_sparks_brown' },
+  { id: 'bit_2', tier: 2, rarity: 'Common', name: 'Стальной Крот', description: 'Стандарт шахтерских союзов.', cost: { clay: 200, stone: 50 }, baseStats: { damage: 5, energyCost: 1 }, fxId: 'none' },
+  { id: 'bit_3', tier: 3, rarity: 'Common', name: 'Зуб Мамонта', description: 'Усиленный сплав, тяжелый и надежный.', cost: { stone: 300, copper: 100 }, baseStats: { damage: 12, energyCost: 2 }, fxId: 'none' },
+  { id: 'bit_4', tier: 4, rarity: 'Rare', name: 'Победитовое сверло', description: 'Классика индустриальной эпохи.', cost: { copper: 500, iron: 200 }, baseStats: { damage: 25, energyCost: 4 }, fxId: 'blue_glint' },
+  { id: 'bit_5', tier: 5, rarity: 'Rare', name: 'Титановый Клык', description: 'Легкий, быстрый, острый.', cost: { iron: 800, silver: 300 }, baseStats: { damage: 45, energyCost: 6 }, fxId: 'blue_glint' },
+  { id: 'bit_6', tier: 6, rarity: 'Rare', name: 'Алмазный Конус', description: 'Пробивает почти всё на верхних слоях.', cost: { silver: 1200, gold: 400 }, baseStats: { damage: 80, energyCost: 10 }, fxId: 'blue_glint' },
+  { id: 'bit_7', tier: 7, rarity: 'Epic', name: 'Вибро-бур "Сверчок"', description: 'Разрушает породу ультразвуком.', cost: { gold: 2000, titanium: 500 }, baseStats: { damage: 120, energyCost: 15 }, fxId: 'golden_aura_vfx' },
+  { id: 'bit_8', tier: 8, rarity: 'Epic', name: 'Лазерный долот', description: 'Испаряет породу, не касаясь её.', cost: { titanium: 3000, uranium: 200 }, baseStats: { damage: 200, energyCost: 25 }, fxId: 'golden_aura_vfx' },
+  { id: 'bit_9', tier: 9, rarity: 'Epic', name: 'Плазменный Резак', description: 'Температура на острие — как на Солнце.', cost: { uranium: 1000, rubies: 20 }, baseStats: { damage: 350, energyCost: 40 }, fxId: 'golden_aura_vfx' },
+  { id: 'bit_10', tier: 10, rarity: 'Legendary', name: 'Молекулярный Дезинтегратор', description: 'Расщепляет молекулярные связи.', cost: { ancientTech: 10, emeralds: 30 }, baseStats: { damage: 600, energyCost: 60 }, fxId: 'fractal_rainbow_trail' },
+  { id: 'bit_11', tier: 11, rarity: 'Legendary', name: 'Гравитационное Шило', description: 'Создает микро-разрыв в пространстве.', cost: { ancientTech: 50, diamonds: 20 }, baseStats: { damage: 1200, energyCost: 90 }, fxId: 'fractal_rainbow_trail' },
+  { id: 'bit_12', tier: 12, rarity: 'Legendary', name: 'Антиматериевое перо', description: 'Аннигиляция при каждом касании.', cost: { ancientTech: 150, nanoSwarm: 1000 }, baseStats: { damage: 2500, energyCost: 130 }, fxId: 'fractal_rainbow_trail' },
+  { id: 'bit_13', tier: 13, rarity: 'Godly', name: 'Разлом Реальности', description: 'Стирает материю из истории.', cost: { ancientTech: 500, rubies: 500 }, baseStats: { damage: 6000, energyCost: 200 }, fxId: 'white_hole_distortion' },
+  { id: 'bit_14', tier: 14, rarity: 'Godly', name: 'Спираль Судьбы', description: 'Урон растет от глубины. Тот самый бур.', cost: { ancientTech: 1000, emeralds: 500 }, baseStats: { damage: 15000, energyCost: 300 }, fxId: 'white_hole_distortion' },
+  { id: 'bit_15', tier: 15, rarity: 'Godly', name: 'Пронзающий Пустоту', description: 'Когда преград больше не осталось.', cost: { ancientTech: 5000, diamonds: 500 }, baseStats: { damage: 50000, energyCost: 500 }, fxId: 'white_hole_distortion' }
+];
+
+// 2. ENGINES (Speed)
+export const ENGINES: EnginePart[] = [
+  { id: 'eng_1', tier: 1, rarity: 'Common', name: 'Ручной привод', description: 'Твоя ярость — его топливо.', cost: { clay: 50 }, baseStats: { speed: 0.2, energyCost: 0 } },
+  { id: 'eng_2', tier: 2, rarity: 'Common', name: 'Паровой котел', description: 'Пыхтит, но крутит.', cost: { stone: 100 }, baseStats: { speed: 0.5, energyCost: 2 } },
+  { id: 'eng_3', tier: 3, rarity: 'Common', name: 'Дизель "Старый Джо"', description: 'Дымный, но неубиваемый.', cost: { copper: 300 }, baseStats: { speed: 1.0, energyCost: 5 } },
+  { id: 'eng_4', tier: 4, rarity: 'Rare', name: 'Электромотор "Искра"', description: 'Чистая энергия, тихий ход.', cost: { iron: 600 }, baseStats: { speed: 1.5, energyCost: 10 } },
+  { id: 'eng_5', tier: 5, rarity: 'Rare', name: 'Турбина "Циклон"', description: 'Высокие обороты, свист металла.', cost: { silver: 1000 }, baseStats: { speed: 2.5, energyCost: 15 } },
+  { id: 'eng_6', tier: 6, rarity: 'Rare', name: 'Ротор "Вихрь"', description: 'Двойная система вращения.', cost: { gold: 1500 }, baseStats: { speed: 4.0, energyCost: 25 } },
+  { id: 'eng_7', tier: 7, rarity: 'Epic', name: 'Магнитный драйв', description: 'Никакого трения, только мощь.', cost: { titanium: 2500 }, baseStats: { speed: 6.0, energyCost: 35 } },
+  { id: 'eng_8', tier: 8, rarity: 'Epic', name: 'Ионный ускоритель', description: 'Синее свечение и бешеная скорость.', cost: { uranium: 1000 }, baseStats: { speed: 9.0, energyCost: 50 } },
+  { id: 'eng_9', tier: 9, rarity: 'Epic', name: 'Фотонный двигатель', description: 'Энергия света в механическом теле.', cost: { ancientTech: 20 }, baseStats: { speed: 12.0, energyCost: 70 } },
+  { id: 'eng_10', tier: 10, rarity: 'Legendary', name: 'Варп-привод', description: 'Схлопывает время между оборотами.', cost: { ancientTech: 50, rubies: 50 }, baseStats: { speed: 18.0, energyCost: 100 } },
+  { id: 'eng_11', tier: 11, rarity: 'Legendary', name: 'Тахионный ротор', description: 'Вращается до того, как ты нажал кнопку.', cost: { ancientTech: 150, emeralds: 50 }, baseStats: { speed: 25.0, energyCost: 140 } },
+  { id: 'eng_12', tier: 12, rarity: 'Legendary', name: 'Темная материя', description: 'Пожирает пространство вокруг себя.', cost: { ancientTech: 400, diamonds: 50 }, baseStats: { speed: 40.0, energyCost: 200 } },
+  { id: 'eng_13', tier: 13, rarity: 'Godly', name: 'Нулевая точка', description: 'Энергия из вакуума.', cost: { ancientTech: 1000, nanoSwarm: 2000 }, baseStats: { speed: 60.0, energyCost: 300 } },
+  { id: 'eng_14', tier: 14, rarity: 'Godly', name: 'Квантовый суперпозитор', description: 'Вращается во всех направлениях сразу.', cost: { ancientTech: 2500, rubies: 1000 }, baseStats: { speed: 100.0, energyCost: 450 } },
+  { id: 'eng_15', tier: 15, rarity: 'Godly', name: 'Двигатель Воли', description: 'Бесконечный драйв.', cost: { ancientTech: 9999 }, baseStats: { speed: 200.0, energyCost: 600 } }
+];
+
+// 3. COOLERS (Heat Reduction)
+export const COOLERS: CoolerPart[] = [
+  { id: 'cool_1', tier: 1, rarity: 'Common', name: 'Дырявый бак', description: 'Поливай его водой вручную.', cost: { clay: 20 }, baseStats: { cooling: 1, energyCost: 0 } },
+  { id: 'cool_2', tier: 2, rarity: 'Common', name: 'Медный радиатор', description: 'Базовая теплоотдача.', cost: { copper: 100 }, baseStats: { cooling: 3, energyCost: 0 } },
+  { id: 'cool_3', tier: 3, rarity: 'Common', name: 'Вентилятор "Тайфун"', description: 'Активный обдув горячего вала.', cost: { iron: 300 }, baseStats: { cooling: 5, energyCost: 2 } },
+  { id: 'cool_4', tier: 4, rarity: 'Rare', name: 'Масляный контур', description: 'Более вязкая и эффективная система.', cost: { silver: 600 }, baseStats: { cooling: 8, energyCost: 5 } },
+  { id: 'cool_5', tier: 5, rarity: 'Rare', name: 'Фреоновая петля', description: 'Холод старых холодильников.', cost: { gold: 1000 }, baseStats: { cooling: 12, energyCost: 8 } },
+  { id: 'cool_6', tier: 6, rarity: 'Rare', name: 'Жидкий Азот', description: 'Бур покрывается инеем.', cost: { titanium: 1500 }, baseStats: { cooling: 18, energyCost: 12 } },
+  { id: 'cool_7', tier: 7, rarity: 'Epic', name: 'Гелиевый инжектор', description: 'Для экстремальных нагрузок.', cost: { uranium: 500 }, baseStats: { cooling: 25, energyCost: 18 } },
+  { id: 'cool_8', tier: 8, rarity: 'Epic', name: 'Крио-капсула', description: 'Замораживает даже звук трения.', cost: { ancientTech: 15 }, baseStats: { cooling: 35, energyCost: 25 } },
+  { id: 'cool_9', tier: 9, rarity: 'Epic', name: 'Тепловой насос "Бездна"', description: 'Сбрасывает жар в почву.', cost: { ancientTech: 40, rubies: 20 }, baseStats: { cooling: 50, energyCost: 35 } },
+  { id: 'cool_10', tier: 10, rarity: 'Legendary', name: 'Эндотермический реактор', description: 'Превращает тепло в энергию.', cost: { ancientTech: 100, emeralds: 20 }, baseStats: { cooling: 70, energyCost: 0 } },
+  { id: 'cool_11', tier: 11, rarity: 'Legendary', name: 'Абсолютный ноль', description: 'Движение атомов почти замирает.', cost: { ancientTech: 300, diamonds: 20 }, baseStats: { cooling: 100, energyCost: 60 } },
+  { id: 'cool_12', tier: 12, rarity: 'Legendary', name: 'Стрингер Пустоты', description: 'Тепло уходит в параллельный мир.', cost: { ancientTech: 800, nanoSwarm: 1000 }, baseStats: { cooling: 150, energyCost: 80 } },
+  { id: 'cool_13', tier: 13, rarity: 'Godly', name: 'Энтропийный якорь', description: 'Запрещает металлу нагреваться.', cost: { ancientTech: 2000, rubies: 500 }, baseStats: { cooling: 250, energyCost: 120 } },
+  { id: 'cool_14', tier: 14, rarity: 'Godly', name: 'Ледяное сердце звезды', description: 'Холод межгалактического пространства.', cost: { ancientTech: 5000, emeralds: 500 }, baseStats: { cooling: 400, energyCost: 200 } },
+  { id: 'cool_15', tier: 15, rarity: 'Godly', name: 'Смерть Вселенной', description: 'Нагрев невозможен. Абсолютная тишина.', cost: { ancientTech: 10000 }, baseStats: { cooling: 999, energyCost: 500 } }
+];
+
+// 4. HULLS (Integrity, Slots)
+export const HULLS: HullPart[] = [
+  { id: 'hull_1', tier: 1, rarity: 'Common', name: 'Каркас из труб', description: '1 слот. Скрежещет, но держит.', cost: { clay: 50 }, baseStats: { maxIntegrity: 50, slots: 1, heatCap: 100 } },
+  { id: 'hull_2', tier: 2, rarity: 'Common', name: 'Грузовой бокс', description: '1 слот. Простой и дешевый.', cost: { stone: 200 }, baseStats: { maxIntegrity: 150, slots: 1, heatCap: 150 } },
+  { id: 'hull_3', tier: 3, rarity: 'Common', name: 'Сплав "Шахтер"', description: '2 слота. Рабочая лошадка.', cost: { copper: 500 }, baseStats: { maxIntegrity: 200, slots: 2, heatCap: 200 } },
+  { id: 'hull_4', tier: 4, rarity: 'Rare', name: 'Укрепленный кокон', description: '2 слота. Выдержит обвал.', cost: { iron: 1000 }, baseStats: { maxIntegrity: 400, slots: 2, heatCap: 250 } },
+  { id: 'hull_5', tier: 5, rarity: 'Rare', name: 'Рама "Авангард"', description: '3 слота. Для передовой.', cost: { silver: 1500 }, baseStats: { maxIntegrity: 500, slots: 3, heatCap: 300 } },
+  { id: 'hull_6', tier: 6, rarity: 'Rare', name: 'Корпус "Бункер"', description: '3 слота. Тяжелый и надежный.', cost: { gold: 2500 }, baseStats: { maxIntegrity: 1000, slots: 3, heatCap: 400 } },
+  { id: 'hull_7', tier: 7, rarity: 'Epic', name: 'Штурмовой дек', description: '4 слота. Боевая платформа.', cost: { titanium: 4000 }, baseStats: { maxIntegrity: 800, slots: 4, heatCap: 350 } },
+  { id: 'hull_8', tier: 8, rarity: 'Epic', name: 'Оболочка "Стелс"', description: '4 слота. Гасит вибрации.', cost: { uranium: 1500 }, baseStats: { maxIntegrity: 600, slots: 4, heatCap: 500 } },
+  { id: 'hull_9', tier: 9, rarity: 'Epic', name: 'Титановый Монолит', description: '5 слотов. Несокрушимый.', cost: { ancientTech: 50, rubies: 10 }, baseStats: { maxIntegrity: 1500, slots: 5, heatCap: 600 } },
+  { id: 'hull_10', tier: 10, rarity: 'Legendary', name: 'Экзо-скелет "Атлант"', description: '5 слотов. Поднимает горы.', cost: { ancientTech: 150, emeralds: 20 }, baseStats: { maxIntegrity: 2500, slots: 5, heatCap: 700 } },
+  { id: 'hull_11', tier: 11, rarity: 'Legendary', name: 'Живая броня', description: '6 слотов. Регенерация структуры.', cost: { ancientTech: 400, diamonds: 30 }, baseStats: { maxIntegrity: 3000, slots: 6, heatCap: 800 } },
+  { id: 'hull_12', tier: 12, rarity: 'Legendary', name: 'Композит "Зеркало"', description: '6 слотов. Отражает реальность.', cost: { ancientTech: 1000, nanoSwarm: 1500 }, baseStats: { maxIntegrity: 3500, slots: 6, heatCap: 900 } },
+  { id: 'hull_13', tier: 13, rarity: 'Godly', name: 'Ковчег Предтеч', description: '7 слотов. Дом в пустоте.', cost: { ancientTech: 3000, rubies: 1000 }, baseStats: { maxIntegrity: 5000, slots: 7, heatCap: 1200 } },
+  { id: 'hull_14', tier: 14, rarity: 'Godly', name: 'Сингулярная оболочка', description: '8 слотов. Поглощает урон в энергию.', cost: { ancientTech: 8000, emeralds: 1000 }, baseStats: { maxIntegrity: 8000, slots: 8, heatCap: 2000 } },
+  { id: 'hull_15', tier: 15, rarity: 'Godly', name: 'Несокрушимый', description: '10 слотов. Вечность.', cost: { ancientTech: 20000, diamonds: 1000 }, baseStats: { maxIntegrity: 20000, slots: 10, heatCap: 5000 } }
+];
+
+// 5. LOGIC CORES (Crit Chance)
+export const LOGIC_CORES: LogicPart[] = [
+  { id: 'cpu_1', tier: 1, rarity: 'Common', name: 'Калькулятор', description: 'Считает на пальцах.', cost: { clay: 50 }, baseStats: { critChance: 1, energyCost: 1 } },
+  { id: 'cpu_2', tier: 2, rarity: 'Common', name: 'Блок "Сигнал"', description: 'Ловит эхо породы.', cost: { copper: 150 }, baseStats: { critChance: 3, energyCost: 2 } },
+  { id: 'cpu_3', tier: 3, rarity: 'Common', name: 'Логика "Скан"', description: 'Видит структуру.', cost: { iron: 300 }, baseStats: { critChance: 4, energyCost: 3 } },
+  { id: 'cpu_4', tier: 4, rarity: 'Rare', name: 'Процессор "Вектор"', description: 'Быстрые вычисления.', cost: { silver: 600 }, baseStats: { critChance: 5, energyCost: 5 } },
+  { id: 'cpu_5', tier: 5, rarity: 'Rare', name: 'ИИ "Геолог"', description: 'Подсвечивает руду.', cost: { gold: 1000 }, baseStats: { critChance: 7, energyCost: 8 } },
+  { id: 'cpu_6', tier: 6, rarity: 'Rare', name: 'Матрица "Поиск"', description: 'Лучший лут.', cost: { titanium: 1500 }, baseStats: { critChance: 10, energyCost: 12 } },
+  { id: 'cpu_7', tier: 7, rarity: 'Epic', name: 'Ядро "Ритм"', description: 'Синхронизация с пульсом.', cost: { uranium: 800 }, baseStats: { critChance: 12, energyCost: 18 } },
+  { id: 'cpu_8', tier: 8, rarity: 'Epic', name: 'Квантовый чип', description: 'Вероятностные удары.', cost: { ancientTech: 20 }, baseStats: { critChance: 15, energyCost: 25 } },
+  { id: 'cpu_9', tier: 9, rarity: 'Epic', name: 'Нейросеть "Видение"', description: 'Обучается в процессе.', cost: { ancientTech: 50 }, baseStats: { critChance: 18, energyCost: 35 } },
+  { id: 'cpu_10', tier: 10, rarity: 'Legendary', name: 'Анализатор "Слабость"', description: 'Бьет в уязвимости.', cost: { ancientTech: 100, rubies: 50 }, baseStats: { critChance: 22, energyCost: 50 } },
+  { id: 'cpu_11', tier: 11, rarity: 'Legendary', name: 'Кибер-мозг "Альфа"', description: 'Чистый интеллект.', cost: { ancientTech: 250, emeralds: 50 }, baseStats: { critChance: 25, energyCost: 70 } },
+  { id: 'cpu_12', tier: 12, rarity: 'Legendary', name: 'Предсказатель', description: 'Видит будущее на 10с.', cost: { ancientTech: 600, diamonds: 50 }, baseStats: { critChance: 30, energyCost: 100 } },
+  { id: 'cpu_13', tier: 13, rarity: 'Godly', name: 'Система "Доминация"', description: 'Каждый крит сильнее.', cost: { ancientTech: 1500 }, baseStats: { critChance: 35, energyCost: 150 } },
+  { id: 'cpu_14', tier: 14, rarity: 'Godly', name: 'Матрица Братана', description: 'Режим пафоса.', cost: { ancientTech: 4000 }, baseStats: { critChance: 50, energyCost: 200 } },
+  { id: 'cpu_15', tier: 15, rarity: 'Godly', name: 'Божественный Архитектор', description: 'Все просчитано.', cost: { ancientTech: 10000 }, baseStats: { critChance: 100, energyCost: 500 } }
+];
+
+// 6. CONTROL UNITS (Click Multiplier)
+export const CONTROL_UNITS: ControlPart[] = [
+  { id: 'ctrl_1', tier: 1, rarity: 'Common', name: 'Старая кнопка', description: 'x1.0', cost: { clay: 10 }, baseStats: { clickMultiplier: 1.0, energyCost: 0 } },
+  { id: 'ctrl_2', tier: 2, rarity: 'Common', name: 'Механический тумблер', description: 'x1.2', cost: { stone: 50 }, baseStats: { clickMultiplier: 1.2, energyCost: 0 } },
+  { id: 'ctrl_3', tier: 3, rarity: 'Common', name: 'Педаль газа', description: 'x1.5', cost: { copper: 150 }, baseStats: { clickMultiplier: 1.5, energyCost: 1 } },
+  { id: 'ctrl_4', tier: 4, rarity: 'Rare', name: 'Джойстик "Ретро"', description: 'x2.0', cost: { iron: 300 }, baseStats: { clickMultiplier: 2.0, energyCost: 2 } },
+  { id: 'ctrl_5', tier: 5, rarity: 'Rare', name: 'Сенсорный ввод', description: 'x2.5', cost: { silver: 600 }, baseStats: { clickMultiplier: 2.5, energyCost: 4 } },
+  { id: 'ctrl_6', tier: 6, rarity: 'Rare', name: 'Кинетик-сенсор', description: 'x3.0', cost: { gold: 1000 }, baseStats: { clickMultiplier: 3.0, energyCost: 6 } },
+  { id: 'ctrl_7', tier: 7, rarity: 'Epic', name: 'Голо-панель', description: 'x4.0', cost: { titanium: 1500 }, baseStats: { clickMultiplier: 4.0, energyCost: 10 } },
+  { id: 'ctrl_8', tier: 8, rarity: 'Epic', name: 'Перчатка силы', description: 'x6.0', cost: { uranium: 800 }, baseStats: { clickMultiplier: 6.0, energyCost: 15 } },
+  { id: 'ctrl_9', tier: 9, rarity: 'Epic', name: 'Мысленный шлем', description: 'x10.0', cost: { ancientTech: 25 }, baseStats: { clickMultiplier: 10.0, energyCost: 25 } },
+  { id: 'ctrl_10', tier: 10, rarity: 'Legendary', name: 'Нейро-имплант', description: 'x15.0', cost: { ancientTech: 100 }, baseStats: { clickMultiplier: 15.0, energyCost: 40 } },
+  { id: 'ctrl_11', tier: 11, rarity: 'Legendary', name: 'Прямое подключение', description: 'x25.0', cost: { ancientTech: 250 }, baseStats: { clickMultiplier: 25.0, energyCost: 60 } },
+  { id: 'ctrl_12', tier: 12, rarity: 'Legendary', name: 'Волевой интерфейс', description: 'x50.0', cost: { ancientTech: 600 }, baseStats: { clickMultiplier: 50.0, energyCost: 100 } },
+  { id: 'ctrl_13', tier: 13, rarity: 'Godly', name: 'Симбиоз', description: 'x100.0', cost: { ancientTech: 1500 }, baseStats: { clickMultiplier: 100.0, energyCost: 200 } },
+  { id: 'ctrl_14', tier: 14, rarity: 'Godly', name: 'Единство души', description: 'x500.0', cost: { ancientTech: 5000 }, baseStats: { clickMultiplier: 500.0, energyCost: 400 } },
+  { id: 'ctrl_15', tier: 15, rarity: 'Godly', name: 'Творец', description: '1 клик = 1 слой.', cost: { ancientTech: 20000 }, baseStats: { clickMultiplier: 1000.0, energyCost: 1000 } }
+];
+
+// 7. GEARBOXES (Torque / Pierce)
+export const GEARBOXES: GearboxPart[] = [
+  { id: 'gear_1', tier: 1, rarity: 'Common', name: 'Ремни и шкивы', description: 'Игнор 2%', cost: { clay: 50 }, baseStats: { torque: 2, energyCost: 1 } },
+  { id: 'gear_2', tier: 2, rarity: 'Common', name: 'Шестерни из меди', description: 'Игнор 5%', cost: { copper: 200 }, baseStats: { torque: 5, energyCost: 2 } },
+  { id: 'gear_3', tier: 3, rarity: 'Common', name: 'Стальной червяк', description: 'Игнор 10%', cost: { iron: 400 }, baseStats: { torque: 10, energyCost: 4 } },
+  { id: 'gear_4', tier: 4, rarity: 'Rare', name: 'Планетарная передача', description: 'Игнор 15%', cost: { silver: 800 }, baseStats: { torque: 15, energyCost: 6 } },
+  { id: 'gear_5', tier: 5, rarity: 'Rare', name: 'Гидравлика "Напор"', description: 'Игнор 20%', cost: { gold: 1200 }, baseStats: { torque: 20, energyCost: 10 } },
+  { id: 'gear_6', tier: 6, rarity: 'Rare', name: 'Магнитная муфта', description: 'Игнор 25%', cost: { titanium: 2000 }, baseStats: { torque: 25, energyCost: 15 } },
+  { id: 'gear_7', tier: 7, rarity: 'Epic', name: 'Титановый редуктор', description: 'Игнор 30%', cost: { uranium: 1000 }, baseStats: { torque: 30, energyCost: 25 } },
+  { id: 'gear_8', tier: 8, rarity: 'Epic', name: 'Алмазные зубья', description: 'Игнор 40%', cost: { ancientTech: 20, diamonds: 10 }, baseStats: { torque: 40, energyCost: 40 } },
+  { id: 'gear_9', tier: 9, rarity: 'Epic', name: 'Герметичный привод', description: 'Игнор 50%', cost: { ancientTech: 60 }, baseStats: { torque: 50, energyCost: 60 } },
+  { id: 'gear_10', tier: 10, rarity: 'Legendary', name: 'Грави-стабилизатор', description: 'Игнор 60%', cost: { ancientTech: 150 }, baseStats: { torque: 60, energyCost: 80 } },
+  { id: 'gear_11', tier: 11, rarity: 'Legendary', name: 'Модуль "Прорыв"', description: 'Игнор 70%', cost: { ancientTech: 400 }, baseStats: { torque: 70, energyCost: 100 } },
+  { id: 'gear_12', tier: 12, rarity: 'Legendary', name: 'Вариатор "Тьма"', description: 'Игнор 80%', cost: { ancientTech: 1000 }, baseStats: { torque: 80, energyCost: 150 } },
+  { id: 'gear_13', tier: 13, rarity: 'Godly', name: 'Разрушитель связей', description: 'Игнор 90%', cost: { ancientTech: 3000 }, baseStats: { torque: 90, energyCost: 200 } },
+  { id: 'gear_14', tier: 14, rarity: 'Godly', name: 'Нулевое сопротивление', description: 'Игнор 95%', cost: { ancientTech: 8000 }, baseStats: { torque: 95, energyCost: 300 } },
+  { id: 'gear_15', tier: 15, rarity: 'Godly', name: 'Абсолютная тяга', description: 'Игнор 100%', cost: { ancientTech: 20000 }, baseStats: { torque: 100, energyCost: 500 } }
+];
+
+// 8. POWER CORES (Capacity)
+export const POWER_CORES: PowerCorePart[] = [
+  { id: 'pwr_1', tier: 1, rarity: 'Common', name: 'Батарейка АА', description: '5 ед.', cost: { clay: 50 }, baseStats: { energyOutput: 5 } },
+  { id: 'pwr_2', tier: 2, rarity: 'Common', name: 'Свинцовый АКБ', description: '15 ед.', cost: { copper: 150 }, baseStats: { energyOutput: 15 } },
+  { id: 'pwr_3', tier: 3, rarity: 'Common', name: 'Бензогенератор', description: '30 ед.', cost: { iron: 300 }, baseStats: { energyOutput: 30 } },
+  { id: 'pwr_4', tier: 4, rarity: 'Rare', name: 'Солнечная панель', description: '50 ед.', cost: { silver: 600 }, baseStats: { energyOutput: 50 } },
+  { id: 'pwr_5', tier: 5, rarity: 'Rare', name: 'Изотопный элемент', description: '80 ед.', cost: { gold: 1000 }, baseStats: { energyOutput: 80 } },
+  { id: 'pwr_6', tier: 6, rarity: 'Rare', name: 'Ядерная ячейка', description: '120 ед.', cost: { titanium: 1500 }, baseStats: { energyOutput: 120 } },
+  { id: 'pwr_7', tier: 7, rarity: 'Epic', name: 'Термоядерный узел', description: '200 ед.', cost: { uranium: 1000 }, baseStats: { energyOutput: 200 } },
+  { id: 'pwr_8', tier: 8, rarity: 'Epic', name: 'Плазменный шар', description: '350 ед.', cost: { ancientTech: 20 }, baseStats: { energyOutput: 350 } },
+  { id: 'pwr_9', tier: 9, rarity: 'Epic', name: 'Антиматериевый бак', description: '500 ед.', cost: { ancientTech: 50 }, baseStats: { energyOutput: 500 } },
+  { id: 'pwr_10', tier: 10, rarity: 'Legendary', name: 'Кварковая ячейка', description: '800 ед.', cost: { ancientTech: 120 }, baseStats: { energyOutput: 800 } },
+  { id: 'pwr_11', tier: 11, rarity: 'Legendary', name: 'Звездное ядро', description: '1200 ед.', cost: { ancientTech: 300 }, baseStats: { energyOutput: 1200 } },
+  { id: 'pwr_12', tier: 12, rarity: 'Legendary', name: 'Сингулярность', description: '2000 ед.', cost: { ancientTech: 800 }, baseStats: { energyOutput: 2000 } },
+  { id: 'pwr_13', tier: 13, rarity: 'Godly', name: 'Энергия Пустоты', description: '5000 ед.', cost: { ancientTech: 2000 }, baseStats: { energyOutput: 5000 } },
+  { id: 'pwr_14', tier: 14, rarity: 'Godly', name: 'Дыхание Вселенной', description: '10000 ед.', cost: { ancientTech: 5000 }, baseStats: { energyOutput: 10000 } },
+  { id: 'pwr_15', tier: 15, rarity: 'Godly', name: 'Вечный Двигатель', description: '∞', cost: { ancientTech: 15000 }, baseStats: { energyOutput: 99999 } }
+];
+
+// 9. ARMOR (Defense)
+export const ARMORS: ArmorPart[] = [
+  { id: 'arm_1', tier: 1, rarity: 'Common', name: 'Фольга', description: '1% защиты', cost: { clay: 50 }, baseStats: { defense: 1, energyCost: 0 } },
+  { id: 'arm_2', tier: 2, rarity: 'Common', name: 'Листы стали', description: '5%', cost: { iron: 200 }, baseStats: { defense: 5, energyCost: 1 } },
+  { id: 'arm_3', tier: 3, rarity: 'Common', name: 'Керамика', description: 'Жар +10%', cost: { stone: 400 }, baseStats: { defense: 10, energyCost: 2 } },
+  { id: 'arm_4', tier: 4, rarity: 'Rare', name: 'Свинец', description: 'Радиация +20%', cost: { copper: 600 }, baseStats: { defense: 15, energyCost: 5 } },
+  { id: 'arm_5', tier: 5, rarity: 'Rare', name: 'Титан', description: '15% защиты', cost: { titanium: 800 }, baseStats: { defense: 15, energyCost: 8 } },
+  { id: 'arm_6', tier: 6, rarity: 'Rare', name: 'Композит', description: '25% защиты', cost: { silver: 1200 }, baseStats: { defense: 25, energyCost: 12 } },
+  { id: 'arm_7', tier: 7, rarity: 'Epic', name: 'Магнитное поле', description: 'Отражение', cost: { gold: 2000 }, baseStats: { defense: 30, energyCost: 20 } },
+  { id: 'arm_8', tier: 8, rarity: 'Epic', name: 'Ионный щит', description: 'Энерго-защита', cost: { uranium: 1000 }, baseStats: { defense: 35, energyCost: 30 } },
+  { id: 'arm_9', tier: 9, rarity: 'Epic', name: 'Вольфрамовая броня', description: '40% защиты', cost: { ancientTech: 20 }, baseStats: { defense: 40, energyCost: 45 } },
+  { id: 'arm_10', tier: 10, rarity: 'Legendary', name: 'Силовое поле "Зенит"', description: '50% погл.', cost: { ancientTech: 60 }, baseStats: { defense: 50, energyCost: 60 } },
+  { id: 'arm_11', tier: 11, rarity: 'Legendary', name: 'Нейтронный слой', description: 'Неуязвим для рад.', cost: { ancientTech: 150 }, baseStats: { defense: 60, energyCost: 80 } },
+  { id: 'arm_12', tier: 12, rarity: 'Legendary', name: 'Пространственный сдвиг', description: 'Уклонение 20%', cost: { ancientTech: 400 }, baseStats: { defense: 70, energyCost: 100 } },
+  { id: 'arm_13', tier: 13, rarity: 'Godly', name: 'Щит "Абсолют"', description: '80% защиты', cost: { ancientTech: 1000 }, baseStats: { defense: 80, energyCost: 150 } },
+  { id: 'arm_14', tier: 14, rarity: 'Godly', name: 'Фрактальная броня', description: 'Распред. урон', cost: { ancientTech: 3000 }, baseStats: { defense: 90, energyCost: 250 } },
+  { id: 'arm_15', tier: 15, rarity: 'Godly', name: 'Божественная длань', description: 'Иммунитет', cost: { ancientTech: 10000 }, baseStats: { defense: 100, energyCost: 500 } }
+];
+
+export const FUSION_RECIPES: MergeRecipe[] = [
+  {
+    id: 'fusion_bit_destiny',
+    resultId: 'bit_14',
+    componentAId: 'bit_13',
+    componentBId: 'bit_11', 
+    catalyst: { resource: 'uranium', amount: 1000 },
+    description: 'Слияние Титана и Алмаза под давлением Ядра.'
+  },
+  {
+    id: 'fusion_eng_singularity',
+    resultId: 'eng_14',
+    componentAId: 'eng_13',
+    componentBId: 'eng_11',
+    catalyst: { resource: 'ancientTech', amount: 500 },
+    description: 'Перегрузка ядерного реактора древними технологиями.'
+  }
+];
+
+export const DRONES: DroneDefinition[] = [
+  {
+    id: 'COLLECTOR',
+    name: 'MK-1 "ПЫЛЕСОС"',
+    description: 'Автономный дрон сбора.',
+    cost: { ancientTech: 50, emeralds: 10, titanium: 2000 },
+    color: '#00FF00' 
+  },
+  {
+    id: 'COOLER',
+    name: 'MK-2 "ФРИЗЕР"',
+    description: 'Распыляет жидкий азот.',
+    cost: { ancientTech: 100, silver: 5000, diamonds: 5 },
+    color: '#00FFFF'
+  },
+  {
+    id: 'BATTLE',
+    name: 'MK-3 "ШЕРШЕНЬ"',
+    description: 'Боевой лазерный модуль.',
+    cost: { ancientTech: 200, uranium: 1000, diamonds: 20 },
+    color: '#FF0000'
+  }
+];
