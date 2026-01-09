@@ -9,8 +9,15 @@ if (!rootElement) {
 }
 
 const root = ReactDOM.createRoot(rootElement);
-root.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
-);
+
+// Global Error Handler for the "Black Screen" issue
+try {
+    root.render(
+      <React.StrictMode>
+        <App />
+      </React.StrictMode>
+    );
+} catch (e) {
+    console.error("CRITICAL RENDER ERROR:", e);
+    rootElement.innerHTML = `<div style="color:red; padding:20px;">CRITICAL ERROR: ${e instanceof Error ? e.message : String(e)}</div>`;
+}
