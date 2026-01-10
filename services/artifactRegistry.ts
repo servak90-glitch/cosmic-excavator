@@ -24,6 +24,7 @@ export const ARTIFACTS: ArtifactDefinition[] = [
     icon: '🌿',
     basePrice: 80,
     scrapAmount: 8,
+    allowedBiomes: ['ПОВЕРХНОСТЬ', 'ТВЕРДЫЙ КАМЕНЬ'],
     effectDescription: 'Получение XP +5%',
     modifiers: {} // Special handling in logic
   },
@@ -37,6 +38,7 @@ export const ARTIFACTS: ArtifactDefinition[] = [
     basePrice: 60,
     scrapAmount: 6,
     visualEffect: 'FROST_BLUE',
+    allowedBiomes: ['КРИСТАЛЬНЫЕ ГРОТЫ'],
     effectDescription: 'Охлаждение +3%',
     modifiers: { heatGenPct: 3 }
   },
@@ -49,6 +51,7 @@ export const ARTIFACTS: ArtifactDefinition[] = [
     icon: '➰',
     basePrice: 40,
     scrapAmount: 4,
+    allowedBiomes: ['МЕДНЫЕ ЖИЛЫ'],
     effectDescription: 'Шанс крита +1%',
     modifiers: { clickPowerPct: 1 }
   },
@@ -62,6 +65,7 @@ export const ARTIFACTS: ArtifactDefinition[] = [
     icon: '🌑',
     basePrice: 70,
     scrapAmount: 7,
+    allowedBiomes: ['ПЛАСТЫ ПУСТОТЫ'],
     effectDescription: 'Сила клика +2%',
     modifiers: { clickPowerPct: 2 }
   },
@@ -76,6 +80,7 @@ export const ARTIFACTS: ArtifactDefinition[] = [
     icon: '🔍',
     basePrice: 200,
     scrapAmount: 25,
+    allowedBiomes: ['КРИСТАЛЬНЫЕ ГРОТЫ'],
     effectDescription: 'Добыча ресурсов +10%',
     modifiers: { resourceMultPct: 10 }
   },
@@ -88,6 +93,7 @@ export const ARTIFACTS: ArtifactDefinition[] = [
     icon: '🧲',
     basePrice: 250,
     scrapAmount: 30,
+    allowedBiomes: ['МЕДНЫЕ ЖИЛЫ', 'ЗОЛОТАЯ ЗЕМЛЯ'],
     effectDescription: 'Сила клика +15%',
     modifiers: { clickPowerPct: 15 }
   },
@@ -113,6 +119,7 @@ export const ARTIFACTS: ArtifactDefinition[] = [
     basePrice: 350,
     scrapAmount: 40,
     visualEffect: 'MATRIX_GREEN',
+    allowedBiomes: ['РАДИОАКТИВНОЕ ЯДРО'],
     effectDescription: 'Авто-бурение +15%',
     modifiers: { drillSpeedPct: 15 }
   },
@@ -140,6 +147,7 @@ export const ARTIFACTS: ArtifactDefinition[] = [
     icon: '🧭',
     basePrice: 450,
     scrapAmount: 50,
+    allowedBiomes: ['ПЛАСТЫ ПУСТОТЫ'],
     effectDescription: 'Удача (События) +20%',
     modifiers: { luckPct: 20 }
   },
@@ -155,6 +163,7 @@ export const ARTIFACTS: ArtifactDefinition[] = [
     basePrice: 1000,
     scrapAmount: 150,
     visualEffect: 'GLOW_PURPLE',
+    allowedBiomes: ['ПЛАСТЫ ПУСТОТЫ'],
     effectDescription: 'Скорость бурения +25%, Нагрев -10%',
     modifiers: { drillSpeedPct: 25, heatGenPct: 10 }
   },
@@ -180,6 +189,7 @@ export const ARTIFACTS: ArtifactDefinition[] = [
     basePrice: 1500,
     scrapAmount: 200,
     visualEffect: 'MATRIX_GREEN',
+    allowedBiomes: ['ЗАЛЕЖИ ЖЕЛЕЗА', 'ЗОЛОТАЯ ЗЕМЛЯ'],
     effectDescription: 'Авто-бурение +40%',
     modifiers: { drillSpeedPct: 40 }
   },
@@ -220,6 +230,7 @@ export const ARTIFACTS: ArtifactDefinition[] = [
     basePrice: 5000,
     scrapAmount: 1000,
     visualEffect: 'GLOW_GOLD',
+    allowedBiomes: ['РАДИОАКТИВНОЕ ЯДРО'],
     effectDescription: 'ВСЕ ХАРАКТЕРИСТИКИ +50%',
     modifiers: { drillSpeedPct: 50, resourceMultPct: 50, clickPowerPct: 50 }
   },
@@ -233,6 +244,7 @@ export const ARTIFACTS: ArtifactDefinition[] = [
     basePrice: 6666,
     scrapAmount: 1200,
     visualEffect: 'GLOW_PURPLE',
+    allowedBiomes: ['ПЛАСТЫ ПУСТОТЫ'],
     effectDescription: 'Крит. удары бура x5 урона',
     modifiers: { clickPowerPct: 100 }
   },
@@ -264,21 +276,48 @@ export const getArtifactColor = (rarity: ArtifactRarity): string => {
   }
 };
 
-export const rollArtifact = (depth: number): ArtifactDefinition => {
+export const rollArtifact = (depth: number, luck: number = 0, currentBiomeName?: string): ArtifactDefinition => {
   const rand = Math.random();
-  let pool: ArtifactDefinition[] = [];
+  // Luck influence: Each 1 luck reduces "Common" range by 0.1% and shifts it to upper tiers
+  const luckFactor = luck / 1000; 
+  
+  // 1. FILTER BY BIOME FIRST
+  let eligibleArtifacts = ARTIFACTS.filter(a => {
+      // If artifact has allowedBiomes, check if currentBiomeName is in it.
+      if (a.allowedBiomes && a.allowedBiomes.length > 0) {
+          if (!currentBiomeName) return false;
+          return a.allowedBiomes.includes(currentBiomeName);
+      }
+      // If artifact has NO allowedBiomes, it drops everywhere
+      return true;
+  });
 
-  if (rand < 0.01 && depth > 20000) { // 1% Legendary (Deep only)
-    pool = ARTIFACTS.filter(a => a.rarity === ArtifactRarity.LEGENDARY || a.rarity === ArtifactRarity.ANOMALOUS);
-  } else if (rand < 0.05 && depth > 5000) { // 5% Epic
-    pool = ARTIFACTS.filter(a => a.rarity === ArtifactRarity.EPIC);
-  } else if (rand < 0.20) { // 15% Rare
-    pool = ARTIFACTS.filter(a => a.rarity === ArtifactRarity.RARE);
-  } else { // 80% Common
-    pool = ARTIFACTS.filter(a => a.rarity === ArtifactRarity.COMMON);
+  // If pool is empty (shouldn't happen given global items), fallback to global
+  if (eligibleArtifacts.length === 0) {
+      eligibleArtifacts = ARTIFACTS.filter(a => !a.allowedBiomes);
   }
 
-  // Fallback
+  let pool: ArtifactDefinition[] = [];
+
+  // Base Chances:
+  // Legendary: 1% (>20k)
+  // Epic: 5% (>5k)
+  // Rare: 20%
+  // Common: 74%
+
+  if ((rand < 0.01 + luckFactor) && depth > 20000) { 
+    pool = eligibleArtifacts.filter(a => a.rarity === ArtifactRarity.LEGENDARY || a.rarity === ArtifactRarity.ANOMALOUS);
+  } else if ((rand < 0.06 + luckFactor) && depth > 5000) { 
+    pool = eligibleArtifacts.filter(a => a.rarity === ArtifactRarity.EPIC);
+  } else if ((rand < 0.26 + luckFactor)) { 
+    pool = eligibleArtifacts.filter(a => a.rarity === ArtifactRarity.RARE);
+  } else { 
+    pool = eligibleArtifacts.filter(a => a.rarity === ArtifactRarity.COMMON);
+  }
+
+  // Fallback to lower rarity if high tier roll failed (empty pool)
+  if (pool.length === 0) pool = eligibleArtifacts.filter(a => a.rarity === ArtifactRarity.COMMON);
+  // Absolute Fallback
   if (pool.length === 0) pool = ARTIFACTS.filter(a => a.rarity === ArtifactRarity.COMMON);
 
   return pool[Math.floor(Math.random() * pool.length)];

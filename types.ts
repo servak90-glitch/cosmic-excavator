@@ -58,6 +58,7 @@ export interface ArtifactDefinition {
   basePrice: number; 
   scrapAmount: number; 
   visualEffect?: VisualEffectType; 
+  allowedBiomes?: string[]; // IF defined, only drops in these biomes
   
   effectDescription: string;
   modifiers: {
@@ -113,28 +114,31 @@ export interface CoolerPart extends BaseDrillPart {
   };
 }
 
-// 4. HULLS (Slots, Integrity)
+// 4. HULLS (Slots, Integrity, Regen)
 export interface HullPart extends BaseDrillPart {
   baseStats: {
     maxIntegrity: number;
+    regen: number; // HP/sec passive repair
     slots: number; // Limits total modules (abstractly)
     heatCap: number; // Thermal mass
   };
 }
 
-// 5. LOGIC CORES (Crit, Intelligence)
+// 5. LOGIC CORES (Crit, Intelligence, Luck)
 export interface LogicPart extends BaseDrillPart {
   baseStats: {
     critChance: number; // %
+    luck: number; // % bonus chance for events/loot
     energyCost: number;
     predictionTime?: number; // For events
   };
 }
 
-// 6. CONTROL UNITS (Click Multiplier)
+// 6. CONTROL UNITS (Click Multiplier, Venting)
 export interface ControlPart extends BaseDrillPart {
   baseStats: {
     clickMultiplier: number;
+    ventSpeed: number; // Multiplier for cooling when NOT drilling
     energyCost: number;
   };
 }
@@ -142,24 +146,24 @@ export interface ControlPart extends BaseDrillPart {
 // 7. GEARBOXES (Torque / Hardness Pierce)
 export interface GearboxPart extends BaseDrillPart {
   baseStats: {
-    torque: number; // % hardness ignore
+    torque: number; // % hardness ignore (Allows drilling at full speed at depth)
     energyCost: number; // Efficiency loss
   };
 }
 
-// 8. POWER CORES (Energy Capacity)
+// 8. POWER CORES (Energy Capacity, Drone Boost)
 export interface PowerCorePart extends BaseDrillPart {
   baseStats: {
     energyOutput: number;
+    droneEfficiency: number; // Multiplier for all drone effects
   };
 }
 
 // 9. ARMOR (Resistances)
 export interface ArmorPart extends BaseDrillPart {
   baseStats: {
-    defense: number; // % Damage reduction
-    radResist?: number;
-    heatResist?: number;
+    defense: number; // % Damage reduction from Enemies
+    hazardResist: number; // % Damage reduction from Biome Hazards
     energyCost: number; // Heavy armor might need servos
   };
 }
@@ -176,6 +180,14 @@ export interface DrillState {
   armor: ArmorPart;
 }
 
+export type FusionConditionType = 'ZERO_HEAT' | 'MAX_HEAT' | 'DEPTH_REACHED' | 'NO_DAMAGE';
+
+export interface FusionCondition {
+  type: FusionConditionType;
+  target: number; // e.g. 60 seconds, or 50000 depth
+  description: string;
+}
+
 export interface MergeRecipe {
   id: string;
   resultId: string;
@@ -185,6 +197,7 @@ export interface MergeRecipe {
     resource: ResourceType;
     amount: number;
   };
+  condition?: FusionCondition; // New Logic Requirement
   description: string;
 }
 
@@ -316,14 +329,36 @@ export interface FlyingObject {
   vy: number;
 }
 
-export type DroneType = 'COLLECTOR' | 'COOLER' | 'BATTLE';
+export type DroneType = 'COLLECTOR' | 'COOLER' | 'BATTLE' | 'REPAIR' | 'MINER';
 
 export interface DroneDefinition {
   id: DroneType;
   name: string;
   description: string;
-  cost: Partial<Resources>;
+  baseCost: Partial<Resources>;
+  costMultiplier: number; // For upgrades
+  maxLevel: number;
+  effectDescription: (level: number) => string;
   color: string;
+}
+
+// --- NARRATIVE ENGINE TYPES ---
+export type AIState = 'IDLE' | 'PANIC' | 'GLITCH' | 'SARCASM' | 'ANALYSIS';
+
+export interface NarrativeContext {
+  depth: number;
+  heat: number;
+  integrity: number;
+  biome: string;
+  eventActive: boolean;
+  afkTime: number; // seconds
+}
+
+export interface LogFragment {
+  id: string;
+  text: string;
+  tags: string[]; // e.g., "heat_high", "biome_lava", "rare_loot"
+  weight: number;
 }
 
 export interface GameState {
@@ -348,15 +383,20 @@ export interface GameState {
   level: number;
   activeEffects: ActiveEffect[];
   eventQueue: GameEvent[];
+  recentEventIds: string[]; 
   flyingObjects: FlyingObject[];
   
   currentBoss: Boss | null; 
   lastBossDepth: number;    
 
   activeDrones: DroneType[]; 
+  droneLevels: Record<DroneType, number>; 
 
   storageLevel: 0 | 1 | 2; 
   forgeUnlocked: boolean; 
   cityUnlocked: boolean; 
   skillsUnlocked: boolean; 
+  
+  // NARRATIVE STATE
+  aiState: AIState;
 }

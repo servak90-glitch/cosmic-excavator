@@ -172,7 +172,7 @@ export class AudioEngine {
   }
 
   playClick() {
-    if (!this.ctx) return;
+    if (!this.ctx || !this.masterBus) return;
     const osc = this.ctx.createOscillator();
     const g = this.ctx.createGain();
     osc.type = 'square';
@@ -181,9 +181,84 @@ export class AudioEngine {
     g.gain.setValueAtTime(0.03, this.ctx.currentTime);
     g.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.05);
     osc.connect(g);
-    g.connect(this.masterBus!);
+    g.connect(this.masterBus);
     osc.start();
     osc.stop(this.ctx.currentTime + 0.05);
+  }
+
+  // --- NEW SFX ---
+
+  playAlarm() {
+    if (!this.ctx || !this.masterBus) return;
+    const osc = this.ctx.createOscillator();
+    const g = this.ctx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(800, this.ctx.currentTime);
+    osc.frequency.linearRampToValueAtTime(400, this.ctx.currentTime + 0.3);
+    osc.frequency.linearRampToValueAtTime(800, this.ctx.currentTime + 0.6);
+    
+    g.gain.setValueAtTime(0.1, this.ctx.currentTime);
+    g.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 0.6);
+    
+    osc.connect(g);
+    g.connect(this.masterBus);
+    osc.start();
+    osc.stop(this.ctx.currentTime + 0.6);
+  }
+
+  playLegendary() {
+    if (!this.ctx || !this.masterBus) return;
+    const now = this.ctx.currentTime;
+    // Major chord arpeggio
+    [440, 554.37, 659.25, 880, 1108.73].forEach((freq, i) => {
+        const osc = this.ctx!.createOscillator();
+        const g = this.ctx!.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, now + i * 0.1);
+        g.gain.setValueAtTime(0, now + i * 0.1);
+        g.gain.linearRampToValueAtTime(0.1, now + i * 0.1 + 0.05);
+        g.gain.exponentialRampToValueAtTime(0.001, now + i * 0.1 + 2);
+        osc.connect(g);
+        g.connect(this.masterBus!);
+        osc.start(now + i * 0.1);
+        osc.stop(now + i * 0.1 + 2);
+    });
+  }
+
+  playBossHit() {
+    if (!this.ctx || !this.masterBus) return;
+    const osc = this.ctx.createOscillator();
+    const g = this.ctx.createGain();
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(100, this.ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(30, this.ctx.currentTime + 0.2);
+    
+    g.gain.setValueAtTime(0.2, this.ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.2);
+    
+    osc.connect(g);
+    g.connect(this.masterBus);
+    osc.start();
+    osc.stop(this.ctx.currentTime + 0.2);
+  }
+
+  playFusion() {
+    if (!this.ctx || !this.masterBus) return;
+    const osc = this.ctx.createOscillator();
+    const g = this.ctx.createGain();
+    osc.type = 'sawtooth';
+    // Power up sound
+    osc.frequency.setValueAtTime(100, this.ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(2000, this.ctx.currentTime + 1.5);
+    
+    g.gain.setValueAtTime(0, this.ctx.currentTime);
+    g.gain.linearRampToValueAtTime(0.1, this.ctx.currentTime + 1.0);
+    g.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 1.5);
+    
+    osc.connect(g);
+    g.connect(this.masterBus);
+    osc.start();
+    osc.stop(this.ctx.currentTime + 1.5);
   }
 }
 

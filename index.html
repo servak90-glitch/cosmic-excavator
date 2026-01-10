@@ -20,6 +20,25 @@
           extend: {
             colors: {
               zinc: { 950: '#09090b' }
+            },
+            animation: {
+              'float-up': 'floatUp 1s ease-out forwards',
+              'glitch-anim': 'glitch 0.3s cubic-bezier(.25, .46, .45, .94) both infinite',
+            },
+            keyframes: {
+              floatUp: {
+                '0%': { transform: 'translateY(0) scale(1)', opacity: '1' },
+                '50%': { opacity: '1' },
+                '100%': { transform: 'translateY(-40px) scale(1.1)', opacity: '0' },
+              },
+              glitch: {
+                '0%': { transform: 'translate(0)' },
+                '20%': { transform: 'translate(-2px, 2px)' },
+                '40%': { transform: 'translate(-2px, -2px)' },
+                '60%': { transform: 'translate(2px, 2px)' },
+                '80%': { transform: 'translate(2px, -2px)' },
+                '100%': { transform: 'translate(0)' }
+              }
             }
           }
         }
@@ -51,7 +70,22 @@
             -ms-overflow-style: none;
             scrollbar-width: none;
         }
-        /* CRT Scanline Effect */
+        
+        /* DYNAMIC CRT EFFECT */
+        :root {
+            --crt-warp: 0px;
+            --crt-aberration: 0px;
+            --crt-scanline-opacity: 0.2;
+        }
+
+        .crt {
+            position: relative;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+        }
+
+        /* Scanlines */
         .crt::before {
             content: " ";
             display: block;
@@ -60,10 +94,35 @@
             left: 0;
             bottom: 0;
             right: 0;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
-            z-index: 50;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, var(--crt-scanline-opacity)) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 9999;
             background-size: 100% 4px, 3px 100%;
             pointer-events: none;
+        }
+
+        /* Chromatic Aberration & Glow */
+        .crt::after {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: rgba(18, 16, 16, 0.1);
+            opacity: 0;
+            z-index: 9999;
+            pointer-events: none;
+            box-shadow: inset 0 0 100px rgba(0,0,0,0.9);
+        }
+
+        /* Screen Distortion Hook */
+        .screen-content {
+            filter: drop-shadow(var(--crt-aberration) 0 0 rgba(255,0,0,0.5)) drop-shadow(calc(var(--crt-aberration) * -1) 0 0 rgba(0,255,255,0.5));
+            transform: perspective(1000px) rotateX(var(--crt-warp));
+            transition: filter 0.2s, transform 0.2s;
+            height: 100%;
+            width: 100%;
         }
     </style>
 <script type="importmap">
@@ -71,15 +130,13 @@
   "imports": {
     "react/": "https://esm.sh/react@^19.2.3/",
     "react": "https://esm.sh/react@^19.2.3",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
-    "@google/genai": "https://esm.sh/@google/genai@^1.35.0"
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/"
   }
 }
 </script>
 </head>
 <body class="crt">
-    <div id="root"></div>
-    <!-- CRITICAL: Entry point for the React App -->
+    <div id="root" class="screen-content"></div>
     <script type="module" src="./index.tsx"></script>
 </body>
 </html>
