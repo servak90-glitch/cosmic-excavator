@@ -108,7 +108,10 @@ const UpgradeCard: React.FC<{
   );
 
   const isFusionLocked = next.tier >= 13;
-  const canAfford = !isFusionLocked && (Object.keys(next.cost) as (keyof Resources)[]).every(r => resources[r] >= (next.cost[r] || 0));
+  // Type-safe access to optional cost object
+  const cost = (next.cost || {}) as Partial<Resources>;
+  const costKeys = Object.keys(cost) as Array<keyof Resources>;
+  const canAfford = !isFusionLocked && costKeys.every(r => resources[r] >= (cost[r] || 0));
 
   return (
     <div className="bg-zinc-900 p-3 md:p-4 border border-zinc-700 flex flex-col justify-between min-h-[180px] md:min-h-[220px] hover:border-zinc-500 transition-colors group relative">
@@ -144,11 +147,11 @@ const UpgradeCard: React.FC<{
              {isFusionLocked ? (
                 <div className="text-[10px] text-purple-400 font-bold font-mono py-2 text-center animate-pulse">ТРЕБУЕТСЯ СЛИЯНИЕ</div>
              ) : (
-                (Object.keys(next.cost) as (keyof Resources)[]).map(res => (
+                costKeys.map(res => (
                    <div key={res} className="flex justify-between text-[9px] md:text-[10px] font-mono border-b border-zinc-800/50 pb-0.5">
                       <span className="text-zinc-500 uppercase">{res}</span>
-                      <span className={resources[res] >= (next.cost[res] || 0) ? 'text-green-400' : 'text-red-500'}>
-                         {next.cost[res]?.toLocaleString()}
+                      <span className={resources[res] >= (cost[res] || 0) ? 'text-green-400' : 'text-red-500'}>
+                         {cost[res]?.toLocaleString()}
                       </span>
                    </div>
                 ))
@@ -580,7 +583,8 @@ const App: React.FC = () => {
               bossAttackTickRef.current = 0;
               const dmg = Math.max(1, nextBoss.damage * (1 - stats.defense / 100)); 
               newIntegrity -= dmg;
-              setBossHitEffect(false); 
+              // Player takes damage feedback is handled in state check below if needed, 
+              // but text is here:
               if (dmg > 5) {
                   addLog(`УДАР ПО КОРПУСУ: -${dmg.toFixed(0)}%`, "text-red-500");
                   audioEngine.playBossHit(); 
@@ -755,7 +759,45 @@ const App: React.FC = () => {
                 audioEngine.playAlarm(); 
                 textRef.current?.addText(centerX, centerY, "ПЕРЕГРЕВ!", 'CRIT');
             }
-          } else {
+          } 
+          // --- COMBAT LOGIC ---
+          else if (isDrilling && nextBoss && !isOverheated) {
+             const baseDmg = stats.totalDamage * (stats.clickMult || 1) * (1 + (skillMods.clickPowerPct + artifactMods.clickPowerPct)/100);
+             const isCrit = Math.random() < (stats.critChance / 100);
+             const finalDamage = isCrit ? baseDmg * 2.0 : baseDmg;
+
+             nextBoss.currentHp = Math.max(0, nextBoss.currentHp - finalDamage);
+             
+             // Heat generation from combat
+             const heatReduction = (1 - (skillMods.heatGenReductionPct + artifactMods.heatGenPct)/100);
+             newHeat += 0.5 * heatReduction;
+
+             if (Math.random() < 0.3 || finalDamage > 100) { 
+                 setBossHitEffect(true);
+                 setTimeout(() => setBossHitEffect(false), 80);
+                 
+                 textRef.current?.addText(
+                     centerX + (Math.random() - 0.5) * 150,
+                     centerY - 50 + (Math.random() - 0.5) * 50,
+                     finalDamage.toFixed(0),
+                     isCrit ? 'CRIT' : 'DAMAGE'
+                 );
+
+                 if (isCrit) {
+                     audioEngine.playClick(); // High pitch click for Crit
+                 } else {
+                     audioEngine.playBossHit(); // Normal hit sound
+                 }
+             }
+
+             if (newHeat >= 100) {
+                 setIsOverheated(true);
+                 setIsDrilling(false);
+                 addLog("ПЕРЕГРЕВ ОРУДИЯ!", "text-red-500");
+                 audioEngine.playAlarm();
+             }
+          }
+          else {
              const coolingDisabled = nextEffects.some(e => e.modifiers.coolingDisabled);
              if (!coolingDisabled) {
                  newHeat = Math.max(0, newHeat - (stats.totalCooling * 0.2 + 0.1) * stats.ventSpeed);
