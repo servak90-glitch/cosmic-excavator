@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { View, GameState, Resources, DrillPart, Biome, ActiveEffect, InventoryItem, VisualEffectType, Quest, QuestRequirement, HullPart, FlyingObject, Boss, DroneType, DrillFX, EnginePart, CoolerPart, LogicPart, ControlPart, GearboxPart, PowerCorePart, ArmorPart, ArtifactRarity, AIState } from './types';
+import { View, GameState, Resources, ResourceType, FlyingObject, DroneType, HullPart, DrillPart, EnginePart, CoolerPart, LogicPart, ControlPart, GearboxPart, PowerCorePart, ArmorPart, ArtifactRarity, AIState, InventoryItem, Quest, VisualEffectType } from './types';
 import { BIOMES, BITS, ENGINES, COOLERS, HULLS, LOGIC_CORES, CONTROL_UNITS, GEARBOXES, POWER_CORES, ARMORS, DRONES, FUSION_RECIPES } from './constants';
 import DrillRenderer from './components/DrillRenderer';
 import BossRenderer from './components/BossRenderer'; 
@@ -8,7 +8,7 @@ import FlyingObjectsRenderer from './components/FlyingObjectsRenderer';
 import ParticleRenderer, { ParticleHandle } from './components/ParticleRenderer'; 
 import DroneRenderer from './components/DroneRenderer'; 
 import FloatingTextOverlay, { FloatingTextHandle } from './components/FloatingTextOverlay';
-import { audioEngine, MusicMode } from './services/audioEngine'; 
+import { audioEngine } from './services/audioEngine'; 
 import { rollRandomEvent, createEffect } from './services/eventRegistry';
 import { calculateSkillModifiers, getSkillCost, SKILLS } from './services/skillRegistry';
 import { ARTIFACTS, rollArtifact, getArtifactColor } from './services/artifactRegistry';
@@ -190,17 +190,16 @@ const App: React.FC = () => {
     {msg: "ОЖИДАНИЕ КОМАНД..."}
   ]);
   
-  const lastBiomeRef = useRef<string>(BIOMES[0].name);
   const consoleEndRef = useRef<HTMLDivElement>(null);
   const eventCheckTickRef = useRef(0); 
   const hazardTickRef = useRef(0);
   const bossAttackTickRef = useRef(0); 
   const droneTickRef = useRef(0);
-  const narrativeTickRef = useRef(0); // NEW: Timer for narrative
-  const afkTimerRef = useRef(0);      // NEW: AFK Timer
-  const lastInteractTimeRef = useRef(Date.now()); // NEW: Interaction tracker
+  const narrativeTickRef = useRef(0); // Timer for narrative
+  const afkTimerRef = useRef(0);      // AFK Timer
+  const lastInteractTimeRef = useRef(Date.now()); // Interaction tracker
 
-  // --- NEW: FUSION CONDITION TRACKERS ---
+  // --- FUSION CONDITION TRACKERS ---
   const heatStabilityTimerRef = useRef(0); // Counts seconds of heat < 1%
   const [heatStabilityDisplay, setHeatStabilityDisplay] = useState(0);
 
@@ -211,7 +210,7 @@ const App: React.FC = () => {
   
   // REFS
   const particleRef = useRef<ParticleHandle>(null);
-  const textRef = useRef<FloatingTextHandle>(null); // NEW: Floating Text Ref
+  const textRef = useRef<FloatingTextHandle>(null); // Floating Text Ref
   const drillContainerRef = useRef<HTMLDivElement>(null); 
 
   const addLog = useCallback((msg: string, color?: string) => {
@@ -273,10 +272,8 @@ const App: React.FC = () => {
         mergedState.drill.power = restorePart(mergedState.drill.power, POWER_CORES);
         mergedState.drill.armor = restorePart(mergedState.drill.armor, ARMORS);
 
-        // Ensure droneLevels exists if loading old save
         if (!mergedState.droneLevels) {
             mergedState.droneLevels = { COLLECTOR: 0, COOLER: 0, BATTLE: 0, REPAIR: 0, MINER: 0 };
-            // Migration for old saves that used simple activeDrones array
             mergedState.activeDrones.forEach((d: string) => {
                 if (d === 'COLLECTOR') mergedState.droneLevels.COLLECTOR = 1;
                 if (d === 'COOLER') mergedState.droneLevels.COOLER = 1;
@@ -326,39 +323,6 @@ const App: React.FC = () => {
 
   const getResourceLabel = (res: keyof Resources): string => { const labels: Record<string, string> = { clay: 'ГЛИНА', stone: 'КАМЕНЬ', copper: 'МЕДЬ', iron: 'ЖЕЛЕЗО', silver: 'СЕРЕБРО', gold: 'ЗОЛОТО', titanium: 'ТИТАН', uranium: 'УРАН', nanoSwarm: 'НАНО', ancientTech: 'TECH', rubies: 'РУБИН', emeralds: 'ИЗУМР', diamonds: 'АЛМАЗ' }; return labels[res] || res; };
 
-  const handleObjectCatch = useCallback((id: string, type: FlyingObject['type']) => {
-      resetAFK();
-      setState(prev => {
-         const obj = prev.flyingObjects.find(o => o.id === id);
-         if (!obj) return prev;
-         const newResources = { ...prev.resources };
-         let newXp = prev.xp;
-         let log = "";
-         
-         const rect = drillContainerRef.current?.getBoundingClientRect();
-         const centerX = rect ? rect.width / 2 : window.innerWidth / 2;
-         const centerY = rect ? rect.height / 2 : window.innerHeight / 2;
-
-         if (type === 'GEODE_SMALL') { 
-             const gem = Math.random() > 0.5 ? 'rubies' : 'emeralds'; 
-             newResources[gem] += 1; newXp += 25; 
-             textRef.current?.addText(centerX, centerY, `+1 ${getResourceLabel(gem)}`, 'RESOURCE');
-         }
-         else if (type === 'GEODE_LARGE') { 
-             const gem = 'diamonds'; 
-             newResources[gem] += 1; newXp += 100; 
-             textRef.current?.addText(centerX, centerY, `+1 ${getResourceLabel(gem)}`, 'RESOURCE');
-         }
-         else { 
-             newResources.ancientTech += 2; newXp += 50; 
-             textRef.current?.addText(centerX, centerY, `+2 TECH`, 'RESOURCE');
-         }
-         
-         audioEngine.playClick();
-         return { ...prev, resources: newResources, xp: newXp, flyingObjects: prev.flyingObjects.filter(o => o.id !== id) };
-      });
-  }, []);
-
   const calculateStats = (drill: typeof INITIAL_STATE.drill) => {
      const energyProd = drill.power.baseStats.energyOutput;
      const energyCons = drill.bit.baseStats.energyCost + drill.engine.baseStats.energyCost + drill.cooling.baseStats.energyCost + drill.logic.baseStats.energyCost + drill.control.baseStats.energyCost + drill.gearbox.baseStats.energyCost + drill.armor.baseStats.energyCost;
@@ -371,8 +335,6 @@ const App: React.FC = () => {
         totalDamage: drill.bit.baseStats.damage * energyEfficiency,
         totalSpeed: drill.engine.baseStats.speed * energyEfficiency,
         totalCooling: drill.cooling.baseStats.cooling * energyEfficiency,
-        
-        // NEW STATS AGGREGATION
         torque: drill.gearbox.baseStats.torque || 0,
         critChance: drill.logic.baseStats.critChance,
         luck: drill.logic.baseStats.luck || 0,
@@ -409,7 +371,7 @@ const App: React.FC = () => {
         let newHeat = prev.heat;
         let newDepth = prev.depth;
         let newIntegrity = prev.integrity;
-        const newResources = { ...prev.resources };
+        let newResources = { ...prev.resources };
         let nextEffects = [...prev.activeEffects];
         const nextQueue = [...prev.eventQueue];
         let newXp = prev.xp;
@@ -424,14 +386,10 @@ const App: React.FC = () => {
         const centerX = rect ? rect.width / 2 : window.innerWidth / 2;
         const centerY = rect ? rect.height / 2 : window.innerHeight / 2;
 
-        // --- CHECK ACTIVE EFFECTS ---
         const isAutoDisabled = nextEffects.some(e => e.modifiers.autoClickDisabled);
         const isHeatUnstable = nextEffects.some(e => e.modifiers.heatInstability);
-
-        // --- CALCULATE MODIFIERS ---
         const skillMods = calculateSkillModifiers(prev.skillLevels);
         
-        // Gather artifact modifiers
         const artifactMods = {
             clickPowerPct: 0,
             drillSpeedPct: 0,
@@ -453,19 +411,17 @@ const App: React.FC = () => {
             }
         });
 
-        // Apply Artifact Luck to stats for event/roll calculations
         stats.luck += artifactMods.luckPct;
 
-        // --- CONDITION TRACKING (FUSION) ---
-        // 1. Heat Stability (ZERO_HEAT)
+        // FUSION Conditions
         if (newHeat <= 1) {
-            heatStabilityTimerRef.current += 0.1; // 100ms interval
+            heatStabilityTimerRef.current += 0.1; 
         } else {
             heatStabilityTimerRef.current = 0;
         }
         setHeatStabilityDisplay(heatStabilityTimerRef.current);
 
-        // --- NARRATIVE ENGINE INTEGRATION ---
+        // NARRATIVE
         narrativeTickRef.current++;
         afkTimerRef.current = (Date.now() - lastInteractTimeRef.current) / 1000;
         
@@ -476,7 +432,6 @@ const App: React.FC = () => {
         const actualBiomeIndex = currentBiomeIndex >= 0 ? currentBiomeIndex : 0;
         const currentBiome = BIOMES[actualBiomeIndex];
 
-        // Update AI State every tick based on context
         const narrativeContext = {
             depth: newDepth,
             heat: newHeat,
@@ -487,18 +442,15 @@ const App: React.FC = () => {
         };
         const nextAIState = narrativeManager.getAIState(narrativeContext);
 
-        // Generate Logs randomly (approx every 3 seconds)
         if (narrativeTickRef.current > 30) {
             narrativeTickRef.current = 0;
-            if (Math.random() < 0.3) { // 30% chance every 3s
+            if (Math.random() < 0.3) { 
                 const log = narrativeManager.generateLog(narrativeContext);
                 if (log) addLog(log.msg, log.color);
             }
         }
 
-        // --- LOGIC CORE PREDICTION (AUTO-THROTTLE) ---
-        // Prevents overheating by stopping drill automatically
-        // DISABLED IF AI IS GLITCHING OR AUTO DISABLED
+        // AUTO-THROTTLE
         if (isDrilling && stats.predictionTime > 0 && !nextBoss && !isAutoDisabled) {
             const safetyMargin = Math.max(90, 100 - (stats.predictionTime * 2)); 
             if (newHeat >= safetyMargin) {
@@ -506,19 +458,18 @@ const App: React.FC = () => {
             }
         }
         
-        // --- LOGIC CORE PREDICTION (AUTO-START) ---
+        // AUTO-START
         if (!isDrilling && !isOverheated && !isBroken && stats.predictionTime >= 5 && (activeView === View.DRILL || activeView === View.COMBAT) && !isAutoDisabled) {
             if (newHeat <= 5) { 
                 setIsDrilling(true);
             }
         }
 
-        // --- QUESTS AUTO-GENERATION ---
         if (prev.activeQuests.length === 0) {
             nextActiveQuests = generateQuestBatch(prev.depth, prev.level);
         }
 
-        // --- FLYING OBJECTS SPAWNER ---
+        // SPAWNER
         if (Math.random() < 0.005 && nextObjects.length < 3) {
             const id = Math.random().toString(36).substr(2, 9);
             const r = Math.random();
@@ -540,14 +491,13 @@ const App: React.FC = () => {
             y: obj.y + obj.vy
         })).filter(obj => obj.y > -20); 
 
-        // --- ANALYZER TICK ---
+        // ANALYZER
         if (nextAnalyzer.activeItemInstanceId) {
             nextAnalyzer.timeLeft = Math.max(0, nextAnalyzer.timeLeft - 1); 
             if (nextAnalyzer.timeLeft <= 0) {
                const itemIndex = nextInventory.findIndex(i => i.instanceId === nextAnalyzer.activeItemInstanceId);
                if (itemIndex > -1) {
                   nextInventory[itemIndex] = { ...nextInventory[itemIndex], isIdentified: true };
-                  // PLAY SUCCESS SOUND
                   audioEngine.playLegendary(); 
                   textRef.current?.addText(centerX, centerY, "АНАЛИЗ ЗАВЕРШЕН", 'INFO');
                }
@@ -555,16 +505,14 @@ const App: React.FC = () => {
             }
         }
         
-        // Drone Logic
+        // DRONES
         droneTickRef.current++;
         if (droneTickRef.current >= 10) { 
            droneTickRef.current = 0;
-           // DRONES ARE DISABLED BY MAGNETIC STORM
            if (!isAutoDisabled) {
                const levels = prev.droneLevels || { COLLECTOR:0, COOLER:0, BATTLE:0, REPAIR:0, MINER:0 };
                const efficiency = stats.droneEfficiency;
 
-               // 1. COLLECTOR (MK-1)
                if (levels.COLLECTOR > 0 && nextObjects.length > 0) {
                   const target = nextObjects[0];
                   const multiplier = (1 + (levels.COLLECTOR * 0.2)) * efficiency;
@@ -573,28 +521,23 @@ const App: React.FC = () => {
                       const gem = Math.random() > 0.5 ? 'rubies' : 'emeralds'; 
                       newResources[gem] += Math.floor(1 * multiplier); 
                       newXp += 25 * multiplier; 
-                      textRef.current?.addText(centerX, centerY - 50, `+${Math.floor(1*multiplier)} ${getResourceLabel(gem)}`, 'RESOURCE');
                   } else if (target.type === 'GEODE_LARGE') { 
                       const gem = 'diamonds'; 
                       newResources[gem] += Math.floor(1 * multiplier); 
                       newXp += 100 * multiplier; 
-                      textRef.current?.addText(centerX, centerY - 50, `+${Math.floor(1*multiplier)} ${getResourceLabel(gem)}`, 'RESOURCE');
                   } else { 
                       newResources.ancientTech += Math.floor(2 * multiplier); 
                       newXp += 50 * multiplier; 
-                      textRef.current?.addText(centerX, centerY - 50, `+${Math.floor(2*multiplier)} TECH`, 'RESOURCE');
                   }
                   nextObjects = nextObjects.filter(o => o.id !== target.id);
                   audioEngine.playClick();
                }
 
-               // 2. COOLER (MK-2)
                if (levels.COOLER > 0 && newHeat > 0) {
                    const coolAmount = 1.5 * levels.COOLER * efficiency;
                    newHeat = Math.max(0, newHeat - coolAmount);
                }
 
-               // 3. BATTLE (MK-3)
                if (levels.BATTLE > 0 && nextBoss) {
                   const dmg = 50 * levels.BATTLE * efficiency;
                   nextBoss = { ...nextBoss, currentHp: Math.max(0, nextBoss.currentHp - dmg) };
@@ -602,51 +545,45 @@ const App: React.FC = () => {
                   textRef.current?.addText(centerX + (Math.random()-0.5)*100, centerY - 100, `-${dmg.toFixed(0)}`, 'DAMAGE');
                }
 
-               // 4. REPAIR (MK-4)
                if (levels.REPAIR > 0 && newIntegrity < stats.integrity) {
                    const repair = 0.2 * levels.REPAIR * efficiency; 
                    newIntegrity = Math.min(stats.integrity, newIntegrity + repair);
                }
 
-               // 5. MINER (MK-5)
                if (levels.MINER > 0) {
                    const b = BIOMES[currentBiomeIndex >= 0 ? currentBiomeIndex : 0];
-                   // Miners benefit from AutoSpeed Skills and Artifacts, representing passive income efficiency
                    const minerSpeedMod = (1 + (skillMods.autoSpeedPct + artifactMods.drillSpeedPct)/100);
                    const amount = levels.MINER * 5 * efficiency * minerSpeedMod;
                    newResources[b.resource] += amount; 
-                   // Don't spam text for passive miner
                }
            }
         }
 
-        // Particle Logic
+        // PARTICLES
         if (activeView === View.DRILL && particleRef.current && drillContainerRef.current) {
-          
           if (isDrilling && !isOverheated && !isBroken) particleRef.current.emit(centerX, centerY, currentBiome.color, 'DEBRIS', 2);
           if (prev.heat > 50 && Math.random() < (prev.heat / 200)) particleRef.current.emit(centerX, centerY, '#FFA500', 'SPARK', 1);
           if (prev.heat > 80 || isOverheated) particleRef.current.emit(centerX + (Math.random()-0.5)*50, centerY, '#333333', 'SMOKE', 1);
         }
 
-        // Boss Logic
+        // BOSS SPAWN
         if (!nextBoss && prev.depth > 200 && (prev.depth - prev.lastBossDepth) >= 500 && nextQueue.length === 0) {
            nextBoss = generateBoss(prev.depth, currentBiome.name);
            addLog(`!!! ВНИМАНИЕ: ${nextBoss.description} !!!`, "text-red-500 font-bold");
            setActiveView(View.COMBAT);
-           audioEngine.playAlarm(); // NEW AUDIO
+           audioEngine.playAlarm(); 
         }
 
         if (nextBoss) {
            bossAttackTickRef.current++;
            if (bossAttackTickRef.current >= nextBoss.attackSpeed && !isBroken) {
               bossAttackTickRef.current = 0;
-              // Defense stat reduces boss damage
               const dmg = Math.max(1, nextBoss.damage * (1 - stats.defense / 100)); 
               newIntegrity -= dmg;
               setBossHitEffect(false); 
               if (dmg > 5) {
                   addLog(`УДАР ПО КОРПУСУ: -${dmg.toFixed(0)}%`, "text-red-500");
-                  audioEngine.playBossHit(); // NEW AUDIO
+                  audioEngine.playBossHit(); 
                   textRef.current?.addText(centerX, centerY + 100, `УДАР! -${dmg.toFixed(0)}%`, 'CRIT');
               }
            }
@@ -657,20 +594,19 @@ const App: React.FC = () => {
               for (const [key, val] of Object.entries(nextBoss.reward.resources)) newResources[key as keyof Resources] = (newResources[key as keyof Resources] || 0) + (val || 0);
               nextBoss = null;
               setActiveView(View.DRILL);
-              audioEngine.playLegendary(); // Victory sound
+              audioEngine.playLegendary(); 
               textRef.current?.addText(centerX, centerY, `БОСС УНИЧТОЖЕН`, 'CRIT');
               return { ...prev, currentBoss: null, lastBossDepth: Math.floor(prev.depth), xp: newXp, resources: newResources, inventory: nextInventory, activeEffects: nextEffects, eventQueue: nextQueue }; 
            }
         }
 
-        // Unlocks
+        // UNLOCKS
         let nextForgeUnlocked = prev.forgeUnlocked;
         let nextCityUnlocked = prev.cityUnlocked;
         let nextSkillsUnlocked = prev.skillsUnlocked;
         
-        // --- EVENT SYSTEM ---
         eventCheckTickRef.current++;
-        if (eventCheckTickRef.current >= 10 && !nextBoss) { // Check every 1s
+        if (eventCheckTickRef.current >= 10 && !nextBoss) { 
           eventCheckTickRef.current = 0;
           const randomEvent = rollRandomEvent(prev.recentEventIds || [], newDepth, newHeat);
           if (randomEvent) {
@@ -694,18 +630,16 @@ const App: React.FC = () => {
             nextQueue.unshift({ id: 'SKILLS_UNLOCK', title: 'НЕЙРО-СЕТЬ: ОНЛАЙН', description: '>> Подключение к коре головного мозга установлено.', type: 'NOTIFICATION', weight: 0 });
         }
 
-        // Hazard Logic
+        // HAZARD LOGIC
         hazardTickRef.current++;
         if (hazardTickRef.current >= 10 && !isBroken && !isOverheated) {
            hazardTickRef.current = 0;
            if (currentBiome.hazard !== 'NONE' && !nextBoss) { 
               const hazardDmg = currentBiome.hazardLevel;
-              // Hazard Resist (Armor) reduces environmental damage
               const netDamage = Math.max(0, hazardDmg * (1 - stats.hazardResist / 100) * 0.1); 
               if (netDamage > 0) newIntegrity = Math.max(0, newIntegrity - netDamage);
            }
            
-           // PASSIVE REGEN
            if (stats.regen > 0 && newIntegrity < stats.integrity && !nextBoss) {
                newIntegrity = Math.min(stats.integrity, newIntegrity + stats.regen);
            } else if (currentBiome.hazard === 'NONE' && newIntegrity < stats.integrity && !nextBoss) {
@@ -713,40 +647,78 @@ const App: React.FC = () => {
            }
         }
 
+        // --- HULL DEPLETION LOGIC ---
         if (newIntegrity <= 0 && !isBroken) {
-           setIsBroken(true); setIsDrilling(false);
-           if (nextBoss) { nextBoss = null; newDepth = Math.max(0, newDepth - 100); setActiveView(View.DRILL); }
+           setIsBroken(true); 
+           setIsDrilling(false);
+           
+           // 1. Lose Depth
+           const depthPenalty = Math.max(100, Math.floor(newDepth * 0.1));
+           newDepth = Math.max(0, newDepth - depthPenalty);
+
+           // 2. Lose Resources (Cargo Breach)
+           const breachFactor = 0.25; // Lose 25% of commons
+           COMMON_RESOURCES.forEach(res => {
+              const amount = newResources[res];
+              if (amount > 100) {
+                 const lost = Math.floor(amount * breachFactor);
+                 newResources[res] -= lost;
+                 if (lost > 0) {
+                    // Only show floating text for significant losses to avoid spam
+                     if (Math.random() > 0.5) {
+                        textRef.current?.addText(
+                           centerX + (Math.random() - 0.5) * 150, 
+                           centerY + (Math.random() - 0.5) * 100, 
+                           `-${lost} ${getResourceLabel(res)}`, 
+                           'CRIT'
+                        );
+                     }
+                 }
+              }
+           });
+
+           if (nextBoss) { 
+               nextBoss = null; 
+               setActiveView(View.DRILL); 
+           }
+
            audioEngine.playAlarm();
-           textRef.current?.addText(centerX, centerY, "СБОЙ СИСТЕМЫ", 'CRIT');
+           textRef.current?.addText(centerX, centerY, "КРИТИЧЕСКИЙ СБОЙ!", 'CRIT');
+           textRef.current?.addText(centerX, centerY + 30, `АВАРИЙНОЕ ВСПЛЫТИЕ: -${depthPenalty}m`, 'CRIT');
+           
+           addLog(`!!! РАЗРУШЕНИЕ ОБШИВКИ !!!`, "text-red-600 font-black");
+           addLog(`ПРОТОКОЛ СПАСЕНИЯ: -${depthPenalty}м ГЛУБИНЫ`, "text-orange-500");
+           addLog(`РАЗГЕРМЕТИЗАЦИЯ ТРЮМА: ПОТЕРЯНО 25% ГРУЗА`, "text-orange-500");
         }
+        
         if (isBroken) {
-           newIntegrity += 0.5; 
-           if (newIntegrity >= stats.integrity) { setIsBroken(false); addLog("ОБШИВКА ВОССТАНОВЛЕНА", "text-green-500"); }
+           // Slower repair
+           newIntegrity += 0.2 + (stats.regen * 0.1); 
+           if (newIntegrity >= stats.integrity) { 
+               setIsBroken(false); 
+               newIntegrity = stats.integrity; // Clamp
+               addLog("ОБШИВКА ВОССТАНОВЛЕНА. СИСТЕМЫ В НОРМЕ.", "text-green-500"); 
+           }
         }
 
-        // Physics
-        // --- UPDATE ACTIVE EFFECTS DURATION ---
+        // PHYSICS
         nextEffects = nextEffects.map(e => ({ ...e, duration: e.duration - 1 })).filter(e => e.duration > 0);
 
-        // Heat Instability Effect
         if (isHeatUnstable && Math.random() < 0.1) {
             newHeat += (Math.random() - 0.5) * 10;
         }
 
         if (isOverheated) {
-          // Slow penalty cooling when overheated
           newHeat = Math.max(0, newHeat - 0.25 * stats.ventSpeed); 
           if (newHeat <= 0) { setIsOverheated(false); addLog("СИСТЕМЫ ОХЛАЖДЕНЫ."); }
         } else if (!isBroken) {
           
           if (isDrilling && !nextBoss) {
             const hardness = Math.min(1.0, (newDepth / 10000));
-            // Torque (Gearbox) acts as Pierce to negate depth hardness
             const torqueFactor = stats.torque / 100;
             const effectiveHardness = Math.max(0, hardness - torqueFactor);
             const speedPenalty = Math.max(0.1, 1.0 - effectiveHardness);
             
-            // Apply Effect Modifiers (Buffs/Debuffs)
             let speedMult = 1;
             let heatGenMult = 1;
             let resMult = 1;
@@ -759,24 +731,18 @@ const App: React.FC = () => {
                 if (e.modifiers.clickPowerMultiplier) clickPowerMult *= e.modifiers.clickPowerMultiplier;
             });
 
-            // FIXED FORMULA: Apply Click Power from Skills, Artifacts, and Effects correctly.
-            // Control Unit Multiplier * (1 + Skill% + Artifact%) * EffectMultiplier
             const combinedClickPower = stats.clickMult * (1 + (skillMods.clickPowerPct + artifactMods.clickPowerPct)/100) * clickPowerMult;
-
             const drillPower = stats.totalSpeed * speedPenalty * combinedClickPower * speedMult;
             newDepth += drillPower;
             
-            // Heat Calculation
             const baseHeat = 0.85;
             const heatReduction = (1 - (skillMods.heatGenReductionPct + artifactMods.heatGenPct)/100);
             newHeat += baseHeat * heatGenMult * heatReduction; 
             
-            // Resource Calculation
             const totalResMult = (1 + (skillMods.resourceMultPct + artifactMods.resourceMultPct)/100) * resMult;
             const resAmount = drillPower * 0.3 * totalResMult;
             newResources[currentBiome.resource] += resAmount;
             
-            // Text for drilling (occasional)
             if (Math.random() < 0.1) {
                 textRef.current?.addText(centerX + (Math.random()-0.5)*100, centerY + 50, `+${resAmount.toFixed(1)}`, 'RESOURCE');
             }
@@ -786,12 +752,10 @@ const App: React.FC = () => {
                 setIsOverheated(true); 
                 setIsDrilling(false); 
                 addLog("!!! КРИТИЧЕСКИЙ ПЕРЕГРЕВ !!!", "text-red-500 font-bold"); 
-                audioEngine.playAlarm(); // ALARM SOUND
+                audioEngine.playAlarm(); 
                 textRef.current?.addText(centerX, centerY, "ПЕРЕГРЕВ!", 'CRIT');
             }
           } else {
-             // Passive cooling when idle
-             // Enhanced by VentSpeed
              const coolingDisabled = nextEffects.some(e => e.modifiers.coolingDisabled);
              if (!coolingDisabled) {
                  newHeat = Math.max(0, newHeat - (stats.totalCooling * 0.2 + 0.1) * stats.ventSpeed);
@@ -828,18 +792,14 @@ const App: React.FC = () => {
   }, [isDrilling, isOverheated, isBroken, hasStarted, addLog, activeView]);
 
   const handleEventOption = (optionId?: string) => {
-    // 1. Determine RNG Outcome outside setState
     const rng = Math.random();
     resetAFK();
-    
-    // 2. Identify Event
     const currentEvent = state.eventQueue[0];
     if (!currentEvent) return;
 
     let logMsg = "";
     let logColor = "text-zinc-400";
 
-    // 3. Update State with Logic & Logs
     setState(prev => {
        const [_, ...remainingEvents] = prev.eventQueue;
        let nextEffects = [...prev.activeEffects];
@@ -850,16 +810,9 @@ const App: React.FC = () => {
        let nextIntegrity = prev.integrity;
        let nextDepth = prev.depth;
 
-       // Calculate luck bonus for events (e.g. 100 luck = +10% success chance for risky options)
-       // Base Luck from Logic Core + Artifacts
        const baseLuck = prev.drill.logic.baseStats.luck;
-       // Artifact luck is added in loop, but here we can approximate or recalculate
-       // For simplicity, we use logic core luck as the main factor + an arbitrary small bonus if we want to be precise, 
-       // but Logic core is the main source.
        const luckBonus = baseLuck / 1000; 
 
-       // --- SPECIFIC EVENT LOGIC ---
-       
        if (optionId === 'purge_nanomites') { 
            nextResources.nanoSwarm += 10; 
            logMsg = "ПРОТОКОЛ ОЧИСТКИ: +10 НАНО-РОЙ"; 
@@ -887,7 +840,6 @@ const App: React.FC = () => {
            logColor = "text-amber-500";
        }
        else if (optionId === 'pod_laser') {
-           // Base chance 0.5 + Luck Bonus
            if (rng < (0.5 + luckBonus)) {
                nextResources.ancientTech += 5;
                nextResources.titanium += 100;
@@ -923,7 +875,6 @@ const App: React.FC = () => {
            logColor = "text-purple-400";
        }
 
-       // --- GENERIC / NOTIFICATION LOGIC (HANDLING ACCEPTED WARNINGS) ---
        if (!optionId) {
            if (currentEvent.id === 'GOLD_VEIN') {
                const effect = createEffect('GOLD_RUSH_EFFECT');
@@ -956,10 +907,7 @@ const App: React.FC = () => {
            }
        }
 
-       // --- ARTIFACT LOGIC ---
        if (currentEvent.forceArtifactDrop || currentEvent.type === 'ARTIFACT') {
-           // Pass current luck to roll
-           // FIND CURRENT BIOME FOR ROLL
            const currentBiomeIndex = BIOMES.findIndex((b, i) => {
               const next = BIOMES[i + 1];
               return prev.depth >= b.depth && (!next || prev.depth < next.depth);
@@ -972,11 +920,7 @@ const App: React.FC = () => {
            
            if (prev.inventory.length < 12) {
                nextInventory = [...prev.inventory, newItem];
-               
-               if (nextStorageLevel === 0) {
-                   nextStorageLevel = 1;
-               }
-               
+               if (nextStorageLevel === 0) nextStorageLevel = 1;
                const artMsg = `АРТЕФАКТ ПОЛУЧЕН: [${def.rarity}]`;
                logMsg = logMsg ? `${logMsg} | ${artMsg}` : artMsg;
                if (!logColor || logColor === 'text-zinc-400') logColor = "text-amber-400";
@@ -988,7 +932,6 @@ const App: React.FC = () => {
            }
        }
        
-       // 4. Trigger Log side-effect manually via the hook reference (safe in event handler)
        if (logMsg) {
            addLog(logMsg, logColor);
        }
@@ -1025,7 +968,6 @@ const App: React.FC = () => {
       const currentIndex = list.findIndex(p => p.id === currentPart.id);
       const nextPart = list[currentIndex + 1];
       if (!nextPart) return prev; 
-      // RESTRICT UPGRADES IN NORMAL SHOP FOR TIER 13+
       if (nextPart.tier >= 13) return prev;
 
       const newResources = { ...prev.resources };
@@ -1040,36 +982,25 @@ const App: React.FC = () => {
   const handleBuyDrone = (droneId: DroneType) => setState(prev => {
       const def = DRONES.find(d => d.id === droneId);
       if (!def) return prev;
-      
       const currentLevel = prev.droneLevels[droneId] || 0;
       if (currentLevel >= def.maxLevel) return prev;
-
-      // Calculate cost based on level
       const costMultiplier = Math.pow(def.costMultiplier, currentLevel);
       const scaledCost: Partial<Resources> = {};
       let canAfford = true;
-      
       (Object.keys(def.baseCost) as (keyof Resources)[]).forEach(res => {
           const val = Math.floor((def.baseCost[res] || 0) * costMultiplier);
           scaledCost[res] = val;
           if (prev.resources[res] < val) canAfford = false;
       });
-
       if (!canAfford) return prev;
-
-      // Deduct resources
       const newResources = { ...prev.resources };
       (Object.keys(scaledCost) as (keyof Resources)[]).forEach(res => {
           newResources[res] -= (scaledCost[res] || 0);
       });
-
       audioEngine.playClick();
       const action = currentLevel === 0 ? "АКТИВИРОВАН" : "УЛУЧШЕН";
       addLog(`ДРОН [${def.name}] ${action}: УР.${currentLevel + 1}`, "text-cyan-400");
-      
-      // Update levels AND activeDrones list (for rendering)
       const nextActiveDrones = prev.activeDrones.includes(droneId) ? prev.activeDrones : [...prev.activeDrones, droneId];
-      
       return { 
           ...prev, 
           resources: newResources, 
@@ -1084,21 +1015,18 @@ const App: React.FC = () => {
      const newResources = { ...prev.resources };
      if (newResources[recipe.catalyst.resource] < recipe.catalyst.amount) return prev;
      
-     // Check Condition Logic Here
      if (recipe.condition) {
          if (recipe.condition.type === 'ZERO_HEAT') {
-             // Use ref for real-time tracking check
              if (heatStabilityTimerRef.current < recipe.condition.target) return prev;
          }
          else if (recipe.condition.type === 'DEPTH_REACHED') {
              if (prev.depth < recipe.condition.target) return prev;
          }
          else if (recipe.condition.type === 'NO_DAMAGE') {
-             if (prev.integrity < recipe.condition.target) return prev; // Assumes target is max %
+             if (prev.integrity < recipe.condition.target) return prev; 
          }
      }
 
-     // Find which part type this upgrades
      let partType = '';
      if (recipe.resultId.startsWith('bit')) partType = 'bit';
      else if (recipe.resultId.startsWith('eng')) partType = 'engine';
@@ -1109,9 +1037,8 @@ const App: React.FC = () => {
      else if (recipe.resultId.startsWith('gear')) partType = 'gearbox';
      else if (recipe.resultId.startsWith('pwr')) partType = 'power';
      else if (recipe.resultId.startsWith('arm')) partType = 'armor';
-     else return prev; // Unsupported for now
+     else return prev; 
 
-     // Find new part def
      let list: any[] = [];
      if (partType === 'bit') list = BITS;
      else if (partType === 'engine') list = ENGINES;
@@ -1126,10 +1053,9 @@ const App: React.FC = () => {
      const nextPart = list.find(p => p.id === recipe.resultId);
      if (!nextPart) return prev;
 
-     // Deduct Cost
      newResources[recipe.catalyst.resource] -= recipe.catalyst.amount;
      
-     audioEngine.playFusion(); // NEW SOUND
+     audioEngine.playFusion(); 
      addLog(`СЛИЯНИЕ ЗАВЕРШЕНО: ${nextPart.name}`, "text-purple-400 font-bold");
      
      return { ...prev, resources: newResources, drill: { ...prev.drill, [partType]: nextPart } };
@@ -1137,25 +1063,18 @@ const App: React.FC = () => {
 
   const handleArtifactTransmutation = () => setState(prev => {
       if (selectedArtifactsForFusion.length !== 3) return prev;
-      
-      // Get Rarity of first item (assuming valid selection)
       const firstItem = prev.inventory.find(i => i.instanceId === selectedArtifactsForFusion[0]);
       if (!firstItem) return prev;
       const firstDef = ARTIFACTS.find(a => a.id === firstItem.defId);
       if (!firstDef) return prev;
 
-      // Determine new rarity
       let newRarity = ArtifactRarity.COMMON;
       if (firstDef.rarity === ArtifactRarity.COMMON) newRarity = ArtifactRarity.RARE;
       else if (firstDef.rarity === ArtifactRarity.RARE) newRarity = ArtifactRarity.EPIC;
       else if (firstDef.rarity === ArtifactRarity.EPIC) newRarity = ArtifactRarity.LEGENDARY;
-      else return prev; // Cannot upgrade legendary via this simple method
+      else return prev;
 
-      // Find pool
-      // Roll based on base luck (though transmutation implies guaranteed rarity up, specific item roll could use luck)
-      const baseLuck = prev.drill.logic.baseStats.luck;
       const pool = ARTIFACTS.filter(a => a.rarity === newRarity);
-      
       if (pool.length === 0) return prev;
       const newDef = pool[Math.floor(Math.random() * pool.length)];
 
@@ -1169,7 +1088,7 @@ const App: React.FC = () => {
       };
       
       addLog(`ТРАНСМУТАЦИЯ: ПОЛУЧЕН [${newDef.name}]`, "text-amber-400");
-      audioEngine.playFusion(); // Using Fusion sound
+      audioEngine.playFusion(); 
       setSelectedArtifactsForFusion([]);
 
       return { ...prev, inventory: [...newInventory, newItem] };
@@ -1180,7 +1099,6 @@ const App: React.FC = () => {
           if (prev.includes(id)) return prev.filter(x => x !== id);
           if (prev.length >= 3) return prev;
           
-          // Check rarity constraint
           const item = state.inventory.find(i => i.instanceId === id);
           if (!item) return prev;
           const def = ARTIFACTS.find(a => a.id === item.defId);
@@ -1188,7 +1106,7 @@ const App: React.FC = () => {
           if (prev.length > 0) {
               const firstItem = state.inventory.find(i => i.instanceId === prev[0]);
               const firstDef = ARTIFACTS.find(a => a.id === firstItem?.defId);
-              if (firstDef?.rarity !== def?.rarity) return prev; // Must match rarity
+              if (firstDef?.rarity !== def?.rarity) return prev; 
           }
 
           return [...prev, id];
@@ -1355,7 +1273,7 @@ const App: React.FC = () => {
                 <div className="text-[10px] md:text-xs font-bold text-zinc-400 bg-black/50 px-2 py-1 inline-block mt-1 border-l-2" style={{ borderColor: currentBiome.color }}>{currentBiome.name}</div>
               </div>
 
-              {/* HUD: Stats (Top Right) - FIXED ALIGNMENT */}
+              {/* HUD: Stats (Top Right) */}
               <div className="absolute top-2 right-2 z-10 w-32 md:w-56 bg-black/60 backdrop-blur-md border border-zinc-700 p-2.5 flex flex-col gap-3 shadow-lg">
                  {/* Hull Section */}
                  <div className="flex flex-col gap-1">
@@ -1365,7 +1283,6 @@ const App: React.FC = () => {
                     </div>
                     <div className="w-full h-1.5 md:h-2.5 bg-zinc-900 border border-zinc-700/50 relative overflow-hidden group">
                        <div className={`h-full transition-all duration-300 ${state.integrity < state.drill.hull.baseStats.maxIntegrity * 0.3 ? 'bg-red-600 shadow-[0_0_10px_red]' : 'bg-green-500'}`} style={{ width: `${Math.max(0, (state.integrity / state.drill.hull.baseStats.maxIntegrity) * 100)}%` }} />
-                       {/* Scanline overlay for bar */}
                        <div className="absolute inset-0 bg-[url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAYAAACp8Z5+AAAAIklEQVQIW2NkQAKrVq36zwjjgzj//v37zaDIfwYgDlmFCAAamxXwSUr1aQAAAABJRU5ErkJggg==')] opacity-20"></div>
                     </div>
                  </div>
@@ -1471,7 +1388,6 @@ const App: React.FC = () => {
                             <h3 className="text-xl pixel-text text-purple-400 mb-4 border-b border-purple-900 pb-2">АТОМНЫЙ РЕКОНСТРУКТОР</h3>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 {FUSION_RECIPES.filter(recipe => {
-                                    // Only show recipe if user has the prerequisite component EQUIPPED
                                     return (state.drill.bit.id === recipe.componentAId) ||
                                            (state.drill.engine.id === recipe.componentAId) ||
                                            (state.drill.cooling.id === recipe.componentAId) ||
@@ -1497,7 +1413,6 @@ const App: React.FC = () => {
                                     const nextPart = list.find(p => p.id === recipe.resultId);
                                     if (!nextPart) return null;
 
-                                    // Condition Logic Check
                                     let conditionMet = true;
                                     let progressPercent = 100;
                                     
@@ -1627,7 +1542,6 @@ const App: React.FC = () => {
                                         const def = ARTIFACTS.find(a => a.id === item.defId);
                                         if (!def) return null;
                                         const isSelected = selectedArtifactsForFusion.includes(item.instanceId);
-                                        // Disable if rarity mismatch with first selected
                                         let disabled = false;
                                         if (selectedArtifactsForFusion.length > 0 && !isSelected) {
                                             const firstItem = state.inventory.find(i => i.instanceId === selectedArtifactsForFusion[0]);
@@ -1661,8 +1575,6 @@ const App: React.FC = () => {
                         {DRONES.map(drone => {
                            const currentLevel = state.droneLevels[drone.id] || 0;
                            const isMaxed = currentLevel >= drone.maxLevel;
-                           
-                           // Calculate Cost
                            const costMultiplier = Math.pow(drone.costMultiplier, currentLevel);
                            const currentCost: Partial<Resources> = {};
                            let canAfford = !isMaxed;
