@@ -30,10 +30,10 @@ const MOB_COLORS: Record<BossType, string> = {
 };
 
 const BOSS_WEAKNESSES: Record<BossType, CombatMinigameType> = {
-    [BossType.WORM]: 'MASH',
-    [BossType.CORE]: 'TIMING',
-    [BossType.CONSTRUCT]: 'MEMORY',
-    [BossType.SWARM]: 'ALIGN'
+  [BossType.WORM]: 'MASH',
+  [BossType.CORE]: 'TIMING',
+  [BossType.CONSTRUCT]: 'MEMORY',
+  [BossType.SWARM]: 'ALIGN'
 };
 
 export const generateBoss = (depth: number, biomeName: string): Boss => {
@@ -43,9 +43,10 @@ export const generateBoss = (depth: number, biomeName: string): Boss => {
   else if (depth > 5000) type = BossType.SWARM;
   else type = BossType.WORM;
 
+  // Custom weight override
   if (Math.random() > 0.7) {
-     const types: BossType[] = [BossType.WORM, BossType.CONSTRUCT, BossType.SWARM];
-     type = types[Math.floor(Math.random() * types.length)];
+    const types: BossType[] = [BossType.WORM, BossType.CONSTRUCT, BossType.SWARM];
+    type = types[Math.floor(Math.random() * types.length)];
   }
 
   const namePool = BOSS_NAMES[type];
@@ -61,7 +62,7 @@ export const generateBoss = (depth: number, biomeName: string): Boss => {
 
   const xpReward = Math.floor(maxHp * 0.5);
   const resources: Partial<Resources> = {};
-  
+
   if (depth > 1000) resources.ancientTech = Math.floor(10 + depth / 500);
   if (depth > 5000) resources.diamonds = Math.floor(1 + depth / 10000);
   resources.gold = Math.floor(100 + depth / 10);
@@ -80,11 +81,12 @@ export const generateBoss = (depth: number, biomeName: string): Boss => {
     maxHp,
     currentHp: maxHp,
     damage,
-    attackSpeed: 20, 
+    attackSpeed: 20,
     description: `ОБНАРУЖЕНА УГРОЗА КЛАССА [${type}]. ПРОТОКОЛ "УНИЧТОЖЕНИЕ".`,
     isMob: false,
-    phases: [0.75, 0.50, 0.25],
+    phases: [1],
     minigameWeakness: BOSS_WEAKNESSES[type],
+    weakPoints: [],
     reward: {
       xp: xpReward,
       resources,
@@ -98,7 +100,7 @@ export const generateMob = (depth: number): Boss => {
   if (depth > 40000) type = BossType.CORE;
   else if (depth > 10000) type = BossType.CONSTRUCT;
   else if (depth > 2000) type = BossType.SWARM;
-  
+
   const namePool = MOB_NAMES[type];
   const name = namePool[Math.floor(Math.random() * namePool.length)];
 
@@ -109,11 +111,11 @@ export const generateMob = (depth: number): Boss => {
 
   const xpReward = Math.floor(maxHp * 0.2);
   const resources: Partial<Resources> = {};
-  
-  if (type === BossType.WORM) resources.stone = Math.floor(50 + depth/10);
-  if (type === BossType.CONSTRUCT) resources.iron = Math.floor(20 + depth/20);
-  if (type === BossType.SWARM) resources.copper = Math.floor(30 + depth/20);
-  if (type === BossType.CORE) resources.gold = Math.floor(10 + depth/50);
+
+  if (type === BossType.WORM) resources.stone = Math.floor(50 + depth / 10);
+  if (type === BossType.CONSTRUCT) resources.iron = Math.floor(20 + depth / 20);
+  if (type === BossType.SWARM) resources.copper = Math.floor(30 + depth / 20);
+  if (type === BossType.CORE) resources.gold = Math.floor(10 + depth / 50);
 
   return {
     id: `mob_${Date.now()}`,
@@ -123,11 +125,12 @@ export const generateMob = (depth: number): Boss => {
     maxHp,
     currentHp: maxHp,
     damage,
-    attackSpeed: 15, 
+    attackSpeed: 15,
     description: `ВРАЖДЕБНАЯ СУЩНОСТЬ.`,
     isMob: true,
     phases: [],
     minigameWeakness: 'MASH',
+    weakPoints: [],
     reward: {
       xp: xpReward,
       resources

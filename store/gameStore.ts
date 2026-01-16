@@ -22,9 +22,12 @@ import { calculateStats, getResourceLabel, calculateRepairCost, calculateShieldR
 import { audioEngine } from '../services/audioEngine';
 import { generateQuestBatch } from '../services/questRegistry';
 import { ARTIFACTS, rollArtifact } from '../services/artifactRegistry';
-import { createEffect } from '../services/eventRegistry';
+import { createEffect, EVENTS } from '../services/eventRegistry';
 import { generateBoss } from '../services/bossRegistry';
 import { SKILLS, getSkillCost } from '../services/skillRegistry';
+import { abilitySystem } from '../services/systems/AbilitySystem';
+import { checkWeakness, damageBossWeakPoint } from '../services/systems/CombatSystem';
+import { AbilityType, ActiveAbilityState } from '../types';
 
 // Слайсы
 import {
@@ -34,8 +37,13 @@ import {
     createInventorySlice, InventoryActions,
     createUpgradeSlice, UpgradeActions,
     createEntitySlice, EntityActions,
-    createSettingsSlice, SettingsActions
+    createSettingsSlice, SettingsActions,
+    createExpeditionSlice, ExpeditionActions,
+    createFactionSlice, FactionActions,
+    createAdminSlice, AdminActions,
+    createEventSlice, EventActions
 } from './slices';
+import { GAME_VERSION } from '../constants';
 
 // === ИНТЕРФЕЙСЫ ===
 
@@ -50,38 +58,20 @@ interface CoreActions {
     importSaveString: (str: string) => boolean;
 }
 
-interface EventActions {
-    handleEventOption: (optionId?: string) => void;
-    completeCombatMinigame: (success: boolean) => void;
-    setCoolingGame: (active: boolean) => void;
-    forceVentHeat: (amount: number) => void;
-    triggerOverheat: () => void;
-}
 
-interface AdminActions {
-    adminAddResources: (common: number, rare: number) => void;
-    adminResetResources: () => void;
-    adminAddArtifact: (defId: string) => void;
-    adminSetGodMode: (enabled: boolean) => void;
-    adminSetInfiniteCoolant: (enabled: boolean) => void;
-    adminSetOverdrive: (enabled: boolean) => void;
-    adminUnlockAll: () => void;
-    adminMaxTech: () => void;
-    adminSetDepth: (depth: number) => void;
-    adminSkipBiome: () => void;
-    adminSpawnBoss: () => void;
-    adminTriggerEvent: (eventId: string) => void;
-    adminClearEvents: () => void;
-}
+
+
 
 // Полный тип store
-interface GameStore extends GameState,
+export interface GameStore extends GameState,
     CoreActions, EventActions, AdminActions,
     DrillActions, CityActions, InventoryActions,
-    UpgradeActions, EntityActions, SettingsActions {
+    UpgradeActions, EntityActions, SettingsActions, ExpeditionActions, FactionActions {
     isGameActive: boolean;
     activeView: View;
     actionLogQueue: VisualEvent[];
+    activateAbility: (id: AbilityType) => void;
+    damageWeakPoint: (wpId: string) => void;
 }
 
 // === НАЧАЛЬНОЕ СОСТОЯНИЕ ===
@@ -151,7 +141,11 @@ const INITIAL_STATE: GameState = {
     lastInteractTime: Date.now(),
 
     eventCheckTick: 0,
-    combatMinigame: null
+    combatMinigame: null,
+    activeAbilities: [],
+    activeExpeditions: [],
+    minigameCooldown: 0,
+    reputation: { CORPORATE: 0, SCIENCE: 0, REBELS: 0 }
 };
 
 // === ПЕРСИСТЕНТНОСТЬ ===
@@ -171,6 +165,7 @@ const createSnapshot = (state: GameState): Partial<GameState> => {
     PERSISTENT_KEYS.forEach(key => {
         snapshot[key] = state[key];
     });
+    snapshot.version = GAME_VERSION;
     return snapshot;
 };
 
@@ -188,7 +183,7 @@ const sanitizeAndMerge = (initial: GameState, saved: any): GameState => {
     const primitiveKeys: (keyof GameState)[] = [
         'depth', 'heat', 'integrity', 'xp', 'level', 'totalDrilled',
         'lastBossDepth', 'storageLevel', 'forgeUnlocked', 'cityUnlocked', 'skillsUnlocked',
-        'selectedBiome', 'debugUnlocked', 'lastQuestRefresh', 'shieldCharge'
+        'selectedBiome', 'debugUnlocked', 'lastQuestRefresh', 'shieldCharge', 'minigameCooldown'
     ];
 
     deepKeys.forEach(key => {
@@ -233,6 +228,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
     ...createUpgradeSlice(set, get),
     ...createEntitySlice(set, get),
     ...createSettingsSlice(set, get),
+    ...createExpeditionSlice(set, get),
+    ...createFactionSlice(set, get),
+    ...createAdminSlice(set, get),
+    ...createEventSlice(set, get),
 
     // === CORE ACTIONS ===
 
@@ -348,182 +347,37 @@ export const useGameStore = create<GameStore>((set, get) => ({
         }
     },
 
-    // === EVENT ACTIONS ===
 
-    handleEventOption: (optionId) => {
+
+    // === ABILITY ACTIONS ===
+    activateAbility: (id: AbilityType) => {
         const s = get();
-        const event = s.eventQueue[0];
-        if (!event) return;
+        if (abilitySystem.canActivate(id, s.heat)) {
+            abilitySystem.activate(id);
+            set({ activeAbilities: abilitySystem.getAllStates() });
 
-        const newQueue = s.eventQueue.slice(1);
-        const updates: Partial<GameState> = { eventQueue: newQueue };
-        const logs: VisualEvent[] = [];
+            const def = abilitySystem.getAbilityDef(id);
+            if (def.heatCost !== 0) {
+                set(state => ({ heat: Math.max(0, Math.min(100, state.heat + def.heatCost)) }));
+            }
 
-        const grantArtifact = () => {
-            const def = rollArtifact(s.depth, calculateStats(s.drill, s.skillLevels, s.equippedArtifacts, s.inventory, s.depth).luck, s.selectedBiome || undefined);
-            const id = Math.random().toString(36).substr(2, 9);
-            const newItem: InventoryItem = { instanceId: id, defId: def.id, acquiredAt: Date.now(), isIdentified: false, isEquipped: false };
-            const newInv = { ...s.inventory, [id]: newItem };
-            updates.inventory = newInv;
-            if (s.storageLevel === 0) updates.storageLevel = 1;
-            logs.push({ type: 'LOG', msg: 'ПОЛУЧЕН АРТЕФАКТ: ???', color: 'text-purple-400 font-bold' });
-            logs.push({ type: 'SOUND', sfx: 'ACHIEVEMENT' });
-        };
-
-        if (optionId) {
             audioEngine.playClick();
-            switch (optionId) {
-                case 'tectonic_hold':
-                    updates.integrity = Math.max(0, s.integrity - 30);
-                    logs.push({ type: 'TEXT', x: window.innerWidth / 2, y: window.innerHeight / 2, text: '-30 HP', style: 'DAMAGE' });
-                    logs.push({ type: 'LOG', msg: '>> УДЕРЖАНИЕ: ПОВРЕЖДЕНИЕ ОБШИВКИ', color: 'text-red-500' });
-                    break;
-                case 'tectonic_push':
-                    updates.depth = s.depth + 1500;
-                    updates.heat = Math.min(100, s.heat + 40);
-                    logs.push({ type: 'LOG', msg: '>> ФОРСАЖ: ГЛУБИНА +1500м', color: 'text-orange-400' });
-                    break;
-                case 'pod_laser':
-                    if (Math.random() > 0.5) {
-                        logs.push({ type: 'LOG', msg: '>> ЛАЗЕР УНИЧТОЖИЛ СОДЕРЖИМОЕ', color: 'text-red-400' });
-                    } else {
-                        const r = { ...s.resources };
-                        r.ancientTech += 20;
-                        updates.resources = r;
-                        logs.push({ type: 'LOG', msg: '>> ВСКРЫТИЕ: +20 ANCIENT TECH', color: 'text-green-400' });
-                    }
-                    break;
-                case 'pod_hack':
-                    const rh = { ...s.resources };
-                    rh.ancientTech += 5;
-                    updates.resources = rh;
-                    logs.push({ type: 'LOG', msg: '>> ДЕШИФРОВКА: +5 ANCIENT TECH', color: 'text-green-400' });
-                    break;
-                case 'accept_fluctuation':
-                    const eff = createEffect('QUANTUM_FLUCTUATION_EFFECT');
-                    if (eff) updates.activeEffects = [...s.activeEffects, { ...eff, id: eff.id + '_' + Date.now() }];
-                    updates.heat = 90;
-                    logs.push({ type: 'LOG', msg: '>> РИСК ПРИНЯТ: РЕСУРСЫ x5', color: 'text-purple-400' });
-                    break;
-                case 'reject_fluctuation':
-                    logs.push({ type: 'LOG', msg: '>> СТАБИЛИЗАЦИЯ ВЫПОЛНЕНА', color: 'text-zinc-400' });
-                    break;
-                case 'ai_trust':
-                    updates.depth = s.depth + 3000;
-                    updates.heat = Math.min(100, s.heat + 20);
-                    logs.push({ type: 'LOG', msg: '>> МАРШРУТ ИИ: +3000м', color: 'text-cyan-400' });
-                    break;
-                case 'ai_reboot':
-                    updates.heat = 0;
-                    logs.push({ type: 'LOG', msg: '>> ПЕРЕЗАГРУЗКА: ОХЛАЖДЕНИЕ', color: 'text-blue-400' });
-                    break;
-                case 'purge_nanomites':
-                    const rn = { ...s.resources };
-                    rn.nanoSwarm += 50;
-                    updates.resources = rn;
-                    logs.push({ type: 'LOG', msg: '>> ОЧИСТКА: +50 NANO SWARM', color: 'text-green-400' });
-                    break;
-                case 'crystal_absorb':
-                    const rc = { ...s.resources };
-                    rc.diamonds += 2;
-                    updates.resources = rc;
-                    updates.heat = Math.min(100, s.heat + 50);
-                    logs.push({ type: 'LOG', msg: '>> ПОГЛОЩЕНИЕ: +2 АЛМАЗА', color: 'text-cyan-400' });
-                    break;
-            }
-        }
-        else {
-            if (event.effectId) {
-                const effect = createEffect(event.effectId);
-                if (effect) {
-                    updates.activeEffects = [...s.activeEffects, { ...effect, id: effect.id + '_' + Date.now() }];
-                    logs.push({ type: 'LOG', msg: `>> НАЛОЖЕН ЭФФЕКТ: ${effect.name}`, color: 'text-yellow-400' });
-                }
-            }
-            if (event.forceArtifactDrop) {
-                grantArtifact();
-            }
-        }
-
-        set({ ...updates, actionLogQueue: [...s.actionLogQueue, ...logs] });
-    },
-
-    completeCombatMinigame: (success) => {
-        const s = get();
-        set({ combatMinigame: null });
-
-        if (s.currentBoss) {
-            if (success) {
-                const newBoss = {
-                    ...s.currentBoss,
-                    currentHp: s.currentBoss.currentHp - (s.currentBoss.maxHp * 0.25),
-                    isInvulnerable: false
-                };
-                set({ currentBoss: newBoss });
-                audioEngine.playExplosion();
-            } else {
-                const newBoss = { ...s.currentBoss, isInvulnerable: false };
-                set({
-                    integrity: Math.max(0, s.integrity - 20),
-                    currentBoss: newBoss
-                });
-                audioEngine.playAlarm();
-            }
         }
     },
 
-    setCoolingGame: (active) => set({ isCoolingGameActive: active }),
-    forceVentHeat: (amount) => set(s => ({ heat: Math.max(0, s.heat - amount) })),
-    triggerOverheat: () => set(s => {
-        const dmg = Math.ceil(s.drill.hull.baseStats.maxIntegrity * 0.2);
-        return {
-            heat: 100,
-            isOverheated: true,
-            integrity: Math.max(0, s.integrity - dmg),
-            isCoolingGameActive: false
-        };
-    }),
-
-    // === ADMIN ACTIONS ===
-
-    adminAddResources: (c, r) => set(s => {
-        const nr = { ...s.resources };
-        Object.keys(nr).forEach(k => {
-            if (['clay', 'stone', 'copper', 'iron', 'silver', 'gold'].includes(k)) nr[k as ResourceType] += c;
-            else nr[k as ResourceType] += r;
-        });
-        return { resources: nr };
-    }),
-
-    adminResetResources: () => set({ resources: INITIAL_STATE.resources }),
-
-    adminAddArtifact: (defId) => {
+    damageWeakPoint: (wpId: string) => {
         const s = get();
-        const id = Math.random().toString(36).substr(2, 9);
-        set({ inventory: { ...s.inventory, [id]: { instanceId: id, defId, acquiredAt: Date.now(), isIdentified: true, isEquipped: false } } });
-    },
+        if (!s.currentBoss) return;
 
-    adminSetGodMode: (v) => set({ isGodMode: v }),
-    adminSetInfiniteCoolant: (v) => set({ isInfiniteCoolant: v }),
-    adminSetOverdrive: (v) => set({ isOverdrive: v }),
-    adminUnlockAll: () => set({ forgeUnlocked: true, cityUnlocked: true, skillsUnlocked: true, storageLevel: 2 }),
-    adminMaxTech: () => set(s => ({ resources: { ...s.resources, ancientTech: 99999, nanoSwarm: 99999 } })),
+        const stats = calculateStats(s.drill, s.skillLevels, s.equippedArtifacts, s.inventory, s.depth);
+        const clickDamage = stats.totalDamage * stats.clickMult;
 
-    adminSetDepth: (d) => set(s => ({
-        depth: d,
-        selectedBiome: null,
-        actionLogQueue: [...s.actionLogQueue, { type: 'LOG', msg: `>> WARP JUMP TO ${d}m`, color: 'text-purple-400 font-bold' }]
-    })),
-
-    adminSkipBiome: () => set(s => ({ depth: s.depth + 5000, selectedBiome: null })),
-
-    adminSpawnBoss: () => {
-        const s = get();
-        const boss = generateBoss(s.depth, "Force Spawn");
-        set({ currentBoss: boss, activeView: View.COMBAT });
-        audioEngine.playAlarm();
-    },
-
-    adminTriggerEvent: (id) => set(s => ({ recentEventIds: [], eventCheckTick: 1000 })),
-    adminClearEvents: () => set({ eventQueue: [] }),
+        const res = damageBossWeakPoint(s.currentBoss, wpId, clickDamage);
+        if (res.damageDealt > 0) {
+            audioEngine.playLaser();
+            set({ currentBoss: res.boss });
+            // Ideally we'd log this or show visual feedback here too, but BossRenderer handles the visual 'hit' state via props if we passed it,
+            // or we rely on the BossOverlay pulsing.
+        }
+    }
 }));

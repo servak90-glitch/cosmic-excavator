@@ -26,35 +26,56 @@ export const createEntitySlice: SliceCreator<EntityActions> = (set, get) => ({
 
         if (obj.hp <= 0) {
             objects.splice(objIndex, 1);
-            audioEngine.playClick();
+            audioEngine.playClick(); // Consider a different sound for larger objects?
 
             const newRes = { ...s.resources };
             const currentBiome = s.selectedBiome
                 ? BIOMES.find(b => b.name === s.selectedBiome) || BIOMES[0]
                 : BIOMES.slice().reverse().find(b => s.depth >= b.depth) || BIOMES[0];
 
-            const commonAmount = Math.floor(Math.random() * 10) + 1;
-            newRes[currentBiome.resource] += commonAmount;
-            logs.push({ type: 'TEXT', x, y, text: `+${commonAmount} ${getResourceLabel(currentBiome.resource)}`, style: 'RESOURCE' });
+            // Rarity Multiplier
+            let multiplier = 1;
+            if (obj.rarity === 'RARE') multiplier = 2;
+            if (obj.rarity === 'EPIC') multiplier = 5;
 
-            // Шанс редкого ресурса
-            if (Math.random() < 0.15) {
-                const rareRes: ResourceType[] = ['titanium', 'uranium', 'nanoSwarm', 'ancientTech'];
-                const rareType = rareRes[Math.floor(Math.random() * rareRes.length)];
-                const rareAmount = Math.floor(Math.random() * 3) + 1;
-                newRes[rareType] += rareAmount;
-                logs.push({ type: 'TEXT', x, y: y - 20, text: `+${rareAmount} ${getResourceLabel(rareType)}`, style: 'CRIT' });
+            // REWARDS BY TYPE
+            if (obj.type === 'SATELLITE_DEBRIS') {
+                // Metals
+                const metalAmount = (Math.floor(Math.random() * 5) + 3) * multiplier;
+                newRes.iron += metalAmount;
+                logs.push({ type: 'TEXT', x, y, text: `+${metalAmount} Iron`, style: 'RESOURCE' });
+
+                if (Math.random() < 0.5) {
+                    const copperAmount = (Math.floor(Math.random() * 4) + 2) * multiplier;
+                    newRes.copper += copperAmount;
+                    logs.push({ type: 'TEXT', x, y: y - 20, text: `+${copperAmount} Copper`, style: 'RESOURCE' });
+                }
+            } else if (obj.type === 'GEODE_SMALL') {
+                // Gems & Stone
+                const stoneAmount = (Math.floor(Math.random() * 10) + 5) * multiplier;
+                newRes.stone += stoneAmount;
+                logs.push({ type: 'TEXT', x, y, text: `+${stoneAmount} Stone`, style: 'RESOURCE' });
+
+                if (Math.random() < 0.3 * multiplier) {
+                    newRes.rubies += 1 * multiplier;
+                    logs.push({ type: 'TEXT', x, y: y - 20, text: `+${1 * multiplier} Ruby`, style: 'CRIT' });
+                }
+            } else if (obj.type === 'GEODE_LARGE') {
+                // Rare Gems & Tech
+                const rareAmount = Math.floor(Math.random() * 2) + 1;
+                newRes.diamonds += rareAmount; // Guaranteed diamond for Large
+                logs.push({ type: 'TEXT', x, y, text: `+${rareAmount} Diamond`, style: 'CRIT' });
+
+                if (Math.random() < 0.4) {
+                    const techAmount = 1 * multiplier;
+                    newRes.ancientTech += techAmount;
+                    logs.push({ type: 'TEXT', x, y: y - 20, text: `+${techAmount} Tech`, style: 'CRIT' });
+                }
             }
 
-            // Шанс гема
-            if (Math.random() < 0.02 && currentBiome.gemResource) {
-                newRes[currentBiome.gemResource] += 1;
-                logs.push({ type: 'TEXT', x, y: y - 40, text: `+1 ${getResourceLabel(currentBiome.gemResource)}`, style: 'CRIT' });
-                audioEngine.playAchievement();
-            }
-
-            const xpGain = Math.floor(Math.random() * 11) + 10;
-            logs.push({ type: 'TEXT', x, y: y - 60, text: `+${xpGain} XP`, style: 'INFO' });
+            // XP Gain
+            const xpGain = (Math.floor(Math.random() * 11) + 10) * multiplier;
+            logs.push({ type: 'TEXT', x, y: y - 40, text: `+${xpGain} XP`, style: 'INFO' });
 
             set({
                 flyingObjects: objects,

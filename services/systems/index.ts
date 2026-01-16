@@ -12,3 +12,4 @@ export { processEntities } from './EntitySystem';
 export { processEvents } from './EventSystem';
 export { processDrones, processRegeneration } from './DroneSystem';
 export { processAnalyzer } from './AnalyzerSystem';
+export { processHazards } from './HazardSystem';

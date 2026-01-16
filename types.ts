@@ -45,9 +45,43 @@ export enum ArtifactRarity {
   ANOMALOUS = 'ANOMALOUS'
 }
 
+
 export type ItemRarity = 'Common' | 'Rare' | 'Epic' | 'Legendary' | 'Godly';
 
-export type VisualEffectType = 'NONE' | 'GLOW_PURPLE' | 'GLOW_GOLD' | 'GLITCH_RED' | 'MATRIX_GREEN' | 'FROST_BLUE';
+export type VisualEffectType = 'NONE' | 'GLOW_PURPLE' | 'GLOW_GOLD' | 'GLITCH_RED' | 'MATRIX_GREEN' | 'FROST_BLUE' | 'FIRE_BURST' | 'EMP_SHOCK';
+
+export interface Stats {
+  energyProd: number;
+  energyCons: number;
+  energyEfficiency: number;
+  totalDamage: number;
+  totalSpeed: number;
+  totalCooling: number;
+  torque: number;
+  critChance: number;
+  luck: number;
+  predictionTime: number;
+  clickMult: number;
+  ventSpeed: number;
+  defense: number;
+  evasion: number;
+  hazardResist: number;
+  integrity: number;
+  regen: number;
+  droneEfficiency: number;
+  drillingEfficiency: number;
+  ambientHeat: number;
+  requiredTier: number;
+  // Using simplified types for mods to avoid huge interface duplication
+  skillMods: Record<string, number>;
+  artifactMods: Record<string, number>;
+}
+
+export interface CombatMinigame {
+  active: boolean;
+  type: CombatMinigameType;
+  difficulty: number;
+}
 
 export type DrillFX =
   | 'pixel_sparks_brown'
@@ -237,6 +271,27 @@ export enum BossType {
   SWARM = 'SWARM'
 }
 
+// --- ABILITY SYSTEM ---
+export type AbilityType = 'EMP_BURST' | 'THERMAL_STRIKE' | 'BARRIER' | 'OVERLOAD';
+
+export interface AbilityDef {
+  id: AbilityType;
+  name: string;
+  description: string;
+  cooldownMs: number;
+  energyCost: number; // For now maybe Heat or direct resource? Let's assume a new "Energy" or "Charge" or just Heat Cost
+  heatCost: number;   // Adds heat
+  icon: string;       // emoji for now
+  unlockLevel: number;
+}
+
+export interface ActiveAbilityState {
+  id: AbilityType;
+  cooldownRemaining: number;
+  isActive: boolean; // For duration-based skills like Barrier
+  durationRemaining: number;
+}
+
 // --- COMBAT MINIGAMES ---
 export type CombatMinigameType = 'TIMING' | 'MEMORY' | 'MASH' | 'ALIGN' | 'GLYPH' | 'WIRES';
 
@@ -259,13 +314,40 @@ export interface Boss {
   phases: number[];
   isInvulnerable?: boolean;
   minigameWeakness: CombatMinigameType;
+  weakPoints: WeakPoint[];
+}
+
+export interface WeakPoint {
+  id: string;
+  x: number; // Percentage 0-100 relative to boss center/size
+  y: number; // Percentage 0-100 relative to boss center/size
+  radius: number;
+  currentHp: number;
+  maxHp: number;
+  isActive: boolean;
+  phaseRequired?: number; // Only active in this phase
 }
 
 export type EventType = 'NOTIFICATION' | 'CHOICE' | 'WARNING' | 'ANOMALY' | 'ARTIFACT';
 
+export enum EventActionId {
+  TECTONIC_HOLD = 'tectonic_hold',
+  TECTONIC_PUSH = 'tectonic_push',
+  POD_LASER = 'pod_laser',
+  POD_HACK = 'pod_hack',
+  ACCEPT_FLUCTUATION = 'accept_fluctuation',
+  REJECT_FLUCTUATION = 'reject_fluctuation',
+  AI_TRUST = 'ai_trust',
+  AI_REBOOT = 'ai_reboot',
+  PURGE_NANOMITES = 'purge_nanomites',
+  CRYSTAL_ABSORB = 'crystal_absorb',
+  TUNNEL_SAFE = 'tunnel_safe',
+  TUNNEL_RISKY = 'tunnel_risky'
+}
+
 export interface EventOption {
   label: string;
-  actionId: string;
+  actionId: EventActionId | string; // allowing string for flexibility if needed, but preferring Enum
   risk?: string;
 }
 
@@ -306,6 +388,12 @@ export interface ActiveEffect {
   };
 }
 
+export type FactionId = 'CORPORATE' | 'SCIENCE' | 'REBELS';
+
+export interface ReputationState {
+  [key: string]: number; // FactionId -> value (0-1000+)
+}
+
 export enum QuestIssuer {
   CORP = 'CORP',
   SCIENCE = 'SCIENCE',
@@ -319,7 +407,7 @@ export interface QuestRequirement {
 }
 
 export interface QuestReward {
-  type: 'RESOURCE' | 'XP' | 'TECH';
+  type: 'RESOURCE' | 'XP' | 'TECH' | 'REPUTATION';
   target: string;
   amount: number;
 }
@@ -332,6 +420,7 @@ export interface Quest {
   requirements: QuestRequirement[];
   rewards: QuestReward[];
   deadline?: number;
+  reputationReward?: number; // Simplified direct field or via rewards array
 }
 
 export type SkillCategory = 'CORTEX' | 'MOTOR' | 'VISUAL' | 'CHRONOS';
@@ -363,6 +452,7 @@ export interface FlyingObject {
   x: number;
   y: number;
   type: 'GEODE_SMALL' | 'GEODE_LARGE' | 'SATELLITE_DEBRIS';
+  rarity: 'COMMON' | 'RARE' | 'EPIC';
   vx: number;
   vy: number;
   hp: number;
@@ -386,6 +476,23 @@ export interface DroneDefinition {
   maxLevel: number;
   effectDescription: (level: number) => string;
   color: string;
+}
+
+// --- EXPEDITION SYSTEM ---
+export type ExpeditionDifficulty = 'LOW' | 'MEDIUM' | 'HIGH' | 'EXTREME';
+
+export interface Expedition {
+  id: string; // unique ID
+  difficulty: ExpeditionDifficulty;
+  riskChance: number; // 0.05, 0.2, 0.4, 0.7
+  droneCount: number;
+  resourceTarget: ResourceType; // Primary resource sought
+  startTime: number;
+  duration: number; // ms
+  status: 'ACTIVE' | 'COMPLETED' | 'FAILED';
+  rewards?: Partial<Resources>;
+  lostDrones?: number;
+  log: string[]; // Narrative of what happened
 }
 
 // --- NARRATIVE ENGINE TYPES ---
@@ -427,6 +534,8 @@ export interface GameState {
   heat: number;
   integrity: number;
 
+  activeAbilities: ActiveAbilityState[];
+
   // [DEV_CONTEXT: SHIELD]
   shieldCharge: number; // 0-100
   maxShieldCharge: number; // 100
@@ -445,6 +554,7 @@ export interface GameState {
 
   activeQuests: Record<string, Quest>;
   lastQuestRefresh: number;
+  reputation: ReputationState;
 
   totalDrilled: number;
   xp: number;
@@ -459,6 +569,7 @@ export interface GameState {
 
   activeDrones: DroneType[];
   droneLevels: Record<DroneType, number>;
+  activeExpeditions: Expedition[];
 
   storageLevel: 0 | 1 | 2;
   forgeUnlocked: boolean;
@@ -494,12 +605,16 @@ export interface GameState {
   narrativeTick: number;
   eventCheckTick: number;
 
-  combatMinigame: { active: boolean; type: CombatMinigameType; difficulty: number } | null;
+
+
+  combatMinigame: CombatMinigame | null;
+  minigameCooldown: number;
 }
 
 export type VisualEvent =
   | { type: 'LOG'; msg: string; color?: string }
-  | { type: 'TEXT'; x: number; y: number; text: string; style?: 'DAMAGE' | 'RESOURCE' | 'CRIT' | 'HEAL' | 'INFO' | 'EVADE' }
+  | { type: 'TEXT'; x: number; y: number; text: string; style?: 'DAMAGE' | 'RESOURCE' | 'CRIT' | 'HEAL' | 'INFO' | 'EVADE' | 'BLOCKED' }
   | { type: 'PARTICLE'; x: number; y: number; color: string; kind: 'DEBRIS' | 'SPARK' | 'SMOKE'; count: number }
   | { type: 'BOSS_HIT' }
-  | { type: 'SOUND'; sfx: 'LOG' | 'GLITCH' | 'ACHIEVEMENT' };
+  | { type: 'SOUND'; sfx: 'LOG' | 'GLITCH' | 'ACHIEVEMENT' }
+  | { type: 'VISUAL_EFFECT'; option: VisualEffectType };

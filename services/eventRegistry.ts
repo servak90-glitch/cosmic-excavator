@@ -1,5 +1,5 @@
 
-import { GameEvent, ActiveEffect } from '../types';
+import { GameEvent, ActiveEffect, EventActionId } from '../types';
 
 // База данных событий с весами
 export const EVENTS: GameEvent[] = [
@@ -31,8 +31,8 @@ export const EVENTS: GameEvent[] = [
     weight: 25,
     minDepth: 1000,
     options: [
-      { label: 'УДЕРЖАТЬ ПОЗИЦИЮ', actionId: 'tectonic_hold', risk: 'Урон обшивке' },
-      { label: 'ФОРСАЖ', actionId: 'tectonic_push', risk: 'Огромный перегрев' }
+      { label: 'УДЕРЖАТЬ ПОЗИЦИЮ', actionId: EventActionId.TECTONIC_HOLD, risk: 'Урон обшивке' },
+      { label: 'ФОРСАЖ', actionId: EventActionId.TECTONIC_PUSH, risk: 'Огромный перегрев' }
     ]
   },
 
@@ -54,8 +54,8 @@ export const EVENTS: GameEvent[] = [
     weight: 30,
     minDepth: 50,
     options: [
-      { label: 'ВСКРЫТЬ ЛАЗЕРОМ', actionId: 'pod_laser', risk: 'Шанс уничтожить лут' },
-      { label: 'ДЕШИФРОВКА', actionId: 'pod_hack' }
+      { label: 'ВСКРЫТЬ ЛАЗЕРОМ', actionId: EventActionId.POD_LASER, risk: 'Шанс уничтожить лут' },
+      { label: 'ДЕШИФРОВКА', actionId: EventActionId.POD_HACK }
     ]
   },
 
@@ -67,8 +67,8 @@ export const EVENTS: GameEvent[] = [
     type: 'WARNING',
     weight: 20,
     options: [
-      { label: 'РИСКНУТЬ (10 сек)', actionId: 'accept_fluctuation', risk: 'Перегрев неизбежен' },
-      { label: 'СТАБИЛИЗИРОВАТЬ', actionId: 'reject_fluctuation' }
+      { label: 'РИСКНУТЬ (10 сек)', actionId: EventActionId.ACCEPT_FLUCTUATION, risk: 'Перегрев неизбежен' },
+      { label: 'СТАБИЛИЗИРОВАТЬ', actionId: EventActionId.REJECT_FLUCTUATION }
     ],
     minDepth: 500
   },
@@ -89,8 +89,8 @@ export const EVENTS: GameEvent[] = [
     weight: 15,
     minDepth: 2000,
     options: [
-      { label: 'ДОВЕРИТЬСЯ ИИ', actionId: 'ai_trust', risk: 'Крит. температура' },
-      { label: 'ПЕРЕЗАГРУЗКА', actionId: 'ai_reboot', risk: 'Потеря прогресса' }
+      { label: 'ДОВЕРИТЬСЯ ИИ', actionId: EventActionId.AI_TRUST, risk: 'Крит. температура' },
+      { label: 'ПЕРЕЗАГРУЗКА', actionId: EventActionId.AI_REBOOT, risk: 'Потеря прогресса' }
     ]
   },
 
@@ -103,7 +103,7 @@ export const EVENTS: GameEvent[] = [
     weight: 10,
     minDepth: 1000,
     options: [
-      { label: 'ОЧИСТИТЬ (+Нано-железо)', actionId: 'purge_nanomites' }
+      { label: 'ОЧИСТИТЬ (+Нано-железо)', actionId: EventActionId.PURGE_NANOMITES }
     ],
   },
   {
@@ -123,7 +123,7 @@ export const EVENTS: GameEvent[] = [
     weight: 15,
     minDepth: 8000,
     options: [
-      { label: 'ПОГЛОТИТЬ ЭНЕРГИЮ', actionId: 'crystal_absorb' }
+      { label: 'ПОГЛОТИТЬ ЭНЕРГИЮ', actionId: EventActionId.CRYSTAL_ABSORB }
     ]
   },
   {
@@ -143,6 +143,20 @@ export const EVENTS: GameEvent[] = [
     weight: 2, // Very Rare
     minDepth: 1000,
     instantDepth: 5000
+  },
+
+  // --- HORIZONTAL PROGRESSION (SIDE TUNNELS) ---
+  {
+    id: 'SIDE_TUNNEL_DISCOVERY',
+    title: 'ПОБОЧНЫЙ ТОННЕЛЬ',
+    description: 'Сканеры обнаружили ответвление. Структура стен нестабильна, но возможны находки.',
+    type: 'CHOICE',
+    weight: 25,
+    minDepth: 300,
+    options: [
+      { label: 'БЕЗОПАСНАЯ ДОБЫЧА', actionId: EventActionId.TUNNEL_SAFE, risk: 'Мало ресурсов' },
+      { label: 'РИСКОВАННАЯ РАЗВЕДКА', actionId: EventActionId.TUNNEL_RISKY, risk: 'Обвал / Артефакт' }
+    ]
   },
 
   // --- СОБЫТИЯ ЯДРА (ВЕС: МИНИМАЛЬНЫЙ, ТОЛЬКО ГЛУБИНА) ---

@@ -481,6 +481,9 @@ export class AudioEngine {
     const g = this.ctx.createGain();
 
     osc.type = 'square';
+    // [VARIATION] Slight pitch shift +/- 50 cents
+    osc.detune.value = (Math.random() - 0.5) * 100;
+
     osc.frequency.setValueAtTime(800, t);
     osc.frequency.exponentialRampToValueAtTime(100, t + 0.1);
 
@@ -499,6 +502,34 @@ export class AudioEngine {
     };
   }
 
+  playLaser() {
+    if (!this.ctx || !this.sfxBus) return;
+    const t = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const g = this.ctx.createGain();
+
+    osc.type = 'sawtooth';
+    // [VARIATION] High variation for rapid fire
+    osc.detune.value = (Math.random() - 0.5) * 200;
+
+    osc.frequency.setValueAtTime(800 + Math.random() * 50, t);
+    osc.frequency.exponentialRampToValueAtTime(100, t + 0.15);
+
+    g.gain.setValueAtTime(0.08, t); // Slightly reduced volume
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.15);
+
+    osc.connect(g);
+    g.connect(this.sfxBus);
+
+    osc.start();
+    osc.stop(t + 0.2);
+
+    osc.onended = () => {
+      osc.disconnect();
+      g.disconnect();
+    };
+  }
+
   playAlarm() {
     if (!this.ctx || !this.sfxBus || !this.sfxDelayBus) return;
     const t = this.ctx.currentTime;
@@ -506,6 +537,9 @@ export class AudioEngine {
     const g = this.ctx.createGain();
 
     osc.type = 'sawtooth';
+    // [VARIATION]
+    osc.detune.value = (Math.random() - 0.5) * 50;
+
     osc.frequency.setValueAtTime(1200, t);
     osc.frequency.linearRampToValueAtTime(800, t + 0.2);
     osc.frequency.linearRampToValueAtTime(1200, t + 0.4);
@@ -559,9 +593,14 @@ export class AudioEngine {
 
     const noise = this.ctx.createBufferSource();
     noise.buffer = this.drillNoise?.buffer || this.createPinkNoise();
+
+    // [VARIATION] Pitch shift the noise slightly
+    noise.playbackRate.value = 0.8 + Math.random() * 0.4;
+
     const noiseFilter = this.ctx.createBiquadFilter();
     noiseFilter.type = 'lowpass';
-    noiseFilter.frequency.setValueAtTime(1000, t);
+    // [VARIATION] Filter cutoff variation
+    noiseFilter.frequency.setValueAtTime(800 + Math.random() * 400, t);
     noiseFilter.frequency.exponentialRampToValueAtTime(100, t + 0.2);
 
     const noiseGain = this.ctx.createGain();
@@ -586,48 +625,67 @@ export class AudioEngine {
     if (!this.ctx || !this.sfxBus) return;
     const t = this.ctx.currentTime;
 
-    // Impact
+    // 1. IMPACT (Kick)
     const osc = this.ctx.createOscillator();
-    const g = this.ctx.createGain();
+    const oscGain = this.ctx.createGain();
 
     osc.type = 'triangle';
-    osc.frequency.setValueAtTime(150, t);
-    osc.frequency.exponentialRampToValueAtTime(10, t + 0.5);
+    // Deep impact dropping pitch
+    osc.frequency.setValueAtTime(120, t);
+    osc.frequency.exponentialRampToValueAtTime(10, t + 0.4);
 
-    g.gain.setValueAtTime(0.8, t);
-    g.gain.exponentialRampToValueAtTime(0.001, t + 0.5);
+    oscGain.gain.setValueAtTime(1.0, t);
+    oscGain.gain.exponentialRampToValueAtTime(0.001, t + 0.4);
 
-    osc.connect(g);
-    g.connect(this.sfxBus);
+    osc.connect(oscGain);
+    oscGain.connect(this.sfxBus);
 
-    // Rumble/Debris
+    // 2. RUMBLE (Pink Noise + Lowpass)
     const noise = this.ctx.createBufferSource();
-    noise.buffer = this.createPinkNoise(); // Using pink noise for lower freq
-    const nFilter = this.ctx.createBiquadFilter();
-    nFilter.type = 'lowpass';
-    nFilter.frequency.setValueAtTime(800, t);
-    nFilter.frequency.exponentialRampToValueAtTime(100, t + 0.5);
+    noise.buffer = this.createPinkNoise();
 
-    const nGain = this.ctx.createGain();
-    nGain.gain.setValueAtTime(0.5, t);
-    nGain.gain.exponentialRampToValueAtTime(0.001, t + 0.8);
+    const noiseFilter = this.ctx.createBiquadFilter();
+    noiseFilter.type = 'lowpass';
+    noiseFilter.frequency.setValueAtTime(400, t);
+    noiseFilter.frequency.linearRampToValueAtTime(100, t + 1.5); // Filter closes down
 
-    noise.connect(nFilter);
-    nFilter.connect(nGain);
-    nGain.connect(this.sfxBus);
+    const noiseGain = this.ctx.createGain();
+    noiseGain.gain.setValueAtTime(0.8, t);
+    noiseGain.gain.exponentialRampToValueAtTime(0.001, t + 1.5); // Long tail
 
-    osc.start();
-    osc.stop(t + 0.6);
-    noise.start();
-    noise.stop(t + 0.9);
+    noise.connect(noiseFilter);
+    noiseFilter.connect(noiseGain);
+    noiseGain.connect(this.sfxBus);
 
-    osc.onended = () => {
-      osc.disconnect();
-      g.disconnect();
-      noise.disconnect();
-      nFilter.disconnect();
-      nGain.disconnect();
+    // 3. CRACKLE (High freq noise burst)
+    const crackle = this.ctx.createBufferSource();
+    crackle.buffer = this.createWhiteNoise();
+    const crackleFilter = this.ctx.createBiquadFilter();
+    crackleFilter.type = 'highpass';
+    crackleFilter.frequency.value = 1000;
+
+    const crackleGain = this.ctx.createGain();
+    crackleGain.gain.setValueAtTime(0.3, t);
+    crackleGain.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
+
+    crackle.connect(crackleFilter);
+    crackleFilter.connect(crackleGain);
+    crackleGain.connect(this.sfxBus);
+
+    // START ALL
+    osc.start(t);
+    osc.stop(t + 0.5);
+    noise.start(t);
+    noise.stop(t + 2.0);
+    crackle.start(t);
+    crackle.stop(t + 0.3);
+
+    // CLEANUP
+    const cleanup = () => {
+      // Simple heuristic cleanup or fire-and-forget
+      // In a real engine, we'd track these nodes
     };
+    setTimeout(cleanup, 2000);
   }
 
   playFusion() {

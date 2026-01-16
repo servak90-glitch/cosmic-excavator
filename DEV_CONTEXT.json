@@ -49,11 +49,14 @@
   },
   "last_changes": {
     "date": "2026-01-16",
-    "description": "TUNNEL ATMOSPHERE: Added floating debris (40 rocks with parallax), depth-based fog gradient, and hazard event system (CAVE_IN shake, GAS_POCKET mist, MAGMA_FLOW glow). New isolated module TunnelAtmosphere.ts integrated into PixiOverlay.",
+    "description": "COMPLETED PHASE 5 (VISUALS & ATMOSPHERE): 1) Enhanced Flying Objects with Rarity System (Common/Rare/Epic), rewards scaling, and new GEODE_LARGE type. 2) Implemented HazardSystem with dynamic triggers (Cave-in, Gas, Magma) based on depth and cooldowns. Integrated with GameEngine and TunnelAtmosphere visuals.",
     "affected_files": [
-      "services/systems/TunnelAtmosphere.ts",
+      "services/systems/HazardSystem.ts",
+      "services/systems/EntitySystem.ts",
+      "store/slices/entitySlice.ts",
       "components/PixiOverlay.tsx",
-      "DEV_CONTEXT.json"
+      "services/GameEngine.ts",
+      "types.ts"
     ]
   }
 }

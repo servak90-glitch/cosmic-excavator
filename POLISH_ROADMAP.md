@@ -14,18 +14,19 @@ This document tracks planned features, enhancements, and polishing tasks based o
 - [ ] **Implementation**: `ExpeditionView.tsx`, `ExpeditionSystem.ts`, `DroneRenderer.tsx`.
 
 ## 3. Combat System
-- [ ] **Active Skills**: EMP Burst, Thermal Strike, Barrier, Overload.
+- [x] **Active Skills**: EMP Burst, Thermal Strike, Barrier, Overload (Fixed cooldowns and UI costs).
 - [ ] **Boss Mechanics**: Phases with weak points.
 - [ ] **Implementation**: `AbilitySystem.ts`, `CombatSystem.ts`, `BossRenderer.tsx`.
 
 ## 4. Horizontal Progression
-- [ ] **Side Tunnels**: Resource Veins, Ancient Vaults, Hostile Nests.
-- [ ] **Factions**: Corporate, Science, Rebels (Reputation system).
+- [x] **Side Tunnels**: Resource Veins, Ancient Vaults, Hostile Nests.
+- [x] **Factions**: Corporate, Science, Rebels (Reputation system).
 
 ## 5. Visuals & Atmosphere
 - [x] **Tunnel Renderer**: Debris, fog gradient (implemented in TunnelAtmosphere.ts)
-- [ ] **Flying Objects**: Geodes, satellite debris background elements.
-- [ ] **Hazards**: Cave-ins, gas pockets, magma flows (system ready, need triggers).
+- [x] **Background Layer**: Fossils, Tech remnants with parallax.
+- [x] **Flying Objects**: Geodes, satellite debris, rarity system (Common/Rare/Epic), visual effects.
+- [x] **Hazards**: Cave-ins, gas pockets, magma flows (system implemented with visual triggers & cooldowns).
 
 ## 6. Long-Term (Endgame)
 - [ ] **Dimensions**: Instead of Prestige. Portal assembly quest.

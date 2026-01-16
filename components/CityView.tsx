@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Biome, Resources, Quest } from '../types';
-import { TradeTab, ContractsTab, JewelerTab, ServiceTab, BarTab } from './city';
+import { TradeTab, ContractsTab, JewelerTab, ServiceTab, BarTab, ExpeditionTab } from './city';
 
 interface CityViewProps {
   biome: Biome;
@@ -18,13 +18,14 @@ interface CityViewProps {
   onRefreshQuests: () => void;
 }
 
-type CityTab = 'TRADE' | 'CONTRACTS' | 'SERVICE' | 'BAR' | 'JEWELER';
+type CityTab = 'TRADE' | 'CONTRACTS' | 'SERVICE' | 'BAR' | 'JEWELER' | 'EXPEDITIONS';
 
 const TABS: { id: CityTab; label: string; icon: string }[] = [
   { id: 'TRADE', label: 'РЫНОК', icon: '⚖️' },
   { id: 'CONTRACTS', label: 'КОНТРАКТЫ', icon: '📜' },
   { id: 'JEWELER', label: 'ЮВЕЛИР', icon: '💎' },
   { id: 'SERVICE', label: 'СЕРВИС', icon: '🔧' },
+  { id: 'EXPEDITIONS', label: 'ЭКСПЕДИЦИИ', icon: '🚀' },
   { id: 'BAR', label: 'БАР', icon: '🍺' },
 ];
 
@@ -43,7 +44,7 @@ const CityView: React.FC<CityViewProps> = ({
   onCompleteQuest,
   onRefreshQuests
 }) => {
-  const [activeTab, setActiveTab] = useState<CityTab>('TRADE');
+  const [activeTab, setActiveTab] = useState<CityTab>('EXPEDITIONS');
 
   const renderActiveTab = () => {
     switch (activeTab) {
@@ -76,6 +77,9 @@ const CityView: React.FC<CityViewProps> = ({
         );
       case 'BAR':
         return <BarTab resources={resources} depth={depth} />;
+
+      case 'EXPEDITIONS':
+        return <ExpeditionTab />;
       default:
         return null;
     }

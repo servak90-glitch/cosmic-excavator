@@ -9,3 +9,7 @@ export { createInventorySlice, type InventoryActions } from './inventorySlice';
 export { createUpgradeSlice, type UpgradeActions } from './upgradeSlice';
 export { createEntitySlice, type EntityActions } from './entitySlice';
 export { createSettingsSlice, type SettingsActions } from './settingsSlice';
+export { createExpeditionSlice, type ExpeditionActions } from './expeditionSlice';
+export { createFactionSlice, type FactionActions } from './factionSlice';
+export { createAdminSlice, type AdminActions } from './adminSlice';
+export { createEventSlice, type EventActions } from './eventSlice';

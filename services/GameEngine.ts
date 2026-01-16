@@ -20,11 +20,15 @@ import {
     processDrilling,
     processCombat,
     processEntities,
-    processDrones,
-    processRegeneration,
+    processHazards,
     applyResourceChanges,
     ResourceChanges
 } from './systems';
+import { processEntities } from './systems/EntitySystem';
+import { processDrones, processRegeneration } from './systems/DroneSystem';
+import { tunnelAtmosphere } from './systems/TunnelAtmosphere';
+import { abilitySystem } from './systems/AbilitySystem';
+import { expeditionSystem } from './systems/ExpeditionSystem';
 
 export class GameEngine {
     tick(state: GameState, dt: number): { partialState: Partial<GameState>, events: VisualEvent[] } {
@@ -124,10 +128,40 @@ export class GameEngine {
         visualEvents.push(...entityResult.events);
 
         // 9. Регенерация и дроны
-        // Integrity check: Event damage vs Combat damage. Event damage is instantaneous.
-        // If event set integrity, use it. Otherwise combat result.
+        // [MODULAR] Check Expeditions (every 1s roughly)
+        if (state.eventCheckTick % 10 === 0) {
+            // [MODULAR] Expedition Update
+            const updatedExpeditions = state.activeExpeditions.map(ex => expeditionSystem.checkStatus(ex));
+            // Check for any changes to avoid unnecessary state updates (React optimization)
+            // But here we are returning partialState.
+            // If we just return mapped, it replaces the array.
+            // Does it matter? 
+            // Let's only add it to partialState if functionality implies it.
+            // checkStatus updates the object effectively (returns new if changed).
+            // We should push this to partialState.
+            // However partialState is aggregated.
+            // We need to merge it?
+            // No, GameEngine returns one object.
+            // We can just assign it to a property of the returned object.
+            // But `entityResult` creates `events`.
+            // Let's create `expeditionResult`.
+        }
+
+        // Actually, let's just do it properly:
+        let activeExpeditions = state.activeExpeditions;
+        if (state.eventCheckTick % 10 === 0) {
+            let hasChanges = false;
+            const updated = state.activeExpeditions.map(ex => {
+                const newVal = expeditionSystem.checkStatus(ex);
+                if (newVal !== ex) hasChanges = true;
+                return newVal;
+            });
+            if (hasChanges) activeExpeditions = updated;
+        }
+
         let integrity = eventsResult.update.integrity ?? heatResult.update.integrity ?? combatResult.update.integrity ?? state.integrity;
         let heat = eventsResult.update.heat ?? heatResult.update.heat;
+
         let depth = eventsResult.update.depth ?? drillResult.update.depth; // Event jump takes priority over drill? Or Add?
 
         // Wait, drillResult adds depth based on state.depth.
@@ -139,10 +173,69 @@ export class GameEngine {
             depth = Math.max(depth, eventsResult.update.depth);
         }
 
+        // [BALANCING] Overload Heat Generation (+10/sec)
+        const isOverloadActive = abilitySystem.getState('OVERLOAD').isActive;
+        if (isOverloadActive) {
+            heat += 10 * dt;
+        }
+
         integrity = processRegeneration(state, stats, integrity);
         const droneResult = processDrones(state, stats, integrity, heat);
         if (droneResult.integrity !== undefined) integrity = droneResult.integrity;
+        if (droneResult.integrity !== undefined) integrity = droneResult.integrity;
         if (droneResult.heat !== undefined) heat = droneResult.heat;
+
+        // 10. Случайные опасности (Hazards)
+        const hazardResult = processHazards({
+            ...state,
+            heat, // Use current accumulated heat
+            integrity, // Use current accumulated integrity
+            depth
+        });
+        if (hazardResult.update.integrity !== undefined) integrity = hazardResult.update.integrity;
+        if (hazardResult.update.heat !== undefined) heat = hazardResult.update.heat;
+        visualEvents.push(...hazardResult.events);
+
+        // === HAZARD TRIGGERS (Visual Effects) ===
+        // Detect hazards from logs for visual triggers (Temporary coupling until VisualEvent supports explicit hazards)
+        hazardResult.events.forEach(e => {
+            if (e.type === 'LOG') {
+                if (e.msg.includes('ОБВАЛ')) tunnelAtmosphere.triggerHazard('CAVE_IN', 0.5);
+                if (e.msg.includes('ГАЗОВЫЙ')) tunnelAtmosphere.triggerHazard('GAS_POCKET', 0.5);
+                if (e.msg.includes('МАГМАТИЧЕСКИЙ')) tunnelAtmosphere.triggerHazard('MAGMA_FLOW', 0.8);
+            }
+        });
+
+        // 1. GAS_POCKET event triggers green mist
+        const gasEvent = eventsResult.update.eventQueue.find(e => e.id === 'GAS_POCKET');
+        if (gasEvent) {
+            tunnelAtmosphere.triggerHazard('GAS_POCKET', 0.7);
+        }
+
+        // 2. Overheat triggers magma glow
+        if (heat >= 90 && !state.isOverheated) {
+            tunnelAtmosphere.triggerHazard('MAGMA_FLOW', heat / 100);
+        }
+
+        // 3. Deep drilling (>30000m) random magma
+        if (depth > 30000 && Math.random() < 0.002) {
+            tunnelAtmosphere.triggerHazard('MAGMA_FLOW', 0.3);
+        }
+
+        // 4. Boss attack triggers screen shake
+        if (combatResult.update.currentBoss && state.currentBoss) {
+            // Check if boss just attacked (bossAttackTick reset)
+            if (combatResult.update.bossAttackTick === 0 && state.bossAttackTick > 0) {
+                const bossIntensity = combatResult.update.currentBoss.damage / 50;
+                tunnelAtmosphere.triggerHazard('CAVE_IN', Math.min(1, bossIntensity));
+            }
+        }
+
+        // 5. Tectonic event triggers cave-in
+        const tectonicEvent = eventsResult.update.eventQueue.find(e => e.id === 'TECTONIC_SHIFT');
+        if (tectonicEvent) {
+            tunnelAtmosphere.triggerHazard('CAVE_IN', 0.8);
+        }
 
         // === ЗВУК И НАРРАТИВ ===
         const narrativeContext = {
@@ -168,6 +261,19 @@ export class GameEngine {
             }
         }
 
+        // === ABILITY SYSTEM UPDATE ===
+        // Update cooldowns and durations
+        abilitySystem.update(dt);
+        // AbilitySystem.update takes dt. 
+        // Let's check AbilitySystem.ts:
+        // update(dt: number): void { ... state.cooldownRemaining -= dt * 1000; ... }
+        // So it expects dt in SECONDS.
+        // Wait, "state.cooldownRemaining -= dt * 1000" implies dt is seconds and we convert to ms.
+        // So passing dt (seconds) is correct.
+
+        const activeAbilities = abilitySystem.getAllStates();
+
+
         // === ОБЪЕДИНЕНИЕ ИНВЕНТАРЯ ===
         let newInventory = state.inventory;
         if (Object.keys(inventoryUpdates).length > 0) {
@@ -180,6 +286,9 @@ export class GameEngine {
         // === ФИНАЛЬНОЕ СОСТОЯНИЕ ===
         return {
             partialState: {
+                // ... (existing)
+                activeAbilities, // Add this
+
                 // Тепло
                 heat,
                 isOverheated: heatResult.update.isOverheated,
@@ -208,6 +317,7 @@ export class GameEngine {
                 combatMinigame: combatResult.update.combatMinigame,
                 bossAttackTick: combatResult.update.bossAttackTick,
                 lastBossDepth: combatResult.update.lastBossDepth,
+                minigameCooldown: combatResult.update.minigameCooldown,
                 flyingObjects: entityResult.update.flyingObjects,
 
                 // События
@@ -223,6 +333,9 @@ export class GameEngine {
                 // Нарратив
                 narrativeTick,
                 aiState,
+
+                // Let's add activeExpeditions if changed
+                ...(state.eventCheckTick % 10 === 0 ? { activeExpeditions } : {})
             },
             events: visualEvents
         };

@@ -89,13 +89,12 @@ const PixiOverlay = forwardRef<PixiOverlayHandle, PixiOverlayProps>(({ onObjectC
                         globalParticleLayer = particleLayer;
 
                         // [DEV_CONTEXT: FILTERS] Using pixi-filters library
-                        // CRT Filter: Retro look
+                        // CRT Filter: Retro look (vignette removed in pixi-filters 6.x)
                         const crtFilter = new CRTFilter({
                             curvature: 1,
                             lineWidth: 1,
                             lineContrast: 0.3,
-                            noise: 0.1,
-                            vignette: 0.3
+                            noise: 0.1
                         });
 
                         // RGB Split: Chromatic Aberration (Glitch effect)
@@ -361,28 +360,97 @@ const PixiOverlay = forwardRef<PixiOverlayHandle, PixiOverlayProps>(({ onObjectC
                                     g.hitArea = new Circle(0, 0, 30);
                                     g.on('pointerdown', (e) => {
                                         e.stopPropagation();
-                                        // Use ref to call fresh callback
                                         callbacksRef.current.onObjectClick(obj.id, e.global.x, e.global.y);
                                     });
                                     objectLayer.addChild(g);
                                     objectGraphicsMap.set(obj.id, g);
-
-                                    if (obj.type === 'GEODE_SMALL') {
-                                        const r = 12;
-                                        const path: number[] = [];
-                                        for (let k = 0; k < 8; k++) {
-                                            const ang = (k * Math.PI) / 4;
-                                            const rad = k % 2 === 0 ? r : r * 0.6;
-                                            path.push(Math.cos(ang) * rad, Math.sin(ang) * rad);
-                                        }
-                                        g.drawPolygon(path).fill({ color: 0x00ff00, alpha: 0.3 }).stroke({ width: 2, color: 0x00ff00 });
-                                    } else if (obj.type === 'GEODE_LARGE') {
-                                        g.rect(-15, -15, 30, 30).fill({ color: 0xffffff, alpha: 0.2 }).stroke({ width: 2, color: 0xffffff });
-                                    } else {
-                                        g.rect(-10, -5, 20, 10).fill({ color: 0x00ccff });
-                                        g.rect(-2, -10, 4, 20).fill({ color: 0x00ccff });
-                                    }
                                 }
+
+                                // Clear and redraw with animation
+                                g.clear();
+
+                                // Pulsating scale based on time
+                                const pulse = 1 + Math.sin(time * 3) * 0.15;
+                                const healthPercent = obj.hp / obj.maxHp;
+
+                                // Rarity Effects
+                                let rarityScale = 1;
+                                let rarityGlowColor = 0x000000;
+                                let rarityGlowAlpha = 0;
+
+                                if (obj.rarity === 'RARE') {
+                                    rarityScale = 1.2;
+                                    rarityGlowColor = 0x00FFFF; // Cyan
+                                    rarityGlowAlpha = 0.3;
+                                } else if (obj.rarity === 'EPIC') {
+                                    rarityScale = 1.5;
+                                    rarityGlowColor = 0xFFD700; // Gold
+                                    rarityGlowAlpha = 0.5;
+                                }
+
+                                // Apply Rarity Glow (Underlay)
+                                if (obj.rarity !== 'COMMON') {
+                                    g.circle(0, 0, 25 * rarityScale * pulse)
+                                        .fill({ color: rarityGlowColor, alpha: rarityGlowAlpha * 0.5 + Math.sin(time * 10) * 0.1 });
+                                }
+
+                                if (obj.type === 'GEODE_SMALL') {
+                                    // Emerald crystal with glow
+                                    const r = 12 * pulse * rarityScale;
+                                    const path: number[] = [];
+                                    for (let k = 0; k < 8; k++) {
+                                        const ang = (k * Math.PI) / 4;
+                                        const rad = k % 2 === 0 ? r : r * 0.6;
+                                        path.push(Math.cos(ang) * rad, Math.sin(ang) * rad);
+                                    }
+                                    // Outer glow
+                                    g.drawPolygon(path.map((v, i) => v * 1.3))
+                                        .fill({ color: 0x00ff88, alpha: 0.15 });
+                                    // Main crystal
+                                    g.drawPolygon(path)
+                                        .fill({ color: 0x00ff88, alpha: 0.4 * healthPercent + 0.2 })
+                                        .stroke({ width: 2, color: 0x00ffaa });
+                                    // Inner highlight
+                                    g.circle(0, -r * 0.3, r * 0.2)
+                                        .fill({ color: 0xffffff, alpha: 0.5 });
+
+                                } else if (obj.type === 'GEODE_LARGE') {
+                                    // Purple rare geode
+                                    const s = 15 * pulse * rarityScale;
+                                    // Outer glow
+                                    g.rect(-s * 1.4, -s * 1.4, s * 2.8, s * 2.8)
+                                        .fill({ color: 0x9900ff, alpha: 0.1 });
+                                    // Main body
+                                    g.rect(-s, -s, s * 2, s * 2)
+                                        .fill({ color: 0xaa44ff, alpha: 0.35 * healthPercent + 0.15 })
+                                        .stroke({ width: 2, color: 0xcc66ff });
+                                    // Sparkle effect
+                                    const sparkX = Math.sin(time * 5) * s * 0.5;
+                                    const sparkY = Math.cos(time * 4) * s * 0.5;
+                                    g.circle(sparkX, sparkY, 3).fill({ color: 0xffffff, alpha: 0.8 });
+
+                                } else {
+                                    // Satellite debris - orange/yellow with sparks
+                                    const baseAlpha = 0.6 * healthPercent + 0.2;
+                                    // Main body (cross shape)
+                                    g.rect(-10 * pulse * rarityScale, -4 * pulse * rarityScale, 20 * pulse * rarityScale, 8 * pulse * rarityScale)
+                                        .fill({ color: 0xff8800, alpha: baseAlpha });
+                                    g.rect(-3 * pulse * rarityScale, -10 * pulse * rarityScale, 6 * pulse * rarityScale, 20 * pulse * rarityScale)
+                                        .fill({ color: 0xffaa00, alpha: baseAlpha });
+                                    // Sparks (small dots around)
+                                    for (let sp = 0; sp < 4; sp++) {
+                                        const sparkAngle = time * 2 + sp * (Math.PI / 2);
+                                        const sparkDist = 15 * rarityScale + Math.sin(time * 8 + sp) * 3;
+                                        g.circle(
+                                            Math.cos(sparkAngle) * sparkDist,
+                                            Math.sin(sparkAngle) * sparkDist,
+                                            2
+                                        ).fill({ color: 0xffff00, alpha: 0.7 });
+                                    }
+                                    // Center light
+                                    g.circle(0, 0, 4 * pulse * rarityScale).fill({ color: 0xffcc00, alpha: 0.9 });
+                                }
+
                                 g.x = (obj.x / 100) * screenW;
                                 g.y = (obj.y / 100) * screenH;
                                 g.rotation = time * 0.5;

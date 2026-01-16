@@ -95,7 +95,7 @@ export class TunnelAtmosphere {
 
   private debris: FloatingDebris[] = [];
   private fogGraphics: Graphics | null = null;
-  private textures: { rock: Texture; rockLarge: Texture } | null = null;
+  private textures: { rock: Texture; rockLarge: Texture; fossil: Texture; tech: Texture } | null = null;
 
   private activeHazard: HazardEvent | null = null;
   private screenShake = { x: 0, y: 0 };
@@ -111,9 +111,111 @@ export class TunnelAtmosphere {
   /**
    * Initialize atmosphere system and add layers to parent container.
    */
+  // --- BACKGROUND SYSTEM ---
+
+  private createBackgroundObjects(count: number): void {
+    if (!this.textures) return;
+
+    for (let i = 0; i < count; i++) {
+      const typeRoll = Math.random();
+      let texture = this.textures.rock; // Fallback
+      let scaleBase = 1.0;
+
+      if (typeRoll < 0.3) {
+        texture = this.textures.fossil;
+        scaleBase = 2.0;
+      } else if (typeRoll < 0.6) {
+        texture = this.textures.tech;
+        scaleBase = 1.8;
+      } else {
+        texture = this.textures.rockLarge;
+        scaleBase = 0.8;
+      }
+
+      const sprite = new Sprite(texture);
+      sprite.anchor.set(0.5);
+
+      // Deep background: slower movement, darker, less opaque
+      const z = Math.random() * 0.3; // 0.0 to 0.3 (Very far)
+      const scale = scaleBase * (0.5 + z);
+
+      sprite.scale.set(scale);
+      sprite.alpha = 0.1 + z * 0.2; // Faint
+      sprite.tint = 0x555566; // Blueish tint for background
+      sprite.rotation = Math.random() * Math.PI * 2;
+
+      const obj: FloatingDebris = {
+        sprite,
+        x: Math.random() * this.config.screenWidth,
+        y: Math.random() * this.config.screenHeight,
+        z: z * 0.2, // Very slow movement
+        rotationSpeed: (Math.random() - 0.5) * 0.005,
+        size: scale
+      };
+
+      this.debris.push(obj); // Add to common physics list but render layer needs to be controlled?
+      // Actually, let's separate them to handle draw order if needed, but for now common debris list is fine 
+      // IF we add them to the correct layer.
+
+      // We want these BEHIND normal debris.
+      // Let's add them to fogLayer? Or a new bgLayer?
+      // Re-using debris list for invalidation is fine, but parent should be different.
+      // Let's create a dedicated list if we want separate behavior, but reuse is cheaper.
+      // To keep it simple: Add to debrisLayer with low Z means they are drawn together.
+      // Pixi draws in order of children. We should add background objects FIRST.
+      this.debrisLayer.addChildAt(sprite, 0);
+    }
+  }
+
+  // Generate extended textures
+  private generateExtendedTextures(): void {
+    const { rock, rockLarge } = generateTextures(); // Keep existing
+
+    // Fossil Texture (Ribcage shape)
+    const fossilCanvas = document.createElement('canvas');
+    fossilCanvas.width = 32;
+    fossilCanvas.height = 32;
+    const fCtx = fossilCanvas.getContext('2d')!;
+    fCtx.strokeStyle = '#888'; // Lighter color
+    fCtx.lineWidth = 3; // Thicker lines
+    fCtx.beginPath();
+    // Spine
+    fCtx.moveTo(16, 4);
+    fCtx.lineTo(16, 28);
+    // Ribs
+    for (let i = 0; i < 4; i++) {
+      const y = 8 + i * 6;
+      fCtx.moveTo(8, y);
+      fCtx.quadraticCurveTo(16, y - 2, 24, y);
+    }
+    fCtx.stroke();
+
+    // Tech Remnant (Greeble plate)
+    const techCanvas = document.createElement('canvas');
+    techCanvas.width = 24;
+    techCanvas.height = 24;
+    const tCtx = techCanvas.getContext('2d')!;
+    tCtx.fillStyle = '#4a4a55';
+    tCtx.fillRect(2, 2, 20, 20);
+    tCtx.fillStyle = '#6a6a75';
+    tCtx.fillRect(4, 4, 8, 8);
+    tCtx.fillStyle = '#2a2a30';
+    tCtx.fillRect(14, 14, 6, 6);
+    tCtx.strokeStyle = '#667';
+    tCtx.lineWidth = 2;
+    tCtx.strokeRect(2, 2, 20, 20);
+
+    this.textures = {
+      rock,
+      rockLarge,
+      fossil: Texture.from(fossilCanvas),
+      tech: Texture.from(techCanvas)
+    };
+  }
+
   init(parent: Container, config: AtmosphereConfig): void {
     this.config = config;
-    this.textures = generateTextures();
+    this.generateExtendedTextures(); // Use new generation
 
     // [FIX] Set layers as non-interactive to not block game clicks
     this.fogLayer.eventMode = 'none';
@@ -126,7 +228,10 @@ export class TunnelAtmosphere {
     parent.addChild(this.debrisLayer); // Position 1
     parent.addChild(this.hazardLayer); // Position 2
 
-    // Create floating debris (30 small, 10 large)
+    // 1. Create Background (Fossils, Tech) - 15 items
+    this.createBackgroundObjects(15);
+
+    // 2. Create Foreground Debris (30 small, 10 large)
     this.createDebris(30, 'small');
     this.createDebris(10, 'large');
 

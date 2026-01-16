@@ -2,43 +2,43 @@
 import { Biome, DrillPart, EnginePart, CoolerPart, HullPart, LogicPart, ControlPart, GearboxPart, PowerCorePart, ArmorPart, DroneDefinition, MergeRecipe, TunnelPropDef, DroneType } from './types';
 
 export const BIOMES: Biome[] = [
-  { 
-    depth: 0, name: "ПОВЕРХНОСТЬ", resource: "clay", color: "#8B4513", 
+  {
+    depth: 0, name: "ПОВЕРХНОСТЬ", resource: "clay", color: "#8B4513",
     description: "Пыльный горизонт, где всё начинается.", hub: "БАЗА 'ГОРИЗОНТ'",
     hazard: 'CORROSION', hazardLevel: 1, gemResource: 'rubies'
   },
-  { 
-    depth: 500, name: "ТВЕРДЫЙ КАМЕНЬ", resource: "stone", color: "#555555", 
+  {
+    depth: 500, name: "ТВЕРДЫЙ КАМЕНЬ", resource: "stone", color: "#555555",
     description: "Непрощающая кора. Проверь свою решимость.",
     hazard: 'NONE', hazardLevel: 0, gemResource: 'rubies'
   },
-  { 
-    depth: 1500, name: "МЕДНЫЕ ЖИЛЫ", resource: "copper", color: "#B87333", 
+  {
+    depth: 1500, name: "МЕДНЫЕ ЖИЛЫ", resource: "copper", color: "#B87333",
     description: "Проводящие пути в глубине. Осторожно: ЭМ-поля.",
     hazard: 'MAGNETIC', hazardLevel: 15, gemResource: 'emeralds'
   },
-  { 
-    depth: 4000, name: "ЗАЛЕЖИ ЖЕЛЕЗА", resource: "iron", color: "#A19D94", 
+  {
+    depth: 4000, name: "ЗАЛЕЖИ ЖЕЛЕЗА", resource: "iron", color: "#A19D94",
     description: "Позвоночник машины.",
-    hazard: 'CORROSION', hazardLevel: 10, gemResource: 'emeralds' 
+    hazard: 'CORROSION', hazardLevel: 10, gemResource: 'emeralds'
   },
-  { 
-    depth: 10000, name: "КРИСТАЛЬНЫЕ ГРОТЫ", resource: "silver", color: "#00CED1", 
+  {
+    depth: 10000, name: "КРИСТАЛЬНЫЕ ГРОТЫ", resource: "silver", color: "#00CED1",
     description: "Сияние в темноте. Отражают тепло.", hub: "КРИСТАЛЬНАЯ ГАВАНЬ",
     hazard: 'HEAT_REFLECTION', hazardLevel: 25, gemResource: 'diamonds'
   },
-  { 
-    depth: 20000, name: "ЗОЛОТАЯ ЗЕМЛЯ", resource: "gold", color: "#FFD700", 
+  {
+    depth: 20000, name: "ЗОЛОТАЯ ЗЕМЛЯ", resource: "gold", color: "#FFD700",
     description: "Богатства спрессованной пустоты.",
     hazard: 'MAGNETIC', hazardLevel: 30, gemResource: 'diamonds'
   },
-  { 
-    depth: 50000, name: "ПЛАСТЫ ПУСТОТЫ", resource: "titanium", color: "#1A1A1A", 
+  {
+    depth: 50000, name: "ПЛАСТЫ ПУСТОТЫ", resource: "titanium", color: "#1A1A1A",
     description: "Здесь свет гаснет. Давление критическое.", hub: "КУЗНИЦА МАГМЫ",
     hazard: 'VOID_PRESSURE', hazardLevel: 50, gemResource: 'diamonds'
   },
-  { 
-    depth: 100000, name: "РАДИОАКТИВНОЕ ЯДРО", resource: "uranium", color: "#32CD32", 
+  {
+    depth: 100000, name: "РАДИОАКТИВНОЕ ЯДРО", resource: "uranium", color: "#32CD32",
     description: "Последний барьер. Сердце бытия.", hub: "СВЯТИЛИЩЕ ЯДРА",
     hazard: 'RADIATION', hazardLevel: 100, gemResource: 'emeralds'
   }
@@ -46,11 +46,11 @@ export const BIOMES: Biome[] = [
 
 // --- VISUAL PROPS REGISTRY (NEW) ---
 export const TUNNEL_PROPS: TunnelPropDef[] = [
-    { type: 'FOSSIL', minDepth: 10, maxDepth: 800, chance: 0.05, color: '#A0A0A0' }, // Bones/Shells
-    { type: 'PIPE', minDepth: 100, maxDepth: 2000, chance: 0.03, color: '#554433' }, // Rusted Pipes
-    { type: 'TECH_DEBRIS', minDepth: 2000, maxDepth: 10000, chance: 0.02, color: '#40E0D0' }, // Old Robots
-    { type: 'CRYSTAL', minDepth: 8000, maxDepth: 25000, chance: 0.08, color: '#E0FFFF' }, // Giant Crystals
-    { type: 'RUIN', minDepth: 15000, maxDepth: 100000, chance: 0.01, color: '#FFD700' } // Precursor Statues
+  { type: 'FOSSIL', minDepth: 10, maxDepth: 800, chance: 0.05, color: '#A0A0A0' }, // Bones/Shells
+  { type: 'PIPE', minDepth: 100, maxDepth: 2000, chance: 0.03, color: '#554433' }, // Rusted Pipes
+  { type: 'TECH_DEBRIS', minDepth: 2000, maxDepth: 10000, chance: 0.02, color: '#40E0D0' }, // Old Robots
+  { type: 'CRYSTAL', minDepth: 8000, maxDepth: 25000, chance: 0.08, color: '#E0FFFF' }, // Giant Crystals
+  { type: 'RUIN', minDepth: 15000, maxDepth: 100000, chance: 0.01, color: '#FFD700' } // Precursor Statues
 ];
 
 // ... (REST OF THE FILE REMAINS UNCHANGED - BITS, ENGINES, ETC.)
@@ -258,54 +258,56 @@ export const FUSION_RECIPES: MergeRecipe[] = [
 ];
 
 export const DRONES: DroneDefinition[] = [
-  { 
-    id: DroneType.COLLECTOR, 
-    name: 'СБОРЩИК MK-1', 
-    description: 'Требуется: Медь + Изумруды (сенсоры).', 
-    baseCost: { clay: 500, copper: 200, emeralds: 5 }, 
-    costMultiplier: 1.5, 
-    maxLevel: 10, 
-    color: '#00FF00', 
-    effectDescription: (lvl) => `Множитель сбора: x${(1 + lvl * 0.2).toFixed(1)}` 
+  {
+    id: DroneType.COLLECTOR,
+    name: 'СБОРЩИК MK-1',
+    description: 'Требуется: Медь + Изумруды (сенсоры).',
+    baseCost: { clay: 500, copper: 200, emeralds: 5 },
+    costMultiplier: 1.5,
+    maxLevel: 10,
+    color: '#00FF00',
+    effectDescription: (lvl) => `Множитель сбора: x${(1 + lvl * 0.2).toFixed(1)}`
   },
-  { 
-    id: DroneType.COOLER, 
-    name: 'КРИО-БОТ MK-2', 
-    description: 'Требуется: Серебро + Железо (радиатор).', 
-    baseCost: { iron: 800, silver: 400 }, 
-    costMultiplier: 1.6, 
-    maxLevel: 10, 
-    color: '#00FFFF', 
-    effectDescription: (lvl) => `Охлаждение: -${(1.5 * lvl).toFixed(1)}/сек` 
+  {
+    id: DroneType.COOLER,
+    name: 'КРИО-БОТ MK-2',
+    description: 'Требуется: Серебро + Железо (радиатор).',
+    baseCost: { iron: 800, silver: 400 },
+    costMultiplier: 1.6,
+    maxLevel: 10,
+    color: '#00FFFF',
+    effectDescription: (lvl) => `Охлаждение: -${(1.5 * lvl).toFixed(1)}/сек`
   },
-  { 
-    id: DroneType.BATTLE, 
-    name: 'ОХРАННИК MK-3', 
-    description: 'Требуется: Титан + Рубины (лазер).', 
-    baseCost: { gold: 1500, titanium: 600, rubies: 10 }, 
-    costMultiplier: 1.8, 
-    maxLevel: 10, 
-    color: '#FF0000', 
-    effectDescription: (lvl) => `Урон боссам: ${(50 * lvl)}/сек` 
+  {
+    id: DroneType.BATTLE,
+    name: 'ОХРАННИК MK-3',
+    description: 'Требуется: Титан + Рубины (лазер).',
+    baseCost: { gold: 1500, titanium: 600, rubies: 10 },
+    costMultiplier: 1.8,
+    maxLevel: 10,
+    color: '#FF0000',
+    effectDescription: (lvl) => `Урон боссам: ${(50 * lvl)}/сек`
   },
-  { 
-    id: DroneType.REPAIR, 
-    name: 'НАНО-ВРАЧ MK-4', 
-    description: 'Требуется: Уран + Нано-рой.', 
-    baseCost: { uranium: 1000, nanoSwarm: 200 }, 
-    costMultiplier: 2.0, 
-    maxLevel: 10, 
-    color: '#FFD700', 
-    effectDescription: (lvl) => `Ремонт: +${(0.2 * lvl).toFixed(1)}/сек` 
+  {
+    id: DroneType.REPAIR,
+    name: 'НАНО-ВРАЧ MK-4',
+    description: 'Требуется: Уран + Нано-рой.',
+    baseCost: { uranium: 1000, nanoSwarm: 200 },
+    costMultiplier: 2.0,
+    maxLevel: 10,
+    color: '#FFD700',
+    effectDescription: (lvl) => `Ремонт: +${(0.2 * lvl).toFixed(1)}/сек`
   },
-  { 
-    id: DroneType.MINER, 
-    name: 'БУР-ДРОН MK-5', 
-    description: 'Требуется: Ancient Tech + Алмазы (бур).', 
-    baseCost: { ancientTech: 50, diamonds: 20 }, 
-    costMultiplier: 2.5, 
-    maxLevel: 10, 
-    color: '#FF00FF', 
-    effectDescription: (lvl) => `Добыча: ${(lvl * 5)}/сек` 
+  {
+    id: DroneType.MINER,
+    name: 'БУР-ДРОН MK-5',
+    description: 'Требуется: Ancient Tech + Алмазы (бур).',
+    baseCost: { ancientTech: 50, diamonds: 20 },
+    costMultiplier: 2.5,
+    maxLevel: 10,
+    color: '#FF00FF',
+    effectDescription: (lvl) => `Добыча: ${(lvl * 5)}/сек`
   }
 ];
+
+export const GAME_VERSION = '0.1.0';

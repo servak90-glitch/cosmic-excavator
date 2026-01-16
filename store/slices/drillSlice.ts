@@ -24,7 +24,12 @@ export const createDrillSlice: SliceCreator<DrillActions> = (set, get) => ({
         if (now - s.lastInteractTime < 50) return;
 
         const stats = calculateStats(s.drill, s.skillLevels, s.equippedArtifacts, s.inventory, s.depth);
-        const damage = 10 * stats.clickMult;
+
+        // [BALANCING] Overload Damage Buff (+100%)
+        const isOverloadActive = s.activeAbilities.find(a => a.id === 'OVERLOAD')?.isActive;
+        const overloadMult = isOverloadActive ? 2.0 : 1.0;
+
+        const damage = 10 * stats.clickMult * overloadMult;
 
         let newHeat = s.heat;
         if (!s.isInfiniteCoolant) {

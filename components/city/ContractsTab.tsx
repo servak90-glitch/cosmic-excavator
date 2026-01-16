@@ -3,6 +3,8 @@ import { ContractsTabProps, getFactionStyle } from './types';
 import { Resources } from '../../types';
 import { getResourceLabel } from '../../services/gameMath';
 
+import { useGameStore } from '../../store/gameStore';
+
 const ContractsTab: React.FC<ContractsTabProps> = ({
     resources,
     xp,
@@ -12,9 +14,28 @@ const ContractsTab: React.FC<ContractsTabProps> = ({
     onRefreshQuests
 }) => {
     const questList = useMemo(() => Object.values(activeQuests), [activeQuests]);
+    const { reputation } = useGameStore();
 
     return (
         <div className="max-w-2xl mx-auto">
+            {/* REPUTATION HEADER */}
+            <div className="flex justify-between items-center mb-4 bg-zinc-900/50 p-2 border border-zinc-800 rounded">
+                <div className="flex gap-4">
+                    <div className="text-[10px]">
+                        <span className="text-zinc-400">CORP: </span>
+                        <span className="text-white font-bold">{reputation?.CORPORATE || 0}</span>
+                    </div>
+                    <div className="text-[10px]">
+                        <span className="text-cyan-400">SCIENCE: </span>
+                        <span className="text-white font-bold">{reputation?.SCIENCE || 0}</span>
+                    </div>
+                    <div className="text-[10px]">
+                        <span className="text-amber-500">REBELS: </span>
+                        <span className="text-white font-bold">{reputation?.REBELS || 0}</span>
+                    </div>
+                </div>
+            </div>
+
             <div className="flex justify-between items-center mb-4 md:mb-6">
                 <div>
                     <h3 className="text-lg md:text-xl pixel-text text-white">ДОСКА ОБЪЯВЛЕНИЙ</h3>
@@ -79,10 +100,17 @@ const ContractsTab: React.FC<ContractsTabProps> = ({
                                         <div className="bg-black/30 p-1.5 md:p-2 border-l-2 border-green-900/30">
                                             {quest.rewards.map((rew, i) => (
                                                 <div key={i} className="flex justify-between text-[10px] md:text-xs font-mono">
-                                                    <span>{getResourceLabel(rew.target)}</span>
+                                                    <span>{rew.type === 'REPUTATION' ? 'REP' : getResourceLabel(rew.target)}</span>
                                                     <span className="text-green-400">+{rew.amount.toLocaleString()}</span>
                                                 </div>
                                             ))}
+                                            {/* Legacy Display */}
+                                            {quest.reputationReward && (
+                                                <div className="flex justify-between text-[10px] md:text-xs font-mono">
+                                                    <span>REP</span>
+                                                    <span className="text-green-400">+{quest.reputationReward}</span>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 </div>

@@ -111,7 +111,27 @@ export const createCitySlice: SliceCreator<CityActions> = (set, get) => ({
             quest.rewards.forEach(r => {
                 if (r.type === 'RESOURCE' || r.type === 'TECH') newRes[r.target as ResourceType] += r.amount;
                 if (r.type === 'XP') xpGain += r.amount;
+                // REPUTATION REWARD
+                if (r.type === 'REPUTATION') {
+                    // Since we can't easily access another slice's action directly (unless we use get().addReputation),
+                    // and addReputation is part of the store now.
+                    // But we are INSIDE the citySlice.
+                    // IMPORTANT: We need to check if FactionActions are mixed in before calling.
+                    // However, at runtime 's' (GameStore) has all methods.
+                    // Logic:
+                    // We can manually update reputation state here or call the action.
+                    // Calling action is cleaner for side effects (logs).
+                    const factionAction = (get() as any).addReputation;
+                    if (factionAction) factionAction(r.target, r.amount);
+                }
             });
+
+            // Legacy support if reputationReward field is used
+            if (quest.reputationReward) {
+                const factionMap: Record<string, string> = { 'CORP': 'CORPORATE', 'SCIENCE': 'SCIENCE', 'REBELS': 'REBELS' };
+                const factionId = factionMap[quest.issuer] || quest.issuer;
+                (get() as any).addReputation?.(factionId, quest.reputationReward);
+            }
 
             const newQuests = { ...s.activeQuests };
             delete newQuests[id];

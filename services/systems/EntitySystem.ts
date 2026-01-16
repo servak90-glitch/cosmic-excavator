@@ -23,14 +23,34 @@ export function processEntities(state: GameState): { update: EntityUpdate; event
 
     // Спавн новых объектов
     if (!state.currentBoss && !state.combatMinigame && !state.isCoolingGameActive && flyingObjects.length < 3) {
-        if (Math.random() < 0.01) {
-            const isDebris = Math.random() > 0.5;
-            const hp = Math.floor(Math.random() * 9) + 7;
+        if (Math.random() < 0.015) { // Slightly increased spawn rate
+            const rand = Math.random();
+            const rarity = rand > 0.95 ? 'EPIC' : (rand > 0.70 ? 'RARE' : 'COMMON');
+
+            // Determine type
+            const typeRoll = Math.random();
+            let type: FlyingObject['type'] = 'SATELLITE_DEBRIS';
+
+            if (typeRoll > 0.5) {
+                // 50% chance for Geode
+                // If Geode, 20% chance for LARGE
+                type = Math.random() < 0.2 ? 'GEODE_LARGE' : 'GEODE_SMALL';
+            }
+
+            // HP scaling with rarity and type
+            let baseHp = 10;
+            if (type === 'GEODE_LARGE') baseHp = 25;
+            if (rarity === 'RARE') baseHp *= 1.5;
+            if (rarity === 'EPIC') baseHp *= 3;
+
+            const hp = Math.floor(baseHp + Math.random() * 5);
+
             const newObj: FlyingObject = {
                 id: `fly_${Date.now()}_${Math.random()}`,
-                x: Math.random() < 0.5 ? -10 : 110,
+                x: Math.random() < 0.5 ? -20 : 120,
                 y: 10 + Math.random() * 60,
-                type: isDebris ? 'SATELLITE_DEBRIS' : 'GEODE_SMALL',
+                type,
+                rarity,
                 vx: (Math.random() * 0.5 + 0.2) * (Math.random() < 0.5 ? 1 : -1),
                 vy: (Math.random() - 0.5) * 0.2,
                 hp,
