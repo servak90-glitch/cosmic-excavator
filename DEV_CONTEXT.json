@@ -1,7 +1,7 @@
 {
   "project_info": {
     "name": "Cosmic Excavator: Void-Piercer",
-    "version": "2.2.1-microhud",
+    "version": "0.2.0",
     "stack": [
       "React 19.2.3",
       "TypeScript",
@@ -49,11 +49,18 @@
   },
   "last_changes": {
     "date": "2026-01-16",
-    "description": "COMPLETED PHASE 5 (VISUALS & ATMOSPHERE): 1) Enhanced Flying Objects with Rarity System (Common/Rare/Epic), rewards scaling, and new GEODE_LARGE type. 2) Implemented HazardSystem with dynamic triggers (Cave-in, Gas, Magma) based on depth and cooldowns. Integrated with GameEngine and TunnelAtmosphere visuals.",
+    "description": "VERSION 0.2.0: Sistema completa - 1) HazardSystem con triggers visuales y cooldowns para Cave-in/Gas/Magma. 2) EntitySystem ampliado con sistema de rareza (Common/Rare/Epic) y GEODE_LARGE. 3) Combat System con cooldown de minijuegos. 4) Refactor completo de GameStore en slices (entitySlice, eventSlice, adminSlice). 5) Balance de habilidades (nerf THERMAL_STRIKE). 6) Audio polish.",
     "affected_files": [
+      "package.json",
+      "constants.tsx",
+      "DEV_CONTEXT.json",
+      "CHANGELOG.md",
       "services/systems/HazardSystem.ts",
       "services/systems/EntitySystem.ts",
       "store/slices/entitySlice.ts",
+      "store/slices/eventSlice.ts",
+      "store/slices/adminSlice.ts",
+      "store/gameStore.ts",
       "components/PixiOverlay.tsx",
       "services/GameEngine.ts",
       "types.ts"
