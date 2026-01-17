@@ -1,20 +1,23 @@
 /**
  * EventSystem — управление случайными событиями
  * 
- * Отвечает за:
- * - Периодическую проверку на события
- * - Добавление событий в очередь
- * - Предотвращение повторов
+ * ОБНОВЛЕНО v4.0: Вероятностные модели
+ * - Поддержка Poisson распределения для событий
+ * - Триггеры контекста (DRILLING, TRAVELING, etc.)
+ * - Cooldowns для предотвращения спама
+ * - Обработка новых полей (instantResource, caravanEffect, baseEffect)
  */
 
-import { GameState, VisualEvent, GameEvent } from '../../types';
+import { GameState, VisualEvent, GameEvent, EventTrigger } from '../../types';
 import { rollRandomEvent } from '../eventRegistry';
 import { calculateStats } from '../gameMath';
+import { poissonProbability, normalDistribution } from '../mathUtils';
 
 export interface EventUpdate {
     eventCheckTick: number;
     eventQueue: GameEvent[];
     recentEventIds: string[];
+    eventCooldowns?: Record<string, number>;  // ID события -> время последнего срабатывания
 
     integrity?: number;
     depth?: number;
@@ -23,7 +26,80 @@ export interface EventUpdate {
 }
 
 /**
- * Обработка случайных событий
+ * Проверяет, может ли событие сработать на основе триггера
+ */
+function matchesTrigger(event: GameEvent, currentTrigger: EventTrigger): boolean {
+    if (!event.triggers || event.triggers.length === 0) {
+        return true;  // Legacy события без триггеров работают везде
+    }
+    return event.triggers.includes(currentTrigger);
+}
+
+/**
+ * Проверяет, не находится ли событие на cooldown
+ */
+function isOnCooldown(eventId: string, cooldowns: Record<string, number>, currentTime: number, eventCooldown: number): boolean {
+    if (!eventCooldown) return false;
+
+    const lastTriggerTime = cooldowns[eventId] || 0;
+    const timeSinceLastTrigger = currentTime - lastTriggerTime;
+
+    return timeSinceLastTrigger < eventCooldown * 1000;  // Cooldown в секундах -> мс
+}
+
+/**
+ * Вычисляет вероятность события на основе модели
+ */
+function calculateEventProbability(event: GameEvent, state: GameState, deltaTime: number): number {
+    if (!event.probabilityModel) {
+        return 0.1;  // Legacy: 10% шанс для старых событий
+    }
+
+    const model = event.probabilityModel;
+
+    switch (model.type) {
+        case 'poisson': {
+            // Poisson: P(≥1) = 1 - e^(-λt)
+            const lambda = model.lambda || 0.01;
+            const hours = deltaTime / 3600;  // dt в секундах -> часы
+
+            // Apply depth modifier if exists
+            let adjustedLambda = lambda;
+            if (model.depthModifier) {
+                adjustedLambda *= model.depthModifier(state.depth);
+            }
+
+            return 1 - Math.exp(-adjustedLambda * hours);
+        }
+
+        case 'exponential_decay': {
+            // Exponential decay with depth
+            const baseChance = model.baseChance || 0.01;
+            const scale = model.scale || 5000;
+            return baseChance * Math.exp(-state.depth / scale);
+        }
+
+        case 'conditional': {
+            // Dynamic calculation based on game state
+            if (model.calculateChance) {
+                return model.calculateChance({
+                    depth: state.depth,
+                    heat: state.heat,
+                    zone: 'green',  // TODO: determine from region
+                    cargoValue: 0,  // TODO: calculate from resources
+                    caravanLevel: 1  // TODO: from caravan state
+                });
+            }
+            return model.baseChance || 0.1;
+        }
+
+        default:
+            return 0.1;  // Fallback
+    }
+}
+
+/**
+ * Обработка случайных событий (REFACTORED для вероятностных моделей)
  */
 export function processEvents(state: GameState, stats: ReturnType<typeof calculateStats>): { update: EventUpdate; events: VisualEvent[] } {
     const visualEvents: VisualEvent[] = [];
@@ -31,20 +107,54 @@ export function processEvents(state: GameState, stats: ReturnType<typeof calcula
     let eventCheckTick = (state.eventCheckTick || 0) + 1;
     let eventQueue = state.eventQueue;
     let recentEventIds = state.recentEventIds;
+    let eventCooldowns = state.eventCooldowns || {};
 
     const updates: Partial<EventUpdate> = {};
+    const currentTime = Date.now();
 
-    // Проверка каждые 50 тиков (5 секунд)
-    if (eventCheckTick >= 50 && eventQueue.length === 0 && !state.currentBoss && !state.combatMinigame?.active) {
+    // === ВЕРОЯТНОСТНАЯ ПРОВЕРКА СОБЫТИЙ ===
+    // Проверяем каждые 10 тиков (1 секунда)
+    if (eventCheckTick >= 10 && eventQueue.length === 0 && !state.currentBoss && !state.combatMinigame?.active) {
         eventCheckTick = 0;
 
-        // 10% шанс события
-        if (Math.random() < 0.1) {
-            const newEvent = rollRandomEvent(recentEventIds, state.depth, state.heat);
+        // Определяем текущий триггер
+        const currentTrigger = state.isDrilling ? EventTrigger.DRILLING : EventTrigger.DRILLING;  // TODO: динамически определять
 
-            if (newEvent) {
+        // Получаем события, которые могут сработать
+        const candidateEvent = rollRandomEvent(recentEventIds, state.depth, state.heat);
+
+        if (candidateEvent) {
+            // Проверяем триггер
+            if (!matchesTrigger(candidateEvent, currentTrigger)) {
+                // Событие не подходит по контексту
+                return {
+                    update: { eventCheckTick, eventQueue, recentEventIds, eventCooldowns },
+                    events: visualEvents
+                };
+            }
+
+            // Проверяем cooldown
+            if (candidateEvent.cooldown && isOnCooldown(candidateEvent.id, eventCooldowns, currentTime, candidateEvent.cooldown)) {
+                // Событие на cooldown
+                return {
+                    update: { eventCheckTick, eventQueue, recentEventIds, eventCooldowns },
+                    events: visualEvents
+                };
+            }
+
+            // Вычисляем вероятность
+            const deltaTime = 1.0;  // 1 секунда между проверками
+            const probability = calculateEventProbability(candidateEvent, state, deltaTime);
+
+            // Проверяем случайный бросок
+            if (Math.random() < probability) {
+                const newEvent = candidateEvent;
+
                 eventQueue = [...eventQueue, newEvent];
                 recentEventIds = [...recentEventIds, newEvent.id];
+
+                // Обновляем cooldown
+                eventCooldowns[newEvent.id] = currentTime;
 
                 // Хранить только 5 последних
                 if (recentEventIds.length > 5) recentEventIds.shift();
@@ -78,12 +188,36 @@ export function processEvents(state: GameState, stats: ReturnType<typeof calcula
                     updates.heat = Math.min(100, state.heat + newEvent.instantHeat);
                     visualEvents.push({ type: 'LOG', msg: `>> НАГРЕВ: +${newEvent.instantHeat}`, color: 'text-orange-500' });
                 }
+
+                // --- NEW: INSTANT RESOURCE (для топливных событий) ---
+                if (newEvent.instantResource && typeof newEvent.instantResource === 'object' && 'type' in newEvent.instantResource) {
+                    const resource = newEvent.instantResource;
+                    let amount = resource.amountMean || 100;
+
+                    // Если есть параметры распределения, используем Normal distribution
+                    if (resource.amountMean && resource.amountStdDev) {
+                        amount = Math.max(
+                            resource.amountMin || 0,
+                            Math.min(
+                                resource.amountMax || 1000,
+                                normalDistribution(resource.amountMean, resource.amountStdDev)
+                            )
+                        );
+                    }
+
+                    // TODO: добавить ресурс в state.resources через resourceChanges
+                    visualEvents.push({
+                        type: 'LOG',
+                        msg: `>> ДОБЫЧА: +${Math.floor(amount)} ${resource.type.toUpperCase()}`,
+                        color: 'text-green-400 font-bold'
+                    });
+                }
             }
         }
     }
 
     return {
-        update: { eventCheckTick, eventQueue, recentEventIds, ...updates },
+        update: { eventCheckTick, eventQueue, recentEventIds, eventCooldowns, ...updates },
         events: visualEvents
     };
 }

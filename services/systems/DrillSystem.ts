@@ -6,11 +6,48 @@
  * - Добыча ресурсов по биому
  * - Эффективность бурения
  * - Разблокировка контента по глубине
+ * - **[NEW v4.0]** Потребление топлива при бурении
  */
 
-import { GameState, VisualEvent, Stats, ResourceType } from '../../types';
+import { GameState, VisualEvent, Stats, ResourceType, Resources } from '../../types';
 import { BIOMES } from '../../constants';
 import { ResourceChanges } from './types';
+
+// === ТОПЛИВНАЯ СИСТЕМА ===
+
+/**
+ * Скорость потребления топлива (% от drillPower)
+ * 0.01 = 1% drillPower расходуется как топливо каждый тик
+ */
+const FUEL_CONSUMPTION_RATE = 0.01;
+
+/**
+ * Эффективность топлива (как долго 1 единица топлива работает)
+ * Чем выше значение, тем МЕНЬШЕ расходуется топлива
+ */
+const FUEL_EFFICIENCY: Record<string, number> = {
+    coal: 1.0,  // Базовая эффективность
+    oil: 1.5,   // На 50% эффективнее угля
+    gas: 2.0,   // В 2 раза эффективнее угля
+};
+
+/**
+ * Выбор лучшего доступного топлива (приоритет: gas > oil > coal)
+ * Возвращает { fuelType, efficiency } или null если топливо закончилось
+ */
+function selectBestAvailableFuel(resources: Resources): { fuelType: keyof Resources; efficiency: number } | null {
+    if (resources.gas > 0) {
+        return { fuelType: 'gas', efficiency: FUEL_EFFICIENCY.gas };
+    }
+    if (resources.oil > 0) {
+        return { fuelType: 'oil', efficiency: FUEL_EFFICIENCY.oil };
+    }
+    if (resources.coal > 0) {
+        return { fuelType: 'coal', efficiency: FUEL_EFFICIENCY.coal };
+    }
+    return null; // Топливо закончилось
+}
+
 
 export interface DrillUpdate {
     depth: number;
@@ -45,6 +82,31 @@ export function processDrilling(
 
     // Бурение активно
     if (isDrilling && !isOverheated && !state.isBroken && !state.currentBoss) {
+        // === ПРОВЕРКА ТОПЛИВА ===
+        const fuel = selectBestAvailableFuel(state.resources);
+
+        if (!fuel) {
+            // Топливо закончилось - блокируем бурение
+            events.push({
+                type: 'LOG',
+                msg: '⚠️ ТОПЛИВО ЗАКОНЧИЛОСЬ! Бурение остановлено. Необходимо coal/oil/gas.',
+                color: 'text-red-500 font-bold'
+            });
+
+            // Не выполнять бурение
+            return {
+                update: {
+                    depth,
+                    forgeUnlocked,
+                    cityUnlocked,
+                    skillsUnlocked,
+                    storageLevel
+                },
+                resourceChanges,
+                events
+            };
+        }
+
         // Лог предупреждения при низкой эффективности
         if (stats.drillingEfficiency < 0.5 && Math.random() < 0.02) {
             events.push({
@@ -71,6 +133,10 @@ export function processDrilling(
         // Итоговая мощность бурения
         let drillPower = stats.totalSpeed * speedPenalty * speedMult;
         if (state.isOverdrive) drillPower *= 100;
+
+        // === ПОТРЕБЛЕНИЕ ТОПЛИВА ===
+        const fuelCost = (drillPower * FUEL_CONSUMPTION_RATE) / fuel.efficiency;
+        resourceChanges[fuel.fuelType] = (resourceChanges[fuel.fuelType] || 0) - fuelCost;
 
         // Увеличение глубины (только если не выбран конкретный биом)
         if (!state.selectedBiome) {

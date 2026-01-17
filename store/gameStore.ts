@@ -80,10 +80,17 @@ const INITIAL_STATE: GameState = {
     depth: 0,
     heat: 0,
     integrity: 100,
+    currentCargoWeight: 0,  // [CARGO SYSTEM] Начальный вес груза
     shieldCharge: 100,
     maxShieldCharge: 100,
     isShielding: false,
-    resources: { clay: 0, stone: 0, copper: 0, iron: 0, silver: 0, gold: 0, titanium: 0, uranium: 0, nanoSwarm: 0, ancientTech: 0, rubies: 0, emeralds: 0, diamonds: 0 },
+    resources: {
+        clay: 0, stone: 0, copper: 0, iron: 0, silver: 0, gold: 0,
+        titanium: 0, uranium: 0, nanoSwarm: 0, ancientTech: 0,
+        rubies: 0, emeralds: 0, diamonds: 0,
+        // Fuel (MVP)
+        coal: 0, oil: 0, gas: 0
+    },
     drill: {
         [DrillSlot.BIT]: BITS[0],
         [DrillSlot.ENGINE]: ENGINES[0],
@@ -109,6 +116,7 @@ const INITIAL_STATE: GameState = {
     activeEffects: [],
     eventQueue: [],
     recentEventIds: [],
+    eventCooldowns: {},  // [EVENT SYSTEM v4.0] Кулдауны событий
     flyingObjects: [],
     currentBoss: null,
     lastBossDepth: 0,
@@ -157,7 +165,7 @@ const PERSISTENT_KEYS: (keyof GameState)[] = [
     'forgeUnlocked', 'cityUnlocked', 'skillsUnlocked', 'storageLevel',
     'lastBossDepth', 'analyzer', 'debugUnlocked', 'selectedBiome',
     'activeEffects', 'eventQueue', 'recentEventIds', 'lastQuestRefresh',
-    'shieldCharge'
+    'shieldCharge', 'currentCargoWeight'
 ];
 
 const createSnapshot = (state: GameState): Partial<GameState> => {
@@ -183,7 +191,8 @@ const sanitizeAndMerge = (initial: GameState, saved: any): GameState => {
     const primitiveKeys: (keyof GameState)[] = [
         'depth', 'heat', 'integrity', 'xp', 'level', 'totalDrilled',
         'lastBossDepth', 'storageLevel', 'forgeUnlocked', 'cityUnlocked', 'skillsUnlocked',
-        'selectedBiome', 'debugUnlocked', 'lastQuestRefresh', 'shieldCharge', 'minigameCooldown'
+        'selectedBiome', 'debugUnlocked', 'lastQuestRefresh', 'shieldCharge', 'minigameCooldown',
+        'currentCargoWeight'
     ];
 
     deepKeys.forEach(key => {

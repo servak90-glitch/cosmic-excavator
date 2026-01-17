@@ -4,7 +4,7 @@
 
 import { SetState, GetState, SliceCreator, pushLog } from './types';
 import { Resources, ResourceType, VisualEvent, InventoryItem } from '../../types';
-import { calculateStats, getResourceLabel, calculateRepairCost } from '../../services/gameMath';
+import { calculateStats, getResourceLabel, calculateRepairCost, recalculateCargoWeight } from '../../services/gameMath';
 import { audioEngine } from '../../services/audioEngine';
 import { createEffect } from '../../services/eventRegistry';
 import { generateQuestBatch } from '../../services/questRegistry';
@@ -30,7 +30,10 @@ export const createCitySlice: SliceCreator<CityActions> = (set, get) => ({
                 if (k === 'XP') set({ xp: s.xp + (v as number) });
                 else newRes[k as ResourceType] += (v as number);
             });
-            set({ resources: newRes });
+            set({
+                resources: newRes,
+                currentCargoWeight: recalculateCargoWeight(newRes)
+            });
             audioEngine.playClick();
         }
     },
@@ -51,7 +54,8 @@ export const createCitySlice: SliceCreator<CityActions> = (set, get) => ({
             const newRes = { ...s.resources, [resource]: s.resources[resource] - cost };
             set({
                 integrity: stats.integrity,
-                resources: newRes
+                resources: newRes,
+                currentCargoWeight: recalculateCargoWeight(newRes)
             });
             audioEngine.playLog();
         } else {
@@ -77,6 +81,7 @@ export const createCitySlice: SliceCreator<CityActions> = (set, get) => ({
                 };
                 set({
                     resources: newRes,
+                    currentCargoWeight: recalculateCargoWeight(newRes),
                     activeEffects: [...s.activeEffects, effect],
                     actionLogQueue: pushLog(s, event)
                 });
@@ -93,11 +98,19 @@ export const createCitySlice: SliceCreator<CityActions> = (set, get) => ({
             if (win) {
                 newRes[res] += amount * 2;
                 const event: VisualEvent = { type: 'LOG', msg: `ВЫИГРЫШ! +${amount}`, color: 'text-green-500' };
-                set({ resources: newRes, actionLogQueue: pushLog(s, event) });
+                set({
+                    resources: newRes,
+                    currentCargoWeight: recalculateCargoWeight(newRes),
+                    actionLogQueue: pushLog(s, event)
+                });
                 audioEngine.playAchievement();
             } else {
                 const event: VisualEvent = { type: 'LOG', msg: `ПРОИГРЫШ...`, color: 'text-red-500' };
-                set({ resources: newRes, actionLogQueue: pushLog(s, event) });
+                set({
+                    resources: newRes,
+                    currentCargoWeight: recalculateCargoWeight(newRes),
+                    actionLogQueue: pushLog(s, event)
+                });
             }
         }
     },
@@ -139,6 +152,7 @@ export const createCitySlice: SliceCreator<CityActions> = (set, get) => ({
             const event: VisualEvent = { type: 'LOG', msg: `КОНТРАКТ ВЫПОЛНЕН`, color: 'text-green-500' };
             set({
                 resources: newRes,
+                currentCargoWeight: recalculateCargoWeight(newRes),
                 xp: s.xp + xpGain,
                 activeQuests: newQuests,
                 actionLogQueue: pushLog(s, event)
@@ -152,8 +166,10 @@ export const createCitySlice: SliceCreator<CityActions> = (set, get) => ({
         if (s.resources.clay >= 100) {
             const quests = generateQuestBatch(s.depth, s.level);
             const questMap = quests.reduce((acc, q) => ({ ...acc, [q.id]: q }), {});
+            const newRes = { ...s.resources, clay: s.resources.clay - 100 };
             set({
-                resources: { ...s.resources, clay: s.resources.clay - 100 },
+                resources: newRes,
+                currentCargoWeight: recalculateCargoWeight(newRes),
                 activeQuests: questMap
             });
         }

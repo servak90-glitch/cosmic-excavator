@@ -10,6 +10,7 @@ import {
 } from '../../constants';
 import { SKILLS, getSkillCost } from '../../services/skillRegistry';
 import { audioEngine } from '../../services/audioEngine';
+import { recalculateCargoWeight } from '../../services/gameMath';
 
 export interface UpgradeActions {
     buyUpgrade: (slot: DrillSlot) => void;
@@ -49,6 +50,7 @@ export const createUpgradeSlice: SliceCreator<UpgradeActions> = (set, get) => ({
 
             set({
                 resources: newRes,
+                currentCargoWeight: recalculateCargoWeight(newRes),
                 drill: { ...s.drill, [slot]: nextPart },
                 actionLogQueue: pushLogs(s, events)
             });
@@ -92,6 +94,7 @@ export const createUpgradeSlice: SliceCreator<UpgradeActions> = (set, get) => ({
 
             set({
                 resources: newRes,
+                currentCargoWeight: recalculateCargoWeight(newRes),
                 drill: { ...s.drill, [slot]: resultPart },
                 actionLogQueue: pushLogs(s, events)
             });
@@ -131,6 +134,7 @@ export const createUpgradeSlice: SliceCreator<UpgradeActions> = (set, get) => ({
 
             set({
                 resources: newRes,
+                currentCargoWeight: recalculateCargoWeight(newRes),
                 droneLevels: newLevels,
                 activeDrones: newActive,
                 actionLogQueue: pushLogs(s, events)

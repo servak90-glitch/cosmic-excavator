@@ -52,6 +52,66 @@ export const calculateShieldRechargeCost = (depth: number): { resource: Resource
     return { resource, cost };
 };
 
+// === CARGO SYSTEM (GLOBAL MAP) ===
+
+/**
+ * Вес каждого ресурса (единиц веса на 1 единицу ресурса)
+ * Используется для расчёта грузоподъёмности бура при перемещении между регионами
+ */
+export const RESOURCE_WEIGHTS: Record<keyof Resources, number> = {
+    // Базовые материалы (тяжёлые)
+    clay: 2,
+    stone: 3,
+    copper: 4,
+    iron: 5,
+
+    // Драгметаллы (средние)
+    silver: 3,
+    gold: 4,
+    titanium: 5,
+    uranium: 6,
+
+    // Редкие (лёгкие, но ценные)
+    nanoSwarm: 1,
+    ancientTech: 2,
+    rubies: 1,
+    emeralds: 1,
+    diamonds: 1,
+
+    // Топливо (MVP)
+    coal: 3,
+    oil: 2,
+    gas: 1,
+};
+
+/**
+ * Рассчитывает текущий вес груза игрока
+ * @param resources - Ресурсы игрока (inventory)
+ * @returns Общий вес в единицах
+ */
+export function calculateCargoWeight(resources: Partial<Resources>): number {
+    let totalWeight = 0;
+
+    for (const [resource, amount] of Object.entries(resources)) {
+        const weight = RESOURCE_WEIGHTS[resource as keyof Resources] || 0;
+        totalWeight += (amount || 0) * weight;
+    }
+
+    return totalWeight;
+}
+
+/**
+ * Вспомогательная функция для обновления currentCargoWeight в state
+ * Используется в слайсах при изменении ресурсов
+ * @param resources - Текущие ресурсы игрока
+ * @returns Обновлённый вес груза
+ */
+export function recalculateCargoWeight(resources: Resources): number {
+    return calculateCargoWeight(resources);
+}
+
+
+
 // UI UTILITY: Compact Number Formatting
 export const formatCompactNumber = (num: number): string => {
     if (num === 0 || isNaN(num)) return '0';

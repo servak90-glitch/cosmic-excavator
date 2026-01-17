@@ -7,7 +7,7 @@
  */
 
 import { GameState, VisualEvent, Resources } from '../types';
-import { calculateStats } from './gameMath';
+import { calculateStats, recalculateCargoWeight } from './gameMath';
 import { narrativeManager } from './narrativeManager';
 
 import { audioEngine } from './audioEngine';
@@ -24,7 +24,6 @@ import {
     applyResourceChanges,
     ResourceChanges
 } from './systems';
-import { processEntities } from './systems/EntitySystem';
 import { processDrones, processRegeneration } from './systems/DroneSystem';
 import { tunnelAtmosphere } from './systems/TunnelAtmosphere';
 import { abilitySystem } from './systems/AbilitySystem';
@@ -309,6 +308,7 @@ export class GameEngine {
 
                 // Ресурсы и HP
                 resources: newResources,
+                currentCargoWeight: recalculateCargoWeight(newResources),  // [CARGO SYSTEM] Автообновление веса
                 integrity,
                 xp: (combatResult.update.xp ?? state.xp), // Combat XP updates
 

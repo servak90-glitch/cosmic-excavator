@@ -1,5 +1,5 @@
 
-import { GameEvent, ActiveEffect, EventActionId } from '../types';
+import { GameEvent, ActiveEffect, EventActionId, EventTrigger } from '../types';
 
 // База данных событий с весами
 export const EVENTS: GameEvent[] = [
@@ -35,6 +35,314 @@ export const EVENTS: GameEvent[] = [
       { label: 'ФОРСАЖ', actionId: EventActionId.TECTONIC_PUSH, risk: 'Огромный перегрев' }
     ]
   },
+
+  // ================================================================================
+  // === ЛОГИСТИЧЕСКИЕ СОБЫТИЯ (ВЕРОЯТНОСТНЫЕ МОДЕЛИ) ===
+  // ================================================================================
+
+  // --- КАТЕГОРИЯ 1: ДОБЫЧА ТОПЛИВА (во время бурения) ---
+
+  {
+    id: 'GAS_POCKET_FUEL',
+    title: 'ОБНАРУЖЕН ГАЗОВЫЙ КАРМАН!',
+    description: 'Твой бур пробил газовый карман. Датчики показывают высокую концентрацию метана. Резервуары заполняются!',
+    type: 'NOTIFICATION',
+    weight: 15,
+    minDepth: 200,
+    biomes: ['Stone', 'Iron', 'Silver'],
+
+    // Вероятностная модель (Poisson λ = 0.05/час)
+    triggers: [EventTrigger.DRILLING],
+    probabilityModel: {
+      type: 'poisson',
+      lambda: 0.05,  // 5% шанс в час бурения
+      depthModifier: (depth: number) => {
+        // Чаще на средних глубинах (3000-6000м)
+        if (depth < 3000) return 0.5;
+        if (depth > 6000) return 0.7;
+        return 1.0;  // Пик на 3000-6000м
+      }
+    },
+
+    // Награда газом (мгновенная)
+    instantResource: {
+      type: 'gas',
+      // N(μ=100, σ=25) → 95% в диапазоне [50, 150]
+      amountMin: 50,
+      amountMax: 150,
+      amountMean: 100,
+      amountStdDev: 25
+    },
+
+    cooldown: 60  // 1 час между Gas Pocket находками
+  },
+
+  {
+    id: 'COAL_SEAM',
+    title: 'ПРОШЛИ ЧЕРЕЗ УГОЛЬНЫЙ ПЛАСТ',
+    description: 'Плотная чёрная порода — это уголь! Автосбор активирован. +20 coal/сек в течение 5 минут.',
+    type: 'BUFF',
+    weight: 12,
+    minDepth: 50,
+    biomes: ['Clay', 'Stone', 'Copper'],
+
+    triggers: [EventTrigger.DRILLING],
+    probabilityModel: {
+      type: 'poisson',
+      lambda: 0.03,  // 3% в час
+      depthModifier: (depth: number) => depth < 3000 ? 1.5 : 0.5  // Чаще на малой глубине
+    },
+
+    // Buff: добыча угля во времени
+    effectId: 'COAL_SEAM_BUFF',  // Создать эффект в effectsRegistry
+    // Параметры эффекта: +20 coal/сек, 300 сек (5 мин), итого 6000 coal
+
+    cooldown: 120  // 2 часа
+  },
+
+  {
+    id: 'OIL_DEPOSIT',
+    title: 'НАЙДЕНО НЕФТЯНОЕ МЕСТОРОЖДЕНИЕ!',
+    description: 'Чёрная жидкость течёт по стенам туннеля. Резервуары заполняются. Это нефть!',
+    type: 'NOTIFICATION',
+    weight: 10,
+    minDepth: 500,
+    biomes: ['Copper', 'Iron', 'Gold'],
+
+    triggers: [EventTrigger.DRILLING],
+    probabilityModel: {
+      type: 'poisson',
+      lambda: 0.02,  // 2% в час (реже газа и угля)
+      depthModifier: (depth: number) => {
+        // Экспоненциальный рост с глубиной
+        return Math.min(3.0, 1 + (depth / 5000));
+      }
+    },
+
+    instantResource: {
+      type: 'oil',
+      // N(μ=350, σ=100) → больший разброс
+      amountMin: 200,
+      amountMax: 500,
+      amountMean: 350,
+      amountStdDev: 100
+    },
+
+    cooldown: 180  // 3 часа
+  },
+
+  // --- КАТЕГОРИЯ 2: СОБЫТИЯ ПЕРЕМЕЩЕНИЯ (Global Map) ---
+
+  {
+    id: 'COSMIC_STORM',
+    title: '⚠️ COSMIC STORM WARNING',
+    description: 'Магнитная буря блокирует перемещения на 30 минут. Все активные караваны задержаны!',
+    type: 'WARNING',
+    weight: 5,
+
+    triggers: [EventTrigger.GLOBAL_MAP_ACTIVE],
+    probabilityModel: {
+      type: 'poisson',
+      lambda: 0.01  // 1% в час (редкое событие)
+    },
+
+    // Эффект на караваны
+    caravanEffect: {
+      type: 'delay',
+      delayMinutes: 30,
+      blockTravel: true
+    },
+
+    cooldown: 180  // 3 часа между бурями
+  },
+
+  {
+    id: 'PIRATE_RAID',
+    title: '☠️ PIRATE RAID!',
+    description: 'Пираты атакуют твой караван! Груз под угрозой. Шанс успешной защиты: 50%',
+    type: 'WARNING',
+    weight: 8,
+
+    triggers: [EventTrigger.CARAVAN_TRAVELING],
+    probabilityModel: {
+      type: 'conditional',
+      // Зависит от зоны + ценности груза
+      calculateChance: (context: any) => {
+        const zoneRisk = { green: 0.05, yellow: 0.15, red: 0.30 };
+        const zone = context.zone || 'green';
+        const valueRisk = Math.min(0.2, (context.cargoValue || 0) / 100000);
+        return zoneRisk[zone] + valueRisk;
+      }
+    },
+
+    caravanEffect: {
+      type: 'raid',
+      successChance: 0.5,  // 50/50 (можно модифицировать навыками)
+      onSuccess: 'caravan_defended',
+      onFailure: 'cargo_lost'  // Потеря ВСЕГО груза
+    },
+
+    cooldown: 60
+  },
+
+  {
+    id: 'CARAVAN_DELAY',
+    title: '⏱️ CARAVAN DELAYED',
+    description: 'Технические проблемы. Караван задерживается. Среднее время задержки: 30 минут.',
+    type: 'WARNING',
+    weight: 20,
+
+    triggers: [EventTrigger.CARAVAN_TRAVELING],
+    probabilityModel: {
+      type: 'conditional',
+      calculateChance: (context: any) => {
+        const baseChance = 0.10;  // 10% на любой караван
+        const caravanLevel = context.caravanLevel || 1;
+        // Лучше караван → меньше шанс поломки
+        return baseChance / caravanLevel;  // 1★: 10%, 2★: 5%, 3★: 3.3%
+      }
+    },
+
+    caravanEffect: {
+      type: 'delay',
+      // Экспоненциальное распределение: E(X) = 30 минут
+      delayMinutes: -30 * Math.log(Math.random())
+    }
+  },
+
+  // --- КАТЕГОРИЯ 3: РЕДКИЕ НАХОДКИ ---
+
+  {
+    id: 'BLACK_MARKET_TIP',
+    title: '💬 BLACK MARKET TIP',
+    description: 'Анонимный контакт: "Знаю где взять дешёвое разрешение на Crystal Wastes..."',
+    type: 'CHOICE',
+    weight: 3,
+
+    triggers: [EventTrigger.BASE_VISIT],
+    probabilityModel: {
+      type: 'poisson',
+      lambda: 0.005  // 0.5% в час (очень редко)
+    },
+
+    // Опции выбора
+    options: [
+      {
+        label: 'КУПИТЬ (-500₵, риск 10% облавы)',
+        actionId: EventActionId.BLACK_MARKET_BUY,
+        risk: 'Риск облавы'
+      },
+      {
+        label: 'ОТКАЗАТЬСЯ',
+        actionId: EventActionId.BLACK_MARKET_REFUSE
+      }
+    ],
+
+    cooldown: 360  // 6 часов
+  },
+
+  {
+    id: 'WRECKAGE_DISCOVERY',
+    title: '💀 WRECKAGE FOUND',
+    description: 'Обнаружен сломанный бур. Внутри скелет... и документы. Осмотреть?',
+    type: 'ARTIFACT',
+    weight: 5,
+    minDepth: 1000,
+
+    triggers: [EventTrigger.DRILLING],
+    probabilityModel: {
+      type: 'exponential_decay',
+      // Экспоненциальное затухание с глубиной
+      baseChance: 0.01,  // 1% на глубине 0
+      scale: 5000  // На 5000м: 0.37%, на 10000м: 0.14%
+    },
+
+    // Лут через weighted random (будет определён в GameEngine)
+    forceArtifactDrop: true,  // Гарантированный лут
+
+    cooldown: 240  // 4 часа
+  },
+
+  {
+    id: 'RESCUE_CONVOY',
+    title: '🚁 RESCUE CONVOY',
+    description: 'Спасательная команда Void Industries предлагает эвакуацию... за 50% груза.',
+    type: 'CHOICE',
+    weight: 15,
+
+    triggers: [EventTrigger.STUCK_IN_SPACE],  // Срабатывает ТОЛЬКО если игрок застрял
+    probabilityModel: {
+      type: 'poisson',
+      lambda: 0.30  // 30% шанс в час если застрял
+    },
+
+    options: [
+      {
+        label: 'ПРИНЯТЬ ПОМОЩЬ (-50% груза)',
+        actionId: EventActionId.RESCUE_ACCEPT,
+        risk: 'Потеря половины груза'
+      },
+      {
+        label: 'ОТКАЗАТЬСЯ',
+        actionId: EventActionId.RESCUE_REFUSE
+      }
+    ]
+  },
+
+  {
+    id: 'DEFEND_THE_BASE',
+    title: '🛡️ BASE UNDER ATTACK!',
+    description: 'Твоя база в Magma Core атакована! Требуется защита.',
+    type: 'WARNING',
+    weight: 2,
+
+    triggers: [EventTrigger.BASE_RAID],  // Только для баз в Red Zone
+    probabilityModel: {
+      type: 'conditional',
+      calculateChance: (context: any) => {
+        if (context.zone !== 'red') return 0;  // Только Red Zone
+        if (context.hasFortification) return 0;  // Иммунитет
+        if (context.hasGuards) return 0.001;  // 0.1% вместо 0.5%
+        return 0.005;  // 0.5% в день
+      }
+    },
+
+    baseEffect: {
+      type: 'raid',
+      // Minigame с шансом успеха
+      minigameType: 'tower_defense_simple',
+      onSuccess: 'base_defended',  // +1000₵
+      onFailure: {
+        storageLoss: { min: 0.2, max: 0.5 },  // 20-50% хранилища
+        damageCredits: 10000  // 10k₵ на ремонт
+      }
+    },
+
+    cooldown: 1440  // 24 часа
+  },
+
+  {
+    id: 'PRICE_SPIKE',
+    title: '📈 PRICE SPIKE!',
+    description: 'Спрос на редкие ресурсы вырос! Цены удвоились-утроились на 24 часа.',
+    type: 'NOTIFICATION',
+    weight: 10,
+
+    triggers: [EventTrigger.MARKET_UPDATE],  // Происходит на рынке
+    probabilityModel: {
+      type: 'poisson',
+      lambda: 0.02  // 2% в день для каждого ресурса
+    },
+
+    effectId: 'PRICE_SPIKE_EFFECT',  // Создать эффект в effectsRegistry
+    // Параметры: priceMultiplier = uniform(2.0, 4.0), duration = 24h
+
+    cooldown: 720  // 12 часов между спайками
+  },
+
+  // ================================================================================
+  // === КОНЕЦ ЛОГИСТИЧЕСКИХ СОБЫТИЙ ===
+  // ================================================================================
 
   // --- ПРЕДМЕТЫ И АРТЕФАКТЫ ---
   {

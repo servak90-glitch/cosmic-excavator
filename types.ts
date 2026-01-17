@@ -33,9 +33,40 @@ export interface Resources {
   rubies: number;
   emeralds: number;
   diamonds: number;
+
+  // === FUEL RESOURCES (MVP) ===
+  coal: number;   // Efficiency ×1.0
+  oil: number;    // Efficiency ×1.5
+  gas: number;    // Efficiency ×2.0
+
+  // TODO (FULL): enriched uranium variants, void crystals, nano fuel
+  // enrichedUraniumLow?: number;
+  // enrichedUraniumMedium?: number;
+  // enrichedUraniumHigh?: number;
+  // voidCrystal?: number;
+  // nanoFuel?: number;
 }
 
 export type ResourceType = keyof Resources;
+
+// === EVENT SYSTEM ===
+
+/**
+ * Event Trigger: определяет контекст, когда может сработать событие
+ */
+export enum EventTrigger {
+  DRILLING = 'drilling',
+  TRAVELING = 'traveling',
+  BASE_VISIT = 'base_visit',
+  MARKET_UPDATE = 'market_update',
+  COMBAT = 'combat',
+
+  // Новые триггеры для логистических событий
+  GLOBAL_MAP_ACTIVE = 'global_map_active',
+  CARAVAN_TRAVELING = 'caravan_traveling',
+  STUCK_IN_SPACE = 'stuck_in_space',
+  BASE_RAID = 'base_raid'
+}
 
 export enum ArtifactRarity {
   COMMON = 'COMMON',
@@ -175,6 +206,7 @@ export interface HullPart extends BaseDrillPart {
     regen: number;
     slots: number;
     heatCap: number;
+    cargoCapacity: number;  // [NEW v4.0] Грузоподъёмность для Global Map (tier-based: 500-10000)
   };
 }
 
@@ -328,7 +360,7 @@ export interface WeakPoint {
   phaseRequired?: number; // Only active in this phase
 }
 
-export type EventType = 'NOTIFICATION' | 'CHOICE' | 'WARNING' | 'ANOMALY' | 'ARTIFACT';
+export type EventType = 'NOTIFICATION' | 'CHOICE' | 'WARNING' | 'ANOMALY' | 'ARTIFACT' | 'BUFF' | 'QUEST';
 
 export enum EventActionId {
   TECTONIC_HOLD = 'tectonic_hold',
@@ -342,7 +374,13 @@ export enum EventActionId {
   PURGE_NANOMITES = 'purge_nanomites',
   CRYSTAL_ABSORB = 'crystal_absorb',
   TUNNEL_SAFE = 'tunnel_safe',
-  TUNNEL_RISKY = 'tunnel_risky'
+  TUNNEL_RISKY = 'tunnel_risky',
+
+  // Новые действия для логистических событий
+  BLACK_MARKET_BUY = 'black_market_buy',
+  BLACK_MARKET_REFUSE = 'black_market_refuse',
+  RESCUE_ACCEPT = 'rescue_accept',
+  RESCUE_REFUSE = 'rescue_refuse'
 }
 
 export interface EventOption {
@@ -356,7 +394,7 @@ export interface GameEvent {
   title: string;
   description: string;
   type: EventType;
-  weight: number;
+  weight: number;  // Legacy: used for weighted random (will be deprecated)
   options?: EventOption[];
   biomes?: string[];
   minDepth?: number;
@@ -364,11 +402,79 @@ export interface GameEvent {
   forceArtifactDrop?: boolean;
   effectId?: string;
 
-  // HARDCORE FIELDS
+  // HARDCORE FIELDS (instant effects)
   instantDamage?: number; // 0.0 - 1.0 (% of Max Integrity)
   instantDepth?: number;  // Meters added
   instantXp?: number;     // XP added
   instantHeat?: number;   // Heat added
+
+  // === NEW: PROBABILITY SYSTEM ===
+
+  // Triggers: когда может сработать событие
+  triggers?: EventTrigger[];
+
+  // Вероятностная модель
+  probabilityModel?: {
+    type: 'poisson' | 'exponential' | 'weighted' | 'conditional' | 'exponential_decay';
+    lambda?: number;      // Для Poisson (events per hour)
+    baseChance?: number;  // Для Exponential/Conditional (0-1)
+    scale?: number;       // Для Exponential (decay scale)
+
+    // Модификаторы
+    depthModifier?: (depth: number) => number;  // Множитель от глубины
+    calculateChance?: (context: any) => number;  // Динамический расчёт шанса
+  };
+
+  // Динамический шанс (функция от состояния игры)
+  conditionalChance?: (state: GameState) => number;
+
+  // Модификаторы шанса
+  regions?: string[];  // Ограничение по регионам
+  depthModifier?: (depth: number) => number;  // Множитель от глубины (deprecated, moved to probabilityModel)
+
+  // === NEW: REWARDS ===
+
+  // Мгновенное добавление ресурсов (расширенная структура)
+  instantResource?: {
+    type: string;  // Тип ресурса (coal, oil, gas, etc.)
+    amountMin?: number;  // Минимальное количество
+    amountMax?: number;  // Максимальное количество
+    amountMean?: number;  // Среднее значение (для Normal distribution)
+    amountStdDev?: number;  // Стандартное отклонение
+  } | Partial<Resources> | (() => Partial<Resources>);
+
+  // Караванные эффекты (для travel events)
+  caravanEffect?: {
+    type?: 'delay' | 'raid' | 'bonus';
+    delay?: number;       // Задержка в минутах
+    delayMinutes?: number;  // Альтернативное название для delay
+    blockTravel?: boolean;  // Блокировка перемещения
+
+    // Raid mechanics
+    successChance?: number;  // Шанс успешной защиты от рейда (0-1)
+    onSuccess?: string;  // ID результата при успехе
+    onFailure?: string;  // ID результата при провале
+    lossChance?: number;  // Шанс потери груза (0-1)
+    bonus?: Partial<Resources>;  // Бонус к грузу
+  };
+
+  // Базовые эффекты (для base events)
+  baseEffect?: {
+    type?: 'raid' | 'upgrade' | 'damage';
+    storageChange?: number;  // Изменение capacity
+    damagePercent?: number;  // % урона базе
+
+    // Raid/minigame mechanics
+    minigameType?: string;  // Тип мини-игры
+    onSuccess?: string;  // ID результата при успехе
+    onFailure?: {
+      storageLoss?: { min: number; max: number };  // Диапазон потерь (0-1)
+      damageCredits?: number;  // Стоимость ремонта
+    };
+  };
+
+  // Cooldown (минимальное время между повторами)
+  cooldown?: number;  // В секундах
 }
 
 export interface ActiveEffect {
@@ -533,6 +639,7 @@ export interface GameState {
   resources: Resources;
   heat: number;
   integrity: number;
+  currentCargoWeight: number;  // [CARGO SYSTEM] Текущий вес груза (обновляется автоматически)
 
   activeAbilities: ActiveAbilityState[];
 
@@ -562,6 +669,7 @@ export interface GameState {
   activeEffects: ActiveEffect[];
   eventQueue: GameEvent[];
   recentEventIds: string[];
+  eventCooldowns: Record<string, number>;  // EventID -> timestamp окончания cooldown
   flyingObjects: FlyingObject[];
 
   currentBoss: Boss | null;
