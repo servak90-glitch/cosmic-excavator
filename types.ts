@@ -1,4 +1,5 @@
 
+
 export enum View {
   DRILL = 'DRILL',
   CITY = 'CITY',
@@ -6,7 +7,8 @@ export enum View {
   SKILLS = 'SKILLS',
   ARTIFACTS = 'ARTIFACTS',
   CODEX = 'CODEX',
-  COMBAT = 'COMBAT'
+  COMBAT = 'COMBAT',
+  GLOBAL_MAP = 'GLOBAL_MAP'
 }
 
 export type Language = 'RU' | 'EN';
@@ -49,6 +51,159 @@ export interface Resources {
 
 export type ResourceType = keyof Resources;
 
+// === GLOBAL MAP: REGIONS ===
+
+/**
+ * ID регионов планеты Aegis-7
+ */
+export enum RegionId {
+  RUST_VALLEY = 'rust_valley',        // Стартовый регион (0, 0)
+  CRYSTAL_WASTES = 'crystal_wastes',  // Север (0, 1000)
+  IRON_GATES = 'iron_gates',          // Восток (1000, 0)
+  MAGMA_CORE = 'magma_core',          // Юго-запад (-700, -700)
+  VOID_CHASM = 'void_chasm'           // Северо-восток (700, 700)
+}
+
+/**
+ * Цвет зоны региона (динамически зависит от player level)
+ * green = легко, yellow = умеренно, red = опасно
+ */
+export type ZoneColor = 'green' | 'yellow' | 'red';
+
+/**
+ * Регион планеты Aegis-7
+ */
+export interface Region {
+  id: RegionId;
+  name: string;                              // Название (RU)
+  coordinates: { x: number; y: number };     // Координаты на глобальной карте
+  recommendedLevel: number;                  // Рекомендуемый минимальный уровень игрока
+  baseZoneColor: ZoneColor;                  // Базовый цвет зоны
+
+  // Ресурсные бонусы (множители к базовой добыче)
+  resourceBonuses?: Partial<Record<ResourceType, number>>;
+
+  // Lore description
+  description?: string;
+}
+
+// === LICENSES & PERMITS ===
+
+export type ZoneLicense = 'green' | 'yellow' | 'red';
+export type PermitType = 'temporary' | 'permanent';
+
+export interface License {
+  zone: ZoneLicense;
+  acquiredAt: number;  // timestamp
+}
+
+export interface Permit {
+  regionId: RegionId;
+  type: PermitType;
+  expirationDate: number | null;  // null = permanent, timestamp otherwise
+}
+
+export interface ReputationTier {
+  tier: 1 | 2 | 3 | 4 | 5;
+  min: number;
+  max: number;
+  name: string;
+  discount: number;
+}
+
+// === PLAYER BASES ===
+
+export type BaseType = 'outpost' | 'camp' | 'station';
+export type BaseStatus = 'building' | 'active' | 'abandoned' | 'damaged';
+
+export interface PlayerBase {
+  id: string;
+  regionId: RegionId;
+  type: BaseType;
+  status: BaseStatus;
+
+  // Storage
+  storageCapacity: number;
+  storedResources: Partial<Resources>;
+
+  // Features
+  hasWorkshop: boolean;
+  workshopTierRange: [number, number] | null;  // Tier range для крафта
+  hasFuelFacilities: boolean;
+  hasMarket: boolean;  // Только для Station
+  hasFortification: boolean;
+  hasGuards: boolean;
+
+  // Timing
+  constructionStartTime: number;
+  constructionCompletionTime: number;
+  lastVisitedAt: number;
+
+  upgradeLevel: number;
+
+  // === PHASE 2: FUEL FACILITIES ===
+  facilities: FacilityId[];  // Построенные facilities в этой базе
+}
+
+// === PHASE 2: FUEL FACILITIES ===
+
+export type FacilityId = 'basic_refinery' | 'advanced_refinery';
+
+export interface Facility {
+  id: FacilityId;
+  name: string;
+  cost: number;
+  description: string;
+  unlocksRecipes: string[];  // Recipe IDs
+}
+
+// === PHASE 2: DYNAMIC MARKET ===
+
+export interface MarketPrice {
+  resource: keyof Resources;
+  basePrice: number;           // Из RESOURCE_PRICES
+  regionalModifier: number;    // Зависит от региона
+  temporalModifier: number;    // События, день недели
+  finalPrice: number;          // Итоговая цена
+}
+
+export interface MarketTransaction {
+  type: 'buy' | 'sell';
+  resource: keyof Resources;
+  amount: number;
+  pricePerUnit: number;
+  totalCost: number;
+  regionId: RegionId;
+  timestamp: number;
+}
+
+// === PHASE 2: CARAVAN SYSTEM ===
+
+export type CaravanTier = '1star' | '2star' | '3star';  // Phase 2: только 1star
+export type CaravanStatus = 'in_transit' | 'completed' | 'lost';
+
+export interface Caravan {
+  id: string;
+  tier: CaravanTier;
+  fromBaseId: string;
+  toBaseId: string;
+  cargo: Partial<Resources>;
+  cargoWeight: number;
+
+  departureTime: number;
+  arrivalTime: number;
+  status: CaravanStatus;
+
+  lossChance: number;  // Вычисляется при отправке
+}
+
+export interface CaravanUnlock {
+  tier: CaravanTier;
+  unlocked: boolean;
+  unlockedAt?: number;
+}
+
+
 // === EVENT SYSTEM ===
 
 /**
@@ -57,6 +212,7 @@ export type ResourceType = keyof Resources;
 export enum EventTrigger {
   DRILLING = 'drilling',
   TRAVELING = 'traveling',
+  TRAVEL = 'travel',  // Для Global Map путешествий
   BASE_VISIT = 'base_visit',
   MARKET_UPDATE = 'market_update',
   COMBAT = 'combat',
@@ -360,7 +516,7 @@ export interface WeakPoint {
   phaseRequired?: number; // Only active in this phase
 }
 
-export type EventType = 'NOTIFICATION' | 'CHOICE' | 'WARNING' | 'ANOMALY' | 'ARTIFACT' | 'BUFF' | 'QUEST';
+export type EventType = 'NOTIFICATION' | 'CHOICE' | 'WARNING' | 'ANOMALY' | 'ARTIFACT' | 'BUFF' | 'QUEST' | 'COMBAT_EVENT' | 'MARKET_EVENT' | 'DELAY';
 
 export enum EventActionId {
   TECTONIC_HOLD = 'tectonic_hold',
@@ -380,7 +536,15 @@ export enum EventActionId {
   BLACK_MARKET_BUY = 'black_market_buy',
   BLACK_MARKET_REFUSE = 'black_market_refuse',
   RESCUE_ACCEPT = 'rescue_accept',
-  RESCUE_REFUSE = 'rescue_refuse'
+  RESCUE_REFUSE = 'rescue_refuse',
+  PIRATE_FIGHT = 'pirate_fight',
+  PIRATE_BRIBE = 'pirate_bribe',
+  WRECK_LOOT = 'wreck_loot',
+  WRECK_IGNORE = 'wreck_ignore',
+  BASE_DEFEND = 'base_defend',
+  BASE_SURRENDER = 'base_surrender',
+  ENCOUNTER_INVESTIGATE = 'encounter_investigate',
+  ENCOUNTER_IGNORE = 'encounter_ignore'
 }
 
 export interface EventOption {
@@ -640,6 +804,15 @@ export interface GameState {
   heat: number;
   integrity: number;
   currentCargoWeight: number;  // [CARGO SYSTEM] Текущий вес груза (обновляется автоматически)
+  currentRegion: RegionId;     // [GLOBAL MAP] Текущий регион игрока
+
+  // GLOBAL MAP (LICENSES & PERMITS)
+  globalReputation: number;  // Глобальная репутация (для license tiers), отдельно от фракций
+  unlockedLicenses: ZoneLicense[];
+  activePermits: Partial<Record<RegionId, Permit>>;  // Частичный record - не все регионы обязательны
+
+  // GLOBAL MAP (PLAYER BASES)
+  playerBases: PlayerBase[];  // Базы игрока в регионах
 
   activeAbilities: ActiveAbilityState[];
 

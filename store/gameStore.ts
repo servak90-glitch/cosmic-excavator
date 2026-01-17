@@ -10,7 +10,7 @@ import { create } from 'zustand';
 import {
     GameState, View, Resources, GameSettings, GameEvent, ResourceType,
     InventoryItem, FlyingObject, VisualEvent, BossType, DrillSlot,
-    DroneType, ArtifactRarity
+    DroneType, ArtifactRarity, RegionId
 } from '../types';
 import {
     BIOMES, BITS, ENGINES, COOLERS, HULLS, LOGIC_CORES, CONTROL_UNITS,
@@ -41,7 +41,10 @@ import {
     createExpeditionSlice, ExpeditionActions,
     createFactionSlice, FactionActions,
     createAdminSlice, AdminActions,
-    createEventSlice, EventActions
+    createEventSlice, EventActions,
+    createTravelSlice, TravelActions,
+    createLicenseSlice, LicenseActions,
+    createBaseSlice, BaseActions
 } from './slices';
 import { GAME_VERSION } from '../constants';
 
@@ -66,7 +69,7 @@ interface CoreActions {
 export interface GameStore extends GameState,
     CoreActions, EventActions, AdminActions,
     DrillActions, CityActions, InventoryActions,
-    UpgradeActions, EntityActions, SettingsActions, ExpeditionActions, FactionActions {
+    UpgradeActions, EntityActions, SettingsActions, ExpeditionActions, FactionActions, TravelActions, LicenseActions, BaseActions {
     isGameActive: boolean;
     activeView: View;
     actionLogQueue: VisualEvent[];
@@ -81,6 +84,7 @@ const INITIAL_STATE: GameState = {
     heat: 0,
     integrity: 100,
     currentCargoWeight: 0,  // [CARGO SYSTEM] Начальный вес груза
+    currentRegion: RegionId.RUST_VALLEY,  // [GLOBAL MAP] Стартовый регион
     shieldCharge: 100,
     maxShieldCharge: 100,
     isShielding: false,
@@ -153,7 +157,21 @@ const INITIAL_STATE: GameState = {
     activeAbilities: [],
     activeExpeditions: [],
     minigameCooldown: 0,
-    reputation: { CORPORATE: 0, SCIENCE: 0, REBELS: 0 }
+    reputation: { CORPORATE: 0, SCIENCE: 0, REBELS: 0 },
+
+    // === LICENSES & PERMITS ===
+    globalReputation: 0,
+    unlockedLicenses: ['green'],  // стартовая лицензия
+    activePermits: {
+        [RegionId.RUST_VALLEY]: {
+            regionId: RegionId.RUST_VALLEY,
+            type: 'permanent',
+            expirationDate: null
+        }
+    },
+
+    // === PLAYER BASES ===
+    playerBases: []
 };
 
 // === ПЕРСИСТЕНТНОСТЬ ===
@@ -165,7 +183,8 @@ const PERSISTENT_KEYS: (keyof GameState)[] = [
     'forgeUnlocked', 'cityUnlocked', 'skillsUnlocked', 'storageLevel',
     'lastBossDepth', 'analyzer', 'debugUnlocked', 'selectedBiome',
     'activeEffects', 'eventQueue', 'recentEventIds', 'lastQuestRefresh',
-    'shieldCharge', 'currentCargoWeight'
+    'shieldCharge', 'currentCargoWeight', 'currentRegion',
+    'globalReputation', 'unlockedLicenses', 'activePermits', 'playerBases'
 ];
 
 const createSnapshot = (state: GameState): Partial<GameState> => {
@@ -192,7 +211,7 @@ const sanitizeAndMerge = (initial: GameState, saved: any): GameState => {
         'depth', 'heat', 'integrity', 'xp', 'level', 'totalDrilled',
         'lastBossDepth', 'storageLevel', 'forgeUnlocked', 'cityUnlocked', 'skillsUnlocked',
         'selectedBiome', 'debugUnlocked', 'lastQuestRefresh', 'shieldCharge', 'minigameCooldown',
-        'currentCargoWeight'
+        'currentCargoWeight', 'currentRegion'
     ];
 
     deepKeys.forEach(key => {
@@ -241,6 +260,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
     ...createFactionSlice(set, get),
     ...createAdminSlice(set, get),
     ...createEventSlice(set, get),
+    ...createTravelSlice(set, get),
+    ...createLicenseSlice(set, get),
+    ...createBaseSlice(set, get),
 
     // === CORE ACTIONS ===
 

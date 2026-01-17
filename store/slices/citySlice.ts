@@ -8,6 +8,7 @@ import { calculateStats, getResourceLabel, calculateRepairCost, recalculateCargo
 import { audioEngine } from '../../services/audioEngine';
 import { createEffect } from '../../services/eventRegistry';
 import { generateQuestBatch } from '../../services/questRegistry';
+import { FUEL_RECIPES, canCraftRecipe, getRecipeById } from '../../constants/fuelRecipes';
 
 export interface CityActions {
     tradeCity: (cost: Partial<Resources>, reward: Partial<Resources>) => void;
@@ -17,6 +18,7 @@ export interface CityActions {
     gambleResources: (res: ResourceType, amount: number) => void;
     completeQuest: (questId: string) => void;
     refreshQuests: () => void;
+    craftFuel: (recipeId: string) => void;  // NEW: Crafting топлива
 }
 
 export const createCitySlice: SliceCreator<CityActions> = (set, get) => ({
@@ -174,4 +176,42 @@ export const createCitySlice: SliceCreator<CityActions> = (set, get) => ({
             });
         }
     },
+
+    // === FUEL CRAFTING ===
+    craftFuel: (recipeId) => {
+        const s = get();
+        const recipe = getRecipeById(recipeId);
+
+        if (!recipe) return;
+
+        // Проверка ресурсов
+        if (!canCraftRecipe(recipe, s.resources)) {
+            const event: VisualEvent = {
+                type: 'LOG',
+                msg: `НЕДОСТАТОЧНО ${getResourceLabel(recipe.input.resource).toUpperCase()}!`,
+                color: 'text-red-500'
+            };
+            set({ actionLogQueue: pushLog(s, event) });
+            return;
+        }
+
+        // Крафт
+        const newRes = { ...s.resources };
+        newRes[recipe.input.resource] -= recipe.input.amount;
+        newRes[recipe.output.resource] += recipe.output.amount;
+
+        const successEvent: VisualEvent = {
+            type: 'LOG',
+            msg: `⚗️ ${recipe.name}: +${recipe.output.amount} ${getResourceLabel(recipe.output.resource).toUpperCase()}`,
+            color: 'text-cyan-400'
+        };
+
+        set({
+            resources: newRes,
+            currentCargoWeight: recalculateCargoWeight(newRes),
+            actionLogQueue: pushLog(s, successEvent)
+        });
+
+        audioEngine.playClick();
+    }
 });

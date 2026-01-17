@@ -13,7 +13,7 @@ const GameFooter: React.FC<GameFooterProps> = ({ logs }) => {
     const setView = useGameStore(s => s.setView);
     const currentBoss = useGameStore(s => s.currentBoss);
     const lang = useGameStore(s => s.settings.language);
-    
+
     // Feature flags
     const forgeUnlocked = useGameStore(s => s.forgeUnlocked);
     const skillsUnlocked = useGameStore(s => s.skillsUnlocked);
@@ -28,15 +28,14 @@ const GameFooter: React.FC<GameFooterProps> = ({ logs }) => {
         }
     }, [logs, activeView]);
 
-    const menuItems = [
-        { id: View.DRILL, label: t(TEXT_IDS.MENU_DRILL, lang), icon: '⚡' },
-        ...(forgeUnlocked ? [{ id: View.FORGE, label: t(TEXT_IDS.MENU_FORGE, lang), icon: '🔧' }] : []),
-        ...(skillsUnlocked ? [{ id: View.SKILLS, label: t(TEXT_IDS.MENU_SKILLS, lang), icon: '🧠' }] : []),
+    const navButtons = [
+        { id: View.DRILL, label: t(TEXT_IDS.MENU_DRILL, lang), icon: '🎯' },
         ...(cityUnlocked ? [{ id: View.CITY, label: t(TEXT_IDS.MENU_CITY, lang), icon: '🏙️' }] : []),
-        ...(storageLevel > 0 ? [
-            { id: View.ARTIFACTS, label: t(TEXT_IDS.MENU_ARTIFACTS, lang), icon: '💎' },
-            { id: View.CODEX, label: 'АРХИВ', icon: '📜' } 
-        ] : [])
+        ...(cityUnlocked ? [{ id: View.GLOBAL_MAP, label: 'КАРТА', icon: '🗺️' }] : []),
+        ...(forgeUnlocked ? [{ id: View.FORGE, label: t(TEXT_IDS.MENU_FORGE, lang), icon: '🔧' }] : []),
+        ...(skillsUnlocked ? [{ id: View.SKILLS, label: t(TEXT_IDS.MENU_SKILLS, lang), icon: '⚡' }] : []),
+        { id: View.ARTIFACTS, label: t(TEXT_IDS.MENU_ARTIFACTS, lang), icon: '📦' },
+        { id: View.CODEX, label: 'АРХИВ', icon: '📚' }
     ];
 
     return (
@@ -55,10 +54,10 @@ const GameFooter: React.FC<GameFooterProps> = ({ logs }) => {
 
             {/* NAVIGATION */}
             <div className={`h-12 md:h-14 flex ${activeView === View.DRILL ? 'border-t border-zinc-800' : ''}`}>
-                {menuItems.map(btn => (
-                    <button 
-                        key={btn.id} 
-                        onClick={() => !currentBoss && setView(btn.id as View)} 
+                {navButtons.map(btn => (
+                    <button
+                        key={btn.id}
+                        onClick={() => !currentBoss && setView(btn.id as View)}
                         className={`flex-1 flex flex-col md:flex-row items-center justify-center gap-0.5 md:gap-2 border-r border-zinc-800 last:border-0 hover:bg-white/5 active:bg-white/10 transition-colors 
                             ${activeView === btn.id ? 'bg-zinc-900 text-cyan-400' : 'text-zinc-500'} 
                             ${currentBoss ? 'opacity-50 cursor-not-allowed' : ''}

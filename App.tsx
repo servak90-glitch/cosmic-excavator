@@ -41,6 +41,7 @@ import StatusStrip from './components/layout/StatusStrip';
 import ActiveEffects from './components/layout/ActiveEffects';
 import MenuOverlay from './components/MenuOverlay';
 import CombatOverlay from './components/CombatOverlay';
+import { GlobalMapView } from './components/GlobalMapView';
 
 const GAME_VERSION = "v3.0.0 (MODULAR)";
 
@@ -337,6 +338,7 @@ const App: React.FC = () => {
                         {activeView === View.SKILLS && <SkillsView />}
                         {activeView === View.ARTIFACTS && <ArtifactsView />}
                         {activeView === View.CODEX && <CodexView discoveredArtifacts={discoveredArtifacts} />}
+                        {activeView === View.GLOBAL_MAP && <GlobalMapView />}
                     </div>
                 </div>
 

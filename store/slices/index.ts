@@ -13,3 +13,6 @@ export { createExpeditionSlice, type ExpeditionActions } from './expeditionSlice
 export { createFactionSlice, type FactionActions } from './factionSlice';
 export { createAdminSlice, type AdminActions } from './adminSlice';
 export { createEventSlice, type EventActions } from './eventSlice';
+export { createTravelSlice, type TravelActions } from './travelSlice';
+export { createLicenseSlice, type LicenseActions } from './licenseSlice';
+export { createBaseSlice, type BaseActions } from './baseSlice';
