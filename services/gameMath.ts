@@ -91,6 +91,10 @@ export const RESOURCE_WEIGHTS: Record<keyof Resources, number> = {
  * @returns Общий вес в единицах
  */
 export function calculateCargoWeight(resources: Partial<Resources>): number {
+    // [DEV_CONTEXT: CHEAT] Zero Weight
+    const s = (globalThis as any).gameStore?.getState?.();
+    if (s?.isZeroWeight) return 0;
+
     let totalWeight = 0;
 
     for (const [resource, amount] of Object.entries(resources)) {
@@ -243,7 +247,10 @@ const calculateStatsInternal = (
     const energyCons = drill.bit.baseStats.energyCost + drill.engine.baseStats.energyCost + drill.cooling.baseStats.energyCost +
         drill.logic.baseStats.energyCost + drill.control.baseStats.energyCost + drill.gearbox.baseStats.energyCost +
         drill.armor.baseStats.energyCost + (drill.cargoBay?.baseStats?.energyCost || 0);
-    const energyEfficiency = energyProd >= energyCons ? 1.0 : (energyProd / Math.max(1, energyCons));
+
+    // [DEV_CONTEXT: CHEAT] Infinite Energy
+    const storeState = (globalThis as any).gameStore?.getState?.();
+    const energyEfficiency = storeState?.isInfiniteEnergy ? 1.0 : (energyProd >= energyCons ? 1.0 : (energyProd / Math.max(1, energyCons)));
 
     const totalCargoCapacity = BASE_CARGO_CAPACITY +
         (drill.hull.baseStats.cargoCapacity || 0) +

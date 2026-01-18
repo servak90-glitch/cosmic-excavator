@@ -172,10 +172,16 @@ const DevTools: React.FC = () => {
                 [{store.isOverdrive ? 'ON' : 'OFF'}]
               </button>
             </div>
-            <div className="flex justify-between items-center border border-green-800 p-2">
+            <div className="flex justify-between items-center border border-zinc-800 p-2">
               <span>INFINITE FUEL</span>
               <button onClick={() => store.adminSetInfiniteFuel(!store.isInfiniteFuel)} className={`${store.isInfiniteFuel ? 'text-cyan-300 font-bold' : 'text-zinc-500'}`}>
                 [{store.isInfiniteFuel ? 'ON' : 'OFF'}]
+              </button>
+            </div>
+            <div className="flex justify-between items-center border border-zinc-800 p-2">
+              <span>INFINITE ENERGY</span>
+              <button onClick={() => store.adminSetInfiniteEnergy(!store.isInfiniteEnergy)} className={`${store.isInfiniteEnergy ? 'text-yellow-300 font-bold' : 'text-zinc-500'}`}>
+                [{store.isInfiniteEnergy ? 'ON' : 'OFF'}]
               </button>
             </div>
             <div className="flex justify-between items-center border border-green-800 p-2">
@@ -189,6 +195,7 @@ const DevTools: React.FC = () => {
               <button onClick={store.adminMaxSkills} className="border border-green-700 hover:bg-green-900 p-1 text-[9px]">MAX SKILLS</button>
               <button onClick={store.adminMaxDrones} className="border border-cyan-700 text-cyan-400 hover:bg-cyan-900/30 p-1 text-[9px]">MAX DRONES</button>
               <button onClick={store.adminMaxTech} className="border border-green-700 hover:bg-green-900 p-1 text-[9px]">MAX TECH</button>
+              <button onClick={store.adminMaxFactionReputation} className="border border-cyan-700 text-cyan-400 hover:bg-cyan-900/30 p-1 text-[9px]">MAX REP</button>
               <button onClick={store.adminInstantHeal} className="border border-red-700 text-red-400 hover:bg-red-900/20 p-1 text-[9px]">INSTANT HEAL</button>
               <button onClick={store.adminCompleteActiveQuests} className="border border-amber-700 text-amber-400 hover:bg-amber-900/20 p-1 text-[9px]">FINISH QUESTS</button>
               <button onClick={() => store.adminInstantComplete()} className="border border-cyan-700 text-cyan-400 hover:bg-cyan-900/30 p-1 text-[9px] col-span-2 text-center">FINISH EXPEDITIONS</button>
@@ -218,7 +225,10 @@ const DevTools: React.FC = () => {
               <button onClick={() => store.adminSetDepth(store.depth + 50000)} className="flex-1 border border-green-700 hover:bg-green-900 p-2">+50k M</button>
             </div>
             <button onClick={store.adminSkipBiome} className="w-full border border-green-700 hover:bg-green-900 p-2">SKIP BIOME</button>
-            <button onClick={store.adminSpawnBoss} className="w-full border border-red-700 text-red-400 hover:bg-red-900/20 p-2">FORCE BOSS</button>
+            <div className="grid grid-cols-2 gap-2">
+              <button onClick={store.adminSpawnBoss} className="border border-red-700 text-red-400 hover:bg-red-900/20 p-2">SPAWN BOSS</button>
+              <button onClick={store.adminKillBoss} className="border border-zinc-700 text-zinc-400 hover:bg-zinc-900/20 p-2">KILL BOSS</button>
+            </div>
 
             {/* MANUAL DEPTH JUMP */}
             <div className="border-t border-green-800 pt-2 mt-2">
@@ -317,6 +327,7 @@ const DevTools: React.FC = () => {
                 <button onClick={() => (store as any).adminCreateBase?.('camp')} className="border border-blue-600 hover:bg-blue-900/30 p-1 text-[8px]">CAMP</button>
                 <button onClick={() => (store as any).adminCreateBase?.('station')} className="border border-purple-600 hover:bg-purple-900/30 p-1 text-[8px]">STATION</button>
               </div>
+              <button onClick={store.adminInstantConstruction} className="w-full mt-1 border border-zinc-600 hover:bg-zinc-800 p-1 text-[9px]">INSTANT CONSTRUCTION</button>
               <button onClick={store.adminForceRaid} className="w-full mt-1 border border-red-700 text-red-400 hover:bg-red-900/30 p-1 text-[9px]">FORCE BASE RAID</button>
             </div>
 

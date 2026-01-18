@@ -86,8 +86,9 @@ export function processDrilling(
     if (isDrilling && !isOverheated && !state.isBroken && !state.currentBoss) {
         // === ПРОВЕРКА ТОПЛИВА ===
         const fuel = selectBestAvailableFuel(state.resources);
+        const isInfiniteFuel = (globalThis as any).gameStore?.getState?.().isInfiniteFuel;
 
-        if (!fuel) {
+        if (!fuel && !isInfiniteFuel) {
             // Топливо закончилось - блокируем бурение
             events.push({
                 type: 'LOG',
@@ -143,8 +144,11 @@ export function processDrilling(
 
         // === ПОТРЕБЛЕНИЕ ТОПЛИВА ===
         // Балансировка: 1 единица угля на 1 метр бурения при базовой эффективности
-        const fuelCost = (drillPower * FUEL_CONSUMPTION_RATE * dt * 10) / fuel.efficiency;
-        resourceChanges[fuel.fuelType] = (resourceChanges[fuel.fuelType] || 0) - fuelCost;
+        const fuelCost = (drillPower * FUEL_CONSUMPTION_RATE * dt * 10) / (fuel?.efficiency || 1);
+
+        if (!isInfiniteFuel && fuel) {
+            resourceChanges[fuel.fuelType] = (resourceChanges[fuel.fuelType] || 0) - fuelCost;
+        }
 
         // Увеличение глубины (только если не выбран конкретный биом)
         if (!state.selectedBiome) {

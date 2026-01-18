@@ -955,6 +955,7 @@ export interface GameState {
   isGodMode: boolean;
   isInfiniteCoolant: boolean;
   isInfiniteFuel: boolean;  // [NEW] Бесконечное топливо
+  isInfiniteEnergy: boolean; // [NEW] Бесконечная энергия
   isZeroWeight: boolean;    // [NEW] Нулевой вес груза
   isOverdrive: boolean;
   isDebugUIOpen: boolean;

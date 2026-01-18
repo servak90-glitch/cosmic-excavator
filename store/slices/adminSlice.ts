@@ -12,10 +12,15 @@ export interface AdminActions {
     adminSetGodMode: (enabled: boolean) => void;
     adminSetInfiniteCoolant: (enabled: boolean) => void;
     adminSetInfiniteFuel: (enabled: boolean) => void;
+    adminSetInfiniteEnergy: (enabled: boolean) => void;
     adminSetZeroWeight: (enabled: boolean) => void;
     adminSetOverdrive: (enabled: boolean) => void;
     adminUnlockAll: () => void;
     adminUnlockLicenses: () => void;
+    adminUnlockAllPermits: () => void;
+    adminMaxFactionReputation: () => void;
+    adminInstantConstruction: () => void;
+    adminKillBoss: () => void;
     adminMaxTech: () => void;
     adminSetDepth: (depth: number) => void;
     adminSkipBiome: () => void;
@@ -56,10 +61,12 @@ export const createAdminSlice: SliceCreator<AdminActions> = (set, get) => ({
     adminSetGodMode: (v) => set({ isGodMode: v }),
     adminSetInfiniteCoolant: (v) => set({ isInfiniteCoolant: v }),
     adminSetInfiniteFuel: (v) => set({ isInfiniteFuel: v }),
+    adminSetInfiniteEnergy: (v) => set({ isInfiniteEnergy: v }),
     adminSetZeroWeight: (v) => set({ isZeroWeight: v }),
     adminSetOverdrive: (v) => set({ isOverdrive: v }),
 
-    adminUnlockAll: () => set(s => {
+    adminUnlockAll: () => {
+        const s = get();
         const hasBaseInRegion = s.playerBases.find(b => b.regionId === s.currentRegion);
         let newBases = s.playerBases;
         if (!hasBaseInRegion) {
@@ -82,11 +89,22 @@ export const createAdminSlice: SliceCreator<AdminActions> = (set, get) => ({
                 upgradeLevel: 1,
                 facilities: []
             }];
-        } else if (hasBaseInRegion.type !== 'station') {
-            newBases = s.playerBases.map(b => b.regionId === s.currentRegion ? { ...b, type: 'station', hasMarket: true } : b);
+        } else {
+            newBases = s.playerBases.map(b => b.regionId === s.currentRegion ? { ...b, type: 'station', hasMarket: true, status: 'active' } : b);
         }
 
-        return {
+        // Подготовка всех разрешений
+        const { REGION_IDS } = require('../../constants/regions');
+        const allPermits: any = {};
+        REGION_IDS.forEach((id: string) => {
+            allPermits[id] = {
+                regionId: id,
+                type: 'permanent',
+                expirationDate: null
+            };
+        });
+
+        set({
             forgeUnlocked: true,
             cityUnlocked: true,
             skillsUnlocked: true,
@@ -94,9 +112,38 @@ export const createAdminSlice: SliceCreator<AdminActions> = (set, get) => ({
             debugUnlocked: true,
             playerBases: newBases,
             caravanUnlocks: s.caravanUnlocks.map(u => ({ ...u, unlocked: true })),
-            unlockedLicenses: ['green', 'yellow', 'red'] as any[]
-        };
+            unlockedLicenses: ['green', 'yellow', 'red'] as any[],
+            activePermits: allPermits
+        });
+    },
+
+    adminUnlockAllPermits: () => {
+        const { REGION_IDS } = require('../../constants/regions');
+        const allPermits: any = {};
+        REGION_IDS.forEach((id: string) => {
+            allPermits[id] = {
+                regionId: id,
+                type: 'permanent',
+                expirationDate: null
+            };
+        });
+        set({ activePermits: allPermits });
+    },
+
+    adminMaxFactionReputation: () => set({
+        reputation: { CORPORATE: 1000, SCIENCE: 1000, REBELS: 1000 },
+        globalReputation: 1000
     }),
+
+    adminInstantConstruction: () => set(s => ({
+        playerBases: s.playerBases.map(b => ({
+            ...b,
+            status: 'active',
+            constructionCompletionTime: Date.now()
+        }))
+    })),
+
+    adminKillBoss: () => set({ currentBoss: null, activeView: View.DRILL }),
 
     adminUnlockLicenses: () => set({ unlockedLicenses: ['green', 'yellow', 'red'] as any[] }),
 

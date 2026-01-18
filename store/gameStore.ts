@@ -144,6 +144,7 @@ const INITIAL_STATE: GameState = {
     isGodMode: false,
     isInfiniteCoolant: false,
     isInfiniteFuel: false,
+    isInfiniteEnergy: false,
     isZeroWeight: false,
     isOverdrive: false,
     isDebugUIOpen: false,
@@ -467,3 +468,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
         }
     }
 }));
+
+// [DEV_CONTEXT: CHEAT ACCESS]
+(globalThis as any).gameStore = useGameStore;
