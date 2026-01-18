@@ -27,7 +27,11 @@ export const createEntitySlice: SliceCreator<EntityActions> = (set, get) => ({
 
         if (obj.hp <= 0) {
             objects.splice(objIndex, 1);
-            audioEngine.playClick(); // Consider a different sound for larger objects?
+            if (obj.type === 'SATELLITE_DEBRIS') {
+                audioEngine.playSatelliteCollect();
+            } else {
+                audioEngine.playGeodeCollect(obj.rarity);
+            }
 
             const newRes = { ...s.resources };
             const currentBiome = s.selectedBiome

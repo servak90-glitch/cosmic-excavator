@@ -94,7 +94,7 @@ export const createLicenseSlice: SliceCreator<LicenseActions> = (set, get) => ({
             actionLogQueue: pushLog(s, successEvent)
         });
 
-        audioEngine.playAchievement();
+        audioEngine.playLocationDiscover();
     },
 
     /**
@@ -176,7 +176,7 @@ export const createLicenseSlice: SliceCreator<LicenseActions> = (set, get) => ({
             actionLogQueue: pushLog(s, successEvent)
         });
 
-        audioEngine.playAchievement();
+        audioEngine.playLocationDiscover();
     },
 
     /**
@@ -198,7 +198,7 @@ export const createLicenseSlice: SliceCreator<LicenseActions> = (set, get) => ({
                 color: 'text-cyan-400 font-bold'
             };
             set({ actionLogQueue: pushLog(s, event) });
-            audioEngine.playAchievement();
+            audioEngine.playLocationDiscover();
         }
     }
 });

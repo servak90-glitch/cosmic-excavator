@@ -102,8 +102,8 @@ export function processHeat(
 
         if (!coolingDisabled) { // Убрано !isCoolingGameActive, чтобы охлаждение шло всегда
             // stats.totalCooling — это базовое значение охлаждения
-            // Базовое охлаждение ~10% в секунду при totalCooling=50
-            const coolingAmount = (stats.totalCooling * 0.2 + 0.1) * stats.ventSpeed * dt;
+            // Базовое охлаждение ~20% в секунду при totalCooling=50 (ускорено в 2 раза)
+            const coolingAmount = (stats.totalCooling * 0.4 + 0.2) * stats.ventSpeed * dt;
             heat = Math.max(stats.ambientHeat, heat - coolingAmount);
 
             if (heat <= stats.ambientHeat + 1) {

@@ -1,7 +1,9 @@
+import React, { useEffect } from 'react';
 import { ArtifactDefinition, ArtifactRarity } from '../types';
 import { useGameStore } from '../store/gameStore';
 import { t, TEXT_IDS } from '../services/localization';
 import { ARTIFACTS, getArtifactColor } from '../services/artifactRegistry';
+import { audioEngine } from '../services/audioEngine';
 
 
 
@@ -11,6 +13,10 @@ interface CodexViewProps {
 
 const CodexView: React.FC<CodexViewProps> = ({ discoveredArtifacts }) => {
     const lang = useGameStore(s => s.settings.language);
+
+    useEffect(() => {
+        audioEngine.playUIPanelOpen();
+    }, []);
     // Sort artifacts: Common -> Rare -> Epic -> Legendary -> Anomalous
 
     const sortedArtifacts = [...ARTIFACTS].sort((a, b) => {

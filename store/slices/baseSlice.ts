@@ -106,7 +106,7 @@ export const createBaseSlice: SliceCreator<BaseActions> = (set, get) => ({
             actionLogQueue: pushLog(s, successEvent)
         });
 
-        audioEngine.playAchievement();
+        audioEngine.playBaseBuild();
     },
 
     /**
@@ -138,7 +138,7 @@ export const createBaseSlice: SliceCreator<BaseActions> = (set, get) => ({
                 actionLogQueue: pushLog(s, event)
             });
 
-            audioEngine.playAchievement();
+            audioEngine.playBaseBuild();
         }
     },
 
@@ -192,6 +192,6 @@ export const createBaseSlice: SliceCreator<BaseActions> = (set, get) => ({
             actionLogQueue: pushLog(s, successEvent)
         });
 
-        audioEngine.playAchievement();
+        audioEngine.playBaseBuild();
     }
 });

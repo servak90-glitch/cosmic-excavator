@@ -105,6 +105,7 @@ export function processCombat(
         // Handle Instant Effects
         activatedAbilities.forEach(abilityId => {
             const isWeak = checkWeakness(currentBoss!.type, abilityId);
+            audioEngine.playAbilityActivation(abilityId);
 
             // EMP LOGIC
             if (abilityId === 'EMP_BURST') {
@@ -146,6 +147,7 @@ export function processCombat(
 
                 currentBoss!.currentHp -= finalDmg;
                 events.push({ type: 'BOSS_HIT' });
+                audioEngine.playBossHit();
             }
 
             // OVERLOAD LOGIC (Instant effect part)
@@ -205,6 +207,7 @@ export function processCombat(
                         text: 'MISS',
                         style: 'EVADE'
                     });
+                    audioEngine.playEvade();
                 } else {
                     // Taking Damage
                     let dmg = Math.max(1, currentBoss.damage * (1 - stats.defense / 100));
@@ -218,11 +221,18 @@ export function processCombat(
                             text: 'BLOCKED',
                             style: 'HEAL'
                         });
+                        audioEngine.playBlock();
                     } else {
-                        if (dmg > 5) events.push({ type: 'BOSS_HIT' });
+                        if (dmg > 5) {
+                            events.push({ type: 'BOSS_HIT' });
+                            audioEngine.playBossHit();
+                        }
                     }
 
-                    if (!state.isGodMode) integrity -= dmg;
+                    if (!state.isGodMode) {
+                        integrity -= dmg;
+                        audioEngine.playPlayerHit();
+                    }
                 }
             }
         }
@@ -252,6 +262,7 @@ export function processCombat(
 
         // Boss Death
         if (currentBoss.currentHp <= 0) {
+            audioEngine.playCombatEnd(true);
             events.push({
                 type: 'LOG',
                 msg: `${currentBoss.isMob ? 'ВРАГ' : 'БОСС'} УНИЧТОЖЕН`,
@@ -311,6 +322,7 @@ export function processCombat(
         }
     } else if (state.depth > 200 && (state.depth - lastBossDepth) >= 500 && Math.random() < 0.005) {
         currentBoss = generateBoss(state.depth, "Unknown");
+        audioEngine.playCombatStart();
         // Initialize phases
         currentBoss.phases = [1];
 

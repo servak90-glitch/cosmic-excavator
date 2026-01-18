@@ -103,6 +103,7 @@ export const createTravelSlice: SliceCreator<TravelActions> = (set, get) => ({
         }
 
         // ✅ Все проверки пройдены — ПЕРЕМЕЩЕНИЕ
+        audioEngine.playTravelStart();
         const newResources = {
             ...s.resources,
             [fuelType]: s.resources[fuelType] - fuelCost
@@ -121,7 +122,7 @@ export const createTravelSlice: SliceCreator<TravelActions> = (set, get) => ({
             actionLogQueue: pushLog(s, successEvent)
         });
 
-        audioEngine.playAchievement();
+        audioEngine.playTravelEnd();
     },
 
     /**

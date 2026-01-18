@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Biome, Resources, Quest } from '../types';
+import { audioEngine } from '../services/audioEngine';
 import QuestPanel from './QuestPanel';
 import TradeTab from './city/TradeTab';
 import JewelerTab from './city/JewelerTab';
@@ -100,7 +101,10 @@ const CityView: React.FC<CityViewProps> = ({
         {TABS.map(tab => (
           <button
             key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
+            onClick={() => {
+              setActiveTab(tab.id);
+              audioEngine.playUITabSwitch();
+            }}
             className={`flex-1 min-w-[80px] md:min-w-0 py-3 md:py-4 px-2 md:px-4 text-[10px] md:text-xs font-bold font-mono transition-colors flex items-center justify-center gap-1 md:gap-2 whitespace-nowrap active:bg-zinc-800
               ${activeTab === tab.id ? 'bg-zinc-800 text-cyan-400 border-b-2 border-cyan-400' : 'text-zinc-500 hover:text-white'}`}
           >

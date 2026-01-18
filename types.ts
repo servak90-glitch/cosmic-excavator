@@ -279,7 +279,7 @@ export interface Stats {
   drillingEfficiency: number;
   ambientHeat: number;
   requiredTier: number;
-  totalCargoCapacity: number; // [NEW v4.0] Общая грузоподъемность (база + модули)
+  totalCargoCapacity?: number; // [NEW v4.0] Общая грузоподъемность (база + модули)
   // Using simplified types for mods to avoid huge interface duplication
   skillMods: Record<string, number>;
   artifactMods: Record<string, number>;

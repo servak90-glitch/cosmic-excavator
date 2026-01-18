@@ -1,5 +1,6 @@
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect } from 'react';
+import { audioEngine } from '../services/audioEngine';
 import { InventoryItem, ArtifactRarity } from '../types';
 import { ARTIFACTS, getArtifactColor } from '../services/artifactRegistry';
 import { useGameStore } from '../store/gameStore';
@@ -20,6 +21,10 @@ const ArtifactsView: React.FC = () => {
    const onEquipArtifact = useGameStore(s => s.equipArtifact);
    const onUnequipArtifact = useGameStore(s => s.unequipArtifact);
    const onScrapArtifact = useGameStore(s => s.scrapArtifact);
+
+   useEffect(() => {
+      audioEngine.playUIPanelOpen();
+   }, []);
 
 
    const isQuarantined = storageLevel === 1;

@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useGameStore } from '../store/gameStore';
+import { audioEngine } from '../services/audioEngine';
 import { DrillSlot } from '../types';
 import { BITS, ENGINES, COOLERS, HULLS, LOGIC_CORES, CONTROL_UNITS, GEARBOXES, POWER_CORES, ARMORS, CARGO_BAYS } from '../constants';
 import { calculateStats } from '../services/gameMath';
@@ -17,6 +18,19 @@ const TABS: { id: ForgeTab; label: string }[] = [
 
 const ForgeView: React.FC = () => {
     const [forgeTab, setForgeTab] = useState<ForgeTab>('DRILL');
+
+    useEffect(() => {
+        audioEngine.playUIPanelOpen();
+    }, []);
+
+    const firstRender = useRef(true);
+    useEffect(() => {
+        if (firstRender.current) {
+            firstRender.current = false;
+            return;
+        }
+        audioEngine.playUITabSwitch();
+    }, [forgeTab]);
 
     // Connect to store
     const drill = useGameStore(s => s.drill);

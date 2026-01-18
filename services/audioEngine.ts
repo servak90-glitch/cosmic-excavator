@@ -1,9 +1,16 @@
+import { ResourceType } from '../types';
 
 export enum MusicMode {
   SURFACE = 'SURFACE',
   DEEP = 'DEEP',
   CRYSTAL = 'CRYSTAL',
   VOID = 'VOID'
+}
+
+export enum MusicIntensity {
+  LOW = 0,
+  MEDIUM = 1,
+  HIGH = 2
 }
 
 interface ScaleVariation {
@@ -17,22 +24,30 @@ const VARIATIONS: Record<MusicMode, ScaleVariation[]> = {
   [MusicMode.SURFACE]: [
     { label: 'Heroic Start', notes: [220, 246.94, 261.63, 293.66, 329.63, 440], waveform: 'sine', density: 0.8 },
     { label: 'Dusty Horizon', notes: [220, 261.63, 293.66, 349.23, 392], waveform: 'triangle', density: 0.6 },
-    { label: 'Determination', notes: [110, 220, 329.63, 440, 493.88], waveform: 'sine', density: 0.5 }
+    { label: 'Determination', notes: [110, 220, 329.63, 440, 493.88], waveform: 'sine', density: 0.5 },
+    { label: 'Golden Sand', notes: [196, 220, 246.94, 293.66, 329.63], waveform: 'sine', density: 0.7 },
+    { label: 'Oasis Dream', notes: [220, 277.18, 329.63, 415.30, 440], waveform: 'triangle', density: 0.4 }
   ],
   [MusicMode.CRYSTAL]: [
     { label: 'Ethereal Shine', notes: [523.25, 587.33, 659.25, 739.99, 783.99, 880], waveform: 'sine', density: 0.9 },
     { label: 'Frozen Echo', notes: [440, 493.88, 523.25, 587.33, 659.25], waveform: 'sine', density: 0.4 },
-    { label: 'Geode Pulse', notes: [261.63, 329.63, 392, 523.25, 659.25], waveform: 'sine', density: 0.7 }
+    { label: 'Geode Pulse', notes: [261.63, 329.63, 392, 523.25, 659.25], waveform: 'sine', density: 0.7 },
+    { label: 'Resonance', notes: [440, 554.37, 659.25, 880], waveform: 'sine', density: 0.6 },
+    { label: 'Prism Light', notes: [523.25, 659.25, 783.99, 1046.50], waveform: 'sine', density: 0.5 }
   ],
   [MusicMode.DEEP]: [
     { label: 'Tension', notes: [164.81, 174.61, 196, 220, 246.94], waveform: 'triangle', density: 0.8 },
     { label: 'Heavy Metal', notes: [82.41, 110, 123.47, 164.81, 196], waveform: 'sawtooth', density: 0.5 },
-    { label: 'Pressure', notes: [110, 116.54, 130.81, 164.81], waveform: 'triangle', density: 0.6 }
+    { label: 'Pressure', notes: [110, 116.54, 130.81, 164.81], waveform: 'triangle', density: 0.6 },
+    { label: 'Iron Heart', notes: [73.42, 82.41, 110, 146.83], waveform: 'sawtooth', density: 0.7 },
+    { label: 'Abyss Echo', notes: [55, 65.41, 82.41, 110], waveform: 'triangle', density: 0.4 }
   ],
   [MusicMode.VOID]: [
     { label: 'Entropy', notes: [110, 116.54, 138.59, 146.83, 174.61, 220], waveform: 'sawtooth', density: 0.9 },
     { label: 'The End', notes: [55, 61.74, 65.41, 82.41, 110], waveform: 'triangle', density: 0.4 },
-    { label: 'Singularity', notes: [440, 466.16, 554.37, 587.33], waveform: 'sine', density: 0.3 }
+    { label: 'Singularity', notes: [440, 466.16, 554.37, 587.33], waveform: 'sine', density: 0.3 },
+    { label: 'Null Point', notes: [27.5, 30.87, 41.2, 55], waveform: 'sawtooth', density: 0.8 },
+    { label: 'Eternal Dark', notes: [55, 58.27, 61.74], waveform: 'triangle', density: 0.2 }
   ]
 };
 
@@ -74,10 +89,38 @@ export class AudioEngine {
   private droneFilter: BiquadFilterNode | null = null;
   private droneGain: GainNode | null = null;
 
+  // Music Layers
+  private melodyBus: GainNode | null = null;
+  private tensionBus: GainNode | null = null;
+  private combatBus: GainNode | null = null;
+
   private currentMode: MusicMode = MusicMode.SURFACE;
+  private currentIntensity: MusicIntensity = MusicIntensity.LOW;
   private currentVariationIndex: number = 0;
   private isRunning: boolean = false;
   private _isReady: boolean = false;
+
+  // Phase 4 State
+  private lastHeat: number = 0;
+  private lfoPhase: number = 0;
+  private drillMaterial: 'rock' | 'crystal' | 'metal' = 'rock';
+
+  // Modulation Nodes
+  private droneLFO_L: OscillatorNode | null = null;
+  private droneLFO_R: OscillatorNode | null = null;
+  private droneLFO_GainL: GainNode | null = null;
+  private droneLFO_GainR: GainNode | null = null;
+
+  private pannerL: StereoPannerNode | null = null;
+  private pannerR: StereoPannerNode | null = null;
+
+  // Drill FM/Resonance
+  private drillModulator: OscillatorNode | null = null;
+  private drillModGain: GainNode | null = null;
+
+  // Steam Turbulence
+  private steamModulator: OscillatorNode | null = null;
+  private steamModGain: GainNode | null = null;
 
   public get isReady(): boolean {
     return this._isReady && !!this.ctx && this.ctx.state === 'running';
@@ -152,6 +195,19 @@ export class AudioEngine {
     // Music
     this.musicBus = this.ctx.createGain(); // Dry
     this.musicBus.connect(this.masterBus);
+
+    // Dynamic Layers
+    this.melodyBus = this.ctx.createGain();
+    this.tensionBus = this.ctx.createGain();
+    this.combatBus = this.ctx.createGain();
+
+    this.melodyBus.connect(this.musicBus);
+    this.tensionBus.connect(this.musicBus);
+    this.combatBus.connect(this.musicBus);
+
+    this.melodyBus.gain.value = 1.0;
+    this.tensionBus.gain.value = 0;
+    this.combatBus.gain.value = 0;
 
     this.musicFxBus = this.ctx.createGain(); // Wet Send
     this.musicFxBus.connect(this.reverbNode);
@@ -264,15 +320,28 @@ export class AudioEngine {
   private initDrillSound() {
     if (!this.ctx || !this.sfxBus) return;
 
+    // Pink Noise for Stick-Slip
     const buffer = this.createPinkNoise();
     this.drillNoise = this.ctx.createBufferSource();
     this.drillNoise.buffer = buffer;
     this.drillNoise.loop = true;
 
+    // Main Drill Oscillator (Stick-Slip Driver / Carrier)
     this.drillOsc = this.ctx.createOscillator();
     this.drillOsc.type = 'sawtooth';
     this.drillOsc.frequency.value = 40;
 
+    // FM Modulator for Metal
+    this.drillModulator = this.ctx.createOscillator();
+    this.drillModulator.type = 'sine';
+    this.drillModulator.frequency.value = 150;
+    this.drillModGain = this.ctx.createGain();
+    this.drillModGain.gain.value = 0; // Default off
+    this.drillModulator.connect(this.drillModGain);
+    this.drillModGain.connect(this.drillOsc.frequency);
+    this.drillModulator.start();
+
+    // Filter for Resonance/Stick-Slip
     this.drillFilter = this.ctx.createBiquadFilter();
     this.drillFilter.type = 'lowpass';
     this.drillFilter.frequency.value = 100;
@@ -298,21 +367,29 @@ export class AudioEngine {
     this.steamNoise.buffer = buffer;
     this.steamNoise.loop = true;
 
+    // Turbulence Modulator (Low freq noise/osc)
+    this.steamModulator = this.ctx.createOscillator();
+    this.steamModulator.type = 'sine';
+    this.steamModulator.frequency.value = 8;
+    this.steamModGain = this.ctx.createGain();
+    this.steamModGain.gain.value = 0;
+    this.steamModulator.start();
+
     this.steamFilter = this.ctx.createBiquadFilter();
     this.steamFilter.type = 'highpass';
     this.steamFilter.frequency.value = 1000;
     this.steamFilter.Q.value = 0.5;
+
+    // Connect Turbulence to Filter Cutoff
+    this.steamModGain.connect(this.steamFilter.frequency);
 
     this.steamGain = this.ctx.createGain();
     this.steamGain.gain.value = 0;
 
     this.steamNoise.connect(this.steamFilter);
     this.steamFilter.connect(this.steamGain);
-
-    // Connect to Dry Bus
     this.steamGain.connect(this.sfxBus);
 
-    // Connect to Wet Bus (Controlled by Volume now)
     const steamVerb = this.ctx.createGain();
     steamVerb.gain.value = 0.3;
     this.steamGain.connect(steamVerb);
@@ -338,21 +415,54 @@ export class AudioEngine {
     this.droneOsc2.frequency.setValueAtTime(55.5, this.ctx.currentTime);
 
     this.droneGain = this.ctx.createGain();
-    this.droneGain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+    this.droneGain.gain.value = 0.15;
+
+    // --- Stereo LFO Setup ---
+    this.droneLFO_L = this.ctx.createOscillator();
+    this.droneLFO_R = this.ctx.createOscillator();
+    this.droneLFO_L.frequency.value = 0.1;
+    this.droneLFO_R.frequency.value = 0.12; // Slightly different freq for depth
+
+    this.droneLFO_GainL = this.ctx.createGain();
+    this.droneLFO_GainR = this.ctx.createGain();
+    this.droneLFO_GainL.gain.value = 50; // Filter mod depth (Hz)
+    this.droneLFO_GainR.gain.value = 50;
+
+    this.pannerL = this.ctx.createStereoPanner();
+    this.pannerR = this.ctx.createStereoPanner();
+    this.pannerL.pan.value = -0.5;
+    this.pannerR.pan.value = 0.5;
+
+    // Connect LFOs to Filter
+    this.droneLFO_L.connect(this.droneLFO_GainL);
+    this.droneLFO_R.connect(this.droneLFO_GainR);
+    this.droneLFO_GainL.connect(this.droneFilter.frequency);
+    this.droneLFO_GainR.connect(this.droneFilter.frequency);
 
     this.droneOsc1.connect(this.droneFilter);
     this.droneOsc2.connect(this.droneFilter);
-    this.droneFilter.connect(this.droneGain);
 
-    // Connect to Dry Bus
+    // Split to stereo path
+    const leftPath = this.ctx.createGain();
+    const rightPath = this.ctx.createGain();
+    this.droneFilter.connect(leftPath);
+    this.droneFilter.connect(rightPath);
+
+    leftPath.connect(this.pannerL);
+    rightPath.connect(this.pannerR);
+
+    this.pannerL.connect(this.droneGain);
+    this.pannerR.connect(this.droneGain);
+
     this.droneGain.connect(this.sfxBus);
 
-    // Connect to Wet Bus
     const verbSend = this.ctx.createGain();
     verbSend.gain.value = 0.5;
     this.droneGain.connect(verbSend);
     verbSend.connect(this.sfxReverbBus);
 
+    this.droneLFO_L.start();
+    this.droneLFO_R.start();
     this.droneOsc1.start();
     this.droneOsc2.start();
   }
@@ -380,23 +490,48 @@ export class AudioEngine {
 
       const variations = VARIATIONS[this.currentMode];
       const variation = variations[this.currentVariationIndex];
+      const intensity = this.currentIntensity;
 
+      // 1. Melody Layer (Always active, but density might change)
       if (Math.random() < variation.density) {
         const scale = variation.notes;
         const freq = scale[Math.floor(Math.random() * scale.length)];
-        this.playNote(freq, variation.waveform);
+        this.playNote(freq, variation.waveform, 'melody');
       }
 
+      // 2. Tension Layer (Low pulses)
+      if (intensity >= MusicIntensity.MEDIUM && Math.random() < 0.4) {
+        const scale = variation.notes;
+        const freq = scale[0] / 2; // Octave lower root
+        this.playNote(freq, 'sine', 'tension');
+      }
+
+      // 3. Combat Layer (Percussive rhythm)
+      if (intensity === MusicIntensity.HIGH && Math.random() < 0.6) {
+        const scale = variation.notes;
+        const freq = scale[Math.floor(Math.random() * scale.length)] * 2; // Octave higher
+        this.playNote(freq, 'sawtooth', 'combat');
+      }
+
+      // Adaptive Tempo
       const baseDelay = this.currentMode === MusicMode.VOID ? 200 : 600;
-      const delay = baseDelay + Math.random() * 1500;
+      const intensityMod = intensity === MusicIntensity.HIGH ? 0.5 : (intensity === MusicIntensity.MEDIUM ? 0.8 : 1.0);
+      const delay = (baseDelay + Math.random() * 1500) * intensityMod;
       setTimeout(playTick, delay);
     };
 
     playTick();
   }
 
-  private playNote(freq: number, type: OscillatorType) {
+  private playNote(freq: number, type: OscillatorType, layer: 'melody' | 'tension' | 'combat' = 'melody') {
     if (!this.ctx || !this.musicBus || !this.musicFxBus) return;
+
+    // Select bus based on layer
+    let targetBus = this.melodyBus;
+    if (layer === 'tension') targetBus = this.tensionBus;
+    if (layer === 'combat') targetBus = this.combatBus;
+
+    if (!targetBus) targetBus = this.musicBus;
 
     const osc = this.ctx.createOscillator();
     const env = this.ctx.createGain();
@@ -408,19 +543,35 @@ export class AudioEngine {
 
     const now = this.ctx.currentTime;
     env.gain.setValueAtTime(0, now);
-    env.gain.linearRampToValueAtTime(0.1, now + 0.1);
-    env.gain.exponentialRampToValueAtTime(0.001, now + 3.0);
+
+    // Specific envelope per layer
+    if (layer === 'combat') {
+      env.gain.linearRampToValueAtTime(0.15, now + 0.01);
+      env.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+      osc.stop(now + 0.5);
+    } else if (layer === 'tension') {
+      env.gain.linearRampToValueAtTime(0.1, now + 0.2);
+      env.gain.exponentialRampToValueAtTime(0.001, now + 4.0);
+      osc.stop(now + 4.1);
+    } else {
+      env.gain.linearRampToValueAtTime(0.1, now + 0.1);
+      env.gain.exponentialRampToValueAtTime(0.001, now + 3.0);
+      osc.stop(now + 3.1);
+    }
 
     osc.connect(env);
 
-    // Connect to Buses (Dry & Wet)
-    env.connect(this.musicBus);
-    env.connect(this.musicFxBus);
+    // Connect to specific Layer Bus -> Music Bus
+    env.connect(targetBus);
+
+    // Add Reverb/Delay wet send to melody and tension layers
+    if (layer !== 'combat') {
+      env.connect(this.musicFxBus);
+    }
 
     osc.start();
-    osc.stop(now + 3.1);
 
-    // Clean up to prevent memory leak / crackling
+    // Clean up
     osc.onended = () => {
       osc.disconnect();
       env.disconnect();
@@ -429,9 +580,22 @@ export class AudioEngine {
 
   // --- UPDATES ---
 
-  update(heat: number, depth: number, isOverheated: boolean) {
+  private crossfadeLayers(intensity: MusicIntensity) {
+    if (!this.ctx || !this.melodyBus || !this.tensionBus || !this.combatBus) return;
+    const now = this.ctx.currentTime;
+    const rampTime = 2.0;
+
+    // Reset all
+    this.melodyBus.gain.setTargetAtTime(intensity === MusicIntensity.LOW ? 1.0 : 0.7, now, rampTime);
+    this.tensionBus.gain.setTargetAtTime(intensity === MusicIntensity.MEDIUM ? 0.8 : 0, now, rampTime);
+    this.combatBus.gain.setTargetAtTime(intensity === MusicIntensity.HIGH ? 0.9 : 0, now, rampTime);
+  }
+
+
+  update(heat: number, depth: number, isOverheated: boolean, isCombat: boolean = false, isBroken: boolean = false, resourceType?: ResourceType) {
     if (!this.ctx) return;
 
+    const now = this.ctx.currentTime;
     const oldMode = this.currentMode;
     if (depth < 5000) this.currentMode = MusicMode.SURFACE;
     else if (depth < 20000) this.currentMode = MusicMode.CRYSTAL;
@@ -442,34 +606,91 @@ export class AudioEngine {
       this.currentVariationIndex = 0;
     }
 
-    if (this.droneFilter && this.droneOsc1 && this.droneOsc2) {
-      const cutoff = 100 + (heat * 20);
-      this.droneFilter.frequency.setTargetAtTime(cutoff, this.ctx.currentTime, 0.5);
+    // --- Intensity Calculation ---
+    let targetIntensity = MusicIntensity.LOW;
+    if (isCombat) targetIntensity = MusicIntensity.HIGH;
+    else if (isOverheated || heat > 70) targetIntensity = MusicIntensity.MEDIUM;
+
+    if (this.currentIntensity !== targetIntensity) {
+      this.currentIntensity = targetIntensity;
+      this.crossfadeLayers(targetIntensity);
+    }
+
+    // --- 1. DRONE SYNTH (Ambience) ---
+    if (this.droneFilter && this.droneOsc1 && this.droneOsc2 && this.droneGain) {
+      const heatCutoff = 100 + (heat * 20);
+      const depthMod = Math.min(1.0, depth / 50000);
+
+      const baseFilterFreq = heatCutoff * (1.0 - depthMod * 0.3);
+      this.droneFilter.frequency.setTargetAtTime(baseFilterFreq, now, 0.5);
 
       const pitch = Math.max(30, 55 - (depth / 5000));
-      this.droneOsc1.frequency.setTargetAtTime(pitch, this.ctx.currentTime, 1.0);
-      this.droneOsc2.frequency.setTargetAtTime(pitch * 1.01, this.ctx.currentTime, 1.0);
-    }
+      this.droneOsc1.frequency.setTargetAtTime(pitch, now, 1.0);
+      this.droneOsc2.frequency.setTargetAtTime(pitch * 1.01, now, 1.0);
 
-    if (this.drillFilter && this.drillOsc && this.drillGain) {
-      const targetGain = isOverheated ? 0 : Math.min(0.4, (heat / 100) * 0.5 + 0.05);
-      const actualGain = heat > 0 ? targetGain : 0;
+      const droneVol = 0.15 + (depthMod * 0.1);
+      this.droneGain.gain.setTargetAtTime(droneVol, now, 2.0);
 
-      this.drillGain.gain.setTargetAtTime(actualGain, this.ctx.currentTime, 0.2);
-
-      const rpm = 50 + (heat * 10);
-      this.drillFilter.frequency.setTargetAtTime(rpm * 2, this.ctx.currentTime, 0.1);
-      this.drillOsc.frequency.setTargetAtTime(rpm / 2, this.ctx.currentTime, 0.1);
-    }
-
-    if (this.steamGain && this.steamFilter) {
-      const steamTarget = isOverheated ? Math.pow(heat / 100, 2) * 0.6 : 0;
-      this.steamGain.gain.setTargetAtTime(steamTarget, this.ctx.currentTime, 0.1);
-
-      if (isOverheated) {
-        this.steamFilter.frequency.setTargetAtTime(800 + (heat * 15), this.ctx.currentTime, 0.1);
+      if (this.pannerL && this.pannerR) {
+        const width = 0.2 + (depthMod * 0.6);
+        this.pannerL.pan.setTargetAtTime(-width, now, 5.0);
+        this.pannerR.pan.setTargetAtTime(width, now, 5.0);
       }
     }
+
+    // --- 2. DRILL SYNTH (Physical Modeling) ---
+    if (this.drillFilter && this.drillOsc && this.drillGain && this.drillModGain) {
+      const targetGain = isOverheated || isBroken || isCombat ? 0 : Math.min(0.4, (heat / 100) * 0.5 + 0.05);
+      const actualGain = heat > 0 ? targetGain : 0;
+      this.drillGain.gain.setTargetAtTime(actualGain, now, 0.2);
+
+      let material: 'rock' | 'crystal' | 'metal' = 'rock';
+      if (resourceType) {
+        const rt = resourceType.toLowerCase();
+        if (['crystal', 'diamonds', 'ancient'].includes(rt)) material = 'crystal';
+        else if (['iron', 'copper', 'gold', 'tech', 'uranium', 'platinum', 'void_shard'].includes(rt)) material = 'metal';
+      }
+
+      const rpm = 50 + (heat * 10);
+
+      if (material === 'crystal') {
+        this.drillFilter.type = 'bandpass';
+        this.drillFilter.frequency.setTargetAtTime(2000 + rpm * 5, now, 0.2);
+        this.drillFilter.Q.setTargetAtTime(10, now, 0.2);
+        this.drillModGain.gain.setTargetAtTime(0, now, 0.2);
+        this.drillOsc.frequency.setTargetAtTime(rpm * 4, now, 0.2);
+      } else if (material === 'metal') {
+        this.drillFilter.type = 'lowpass';
+        this.drillFilter.frequency.setTargetAtTime(1500 + rpm * 2, now, 0.2);
+        this.drillFilter.Q.setTargetAtTime(3, now, 0.2);
+        this.drillModGain.gain.setTargetAtTime(200, now, 0.2);
+        this.drillOsc.frequency.setTargetAtTime(rpm, now, 0.2);
+      } else {
+        this.drillFilter.type = 'lowpass';
+        this.drillFilter.frequency.setTargetAtTime(200 + rpm * 2, now, 0.2);
+        this.drillFilter.Q.setTargetAtTime(2, now, 0.2);
+        this.drillModGain.gain.setTargetAtTime(0, now, 0.2);
+        this.drillOsc.frequency.setTargetAtTime(rpm / 2, now, 0.2);
+      }
+    }
+
+    // --- 3. STEAM SYNTH (Turbulence) ---
+    if (this.steamGain && this.steamFilter && this.steamModGain) {
+      const coolingRate = Math.max(0, this.lastHeat - heat);
+      const steamTarget = isOverheated ? Math.min(0.8, (heat / 100) * 0.6 + (coolingRate * 0.05)) : 0;
+
+      this.steamGain.gain.setTargetAtTime(steamTarget, now, 0.1);
+
+      if (isOverheated) {
+        const turbDepth = 500 + (coolingRate * 100);
+        this.steamModGain.gain.setTargetAtTime(turbDepth, now, 0.1);
+
+        const baseFreq = 800 + (heat * 15);
+        this.steamFilter.frequency.setTargetAtTime(baseFreq, now, 0.1);
+      }
+    }
+
+    this.lastHeat = heat;
   }
 
   // --- SFX API ---
@@ -808,6 +1029,408 @@ export class AudioEngine {
         g.disconnect();
       };
     });
+  }
+
+  playGeodeCollect(rarity: string) {
+    if (!this.ctx || !this.sfxBus) return;
+    const t = this.ctx.currentTime;
+
+    if (rarity === 'LEGENDARY') {
+      this.playLegendary();
+      return;
+    }
+
+    const g = this.ctx.createGain();
+    const osc = this.ctx.createOscillator();
+
+    if (rarity === 'COMMON') {
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(400, t);
+      osc.frequency.exponentialRampToValueAtTime(200, t + 0.1);
+      g.gain.setValueAtTime(0.05, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
+    } else if (rarity === 'UNCOMMON') {
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(440, t);
+      osc.frequency.exponentialRampToValueAtTime(660, t + 0.05);
+      osc.frequency.exponentialRampToValueAtTime(880, t + 0.1);
+      g.gain.setValueAtTime(0.07, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.15);
+    } else if (rarity === 'RARE' || rarity === 'EPIC') {
+      const isEpic = rarity === 'EPIC';
+      const freqs = isEpic ? [880, 1108.73, 1318.51] : [440, 554.37, 659.25];
+      freqs.forEach((f, i) => {
+        const o = this.ctx!.createOscillator();
+        const gainNode = this.ctx!.createGain();
+        o.type = 'sine';
+        o.frequency.setValueAtTime(f, t + i * 0.05);
+        gainNode.gain.setValueAtTime(0.05, t + i * 0.05);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, t + i * 0.05 + 0.3);
+        o.connect(gainNode);
+        gainNode.connect(this.sfxBus!);
+        o.start(t + i * 0.05);
+        o.stop(t + i * 0.05 + 0.35);
+      });
+      return;
+    }
+
+    osc.connect(g);
+    g.connect(this.sfxBus);
+    osc.start();
+    osc.stop(t + 0.2);
+
+    osc.onended = () => {
+      osc.disconnect();
+      g.disconnect();
+    };
+  }
+
+  playSatelliteCollect() {
+    if (!this.ctx || !this.sfxBus) return;
+    const t = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const g = this.ctx.createGain();
+
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(1200, t);
+    osc.frequency.exponentialRampToValueAtTime(2400, t + 0.05);
+    osc.frequency.exponentialRampToValueAtTime(800, t + 0.2);
+
+    g.gain.setValueAtTime(0.06, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
+
+    osc.connect(g);
+    g.connect(this.sfxBus);
+    osc.start();
+    osc.stop(t + 0.25);
+
+    osc.onended = () => {
+      osc.disconnect();
+      g.disconnect();
+    };
+  }
+
+  playHazardTrigger(type: string) {
+    if (!this.ctx || !this.sfxBus || !this.sfxReverbBus) return;
+    const t = this.ctx.currentTime;
+
+    if (type === 'CAVE_IN') {
+      const noise = this.ctx.createBufferSource();
+      noise.buffer = this.createPinkNoise();
+      const filter = this.ctx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(200, t);
+      filter.frequency.linearRampToValueAtTime(40, t + 1.5);
+      const g = this.ctx.createGain();
+      g.gain.setValueAtTime(0.6, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 1.5);
+      noise.connect(filter);
+      filter.connect(g);
+      g.connect(this.sfxBus);
+      noise.start();
+      noise.stop(t + 1.6);
+    } else if (type === 'GAS') {
+      const noise = this.ctx.createBufferSource();
+      noise.buffer = this.createWhiteNoise();
+      const filter = this.ctx.createBiquadFilter();
+      filter.type = 'highpass';
+      filter.frequency.setValueAtTime(2000, t);
+      filter.frequency.linearRampToValueAtTime(5000, t + 1.0);
+      const g = this.ctx.createGain();
+      g.gain.setValueAtTime(0, t);
+      g.gain.linearRampToValueAtTime(0.2, t + 0.1);
+      g.gain.linearRampToValueAtTime(0, t + 1.0);
+      noise.connect(filter);
+      filter.connect(g);
+      g.connect(this.sfxBus);
+      noise.start();
+      noise.stop(t + 1.1);
+    } else if (type === 'MAGMA') {
+      const osc = this.ctx.createOscillator();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(60, t);
+      const lfo = this.ctx.createOscillator();
+      lfo.type = 'sine';
+      lfo.frequency.setValueAtTime(8, t);
+      const lfoGain = this.ctx.createGain();
+      lfoGain.gain.value = 20;
+      lfo.connect(lfoGain);
+      lfoGain.connect(osc.frequency);
+      const g = this.ctx.createGain();
+      g.gain.setValueAtTime(0, t);
+      g.gain.linearRampToValueAtTime(0.3, t + 0.2);
+      g.gain.linearRampToValueAtTime(0, t + 1.2);
+      osc.connect(g);
+      g.connect(this.sfxBus);
+      osc.start();
+      lfo.start();
+      osc.stop(t + 1.3);
+      lfo.stop(t + 1.3);
+    }
+  }
+
+  playHazardDamage() {
+    if (!this.ctx || !this.sfxBus) return;
+    const t = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const g = this.ctx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(100, t);
+    osc.frequency.exponentialRampToValueAtTime(40, t + 0.2);
+    g.gain.setValueAtTime(0.2, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
+    osc.connect(g);
+    g.connect(this.sfxBus);
+    osc.start();
+    osc.stop(t + 0.25);
+    osc.onended = () => {
+      osc.disconnect();
+      g.disconnect();
+    };
+  }
+
+  playCombatStart() {
+    if (!this.ctx || !this.sfxBus || !this.sfxReverbBus) return;
+    const t = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const g = this.ctx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(80, t);
+    osc.frequency.exponentialRampToValueAtTime(40, t + 0.5);
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(0.3, t + 0.1);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 1.0);
+    osc.connect(g);
+    g.connect(this.sfxBus);
+    g.connect(this.sfxReverbBus);
+    osc.start();
+    osc.stop(t + 1.1);
+    osc.onended = () => {
+      osc.disconnect();
+      g.disconnect();
+    };
+  }
+
+  playCombatEnd(victory: boolean) {
+    if (!this.ctx || !this.sfxBus || !this.sfxReverbBus) return;
+    const t = this.ctx.currentTime;
+    if (victory) {
+      this.playAchievement();
+    } else {
+      const osc = this.ctx.createOscillator();
+      const g = this.ctx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(100, t);
+      osc.frequency.linearRampToValueAtTime(50, t + 0.5);
+      g.gain.setValueAtTime(0.2, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 1.0);
+      osc.connect(g);
+      g.connect(this.sfxBus);
+      osc.start();
+      osc.stop(t + 1.1);
+      osc.onended = () => {
+        osc.disconnect();
+        g.disconnect();
+      };
+    }
+  }
+
+  playPlayerHit() {
+    if (!this.ctx || !this.sfxBus) return;
+    const t = this.ctx.currentTime;
+    const noise = this.ctx.createBufferSource();
+    noise.buffer = this.createPinkNoise();
+    const filter = this.ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(400, t);
+    const g = this.ctx.createGain();
+    g.gain.setValueAtTime(0.4, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
+    noise.connect(filter);
+    filter.connect(g);
+    g.connect(this.sfxBus);
+    noise.start();
+    noise.stop(t + 0.35);
+  }
+
+  playEvade() {
+    if (!this.ctx || !this.sfxBus) return;
+    const t = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const g = this.ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(800, t);
+    osc.frequency.exponentialRampToValueAtTime(1600, t + 0.1);
+    g.gain.setValueAtTime(0.1, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.15);
+    osc.connect(g);
+    g.connect(this.sfxBus);
+    osc.start();
+    osc.stop(t + 0.2);
+  }
+
+  playBlock() {
+    if (!this.ctx || !this.sfxBus) return;
+    const t = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const g = this.ctx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(200, t);
+    osc.frequency.exponentialRampToValueAtTime(100, t + 0.1);
+    g.gain.setValueAtTime(0.2, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
+    osc.connect(g);
+    g.connect(this.sfxBus);
+    osc.start();
+    osc.stop(t + 0.25);
+  }
+
+  playAbilityActivation(type: string) {
+    if (!this.ctx || !this.sfxBus || !this.sfxReverbBus) return;
+    const t = this.ctx.currentTime;
+    const g = this.ctx.createGain();
+    g.connect(this.sfxBus);
+    g.connect(this.sfxReverbBus);
+
+    if (type === 'EMP_BURST') {
+      const osc = this.ctx.createOscillator();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(100, t);
+      osc.frequency.exponentialRampToValueAtTime(1000, t + 0.1);
+      osc.frequency.exponentialRampToValueAtTime(50, t + 0.5);
+      g.gain.setValueAtTime(0.3, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.6);
+      osc.connect(g);
+      osc.start();
+      osc.stop(t + 0.7);
+    } else if (type === 'THERMAL_STRIKE') {
+      const noise = this.ctx.createBufferSource();
+      noise.buffer = this.createWhiteNoise();
+      const filter = this.ctx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(1000, t);
+      filter.frequency.exponentialRampToValueAtTime(200, t + 0.5);
+      g.gain.setValueAtTime(0.5, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.6);
+      noise.connect(filter);
+      filter.connect(g);
+      noise.start();
+      noise.stop(t + 0.7);
+    } else if (type === 'BARRIER') {
+      const osc = this.ctx.createOscillator();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(440, t);
+      const mod = this.ctx.createOscillator();
+      mod.frequency.value = 10;
+      const modGain = this.ctx.createGain();
+      modGain.gain.value = 20;
+      mod.connect(modGain);
+      modGain.connect(osc.frequency);
+      g.gain.setValueAtTime(0, t);
+      g.gain.linearRampToValueAtTime(0.2, t + 0.1);
+      g.gain.linearRampToValueAtTime(0, t + 0.8);
+      osc.connect(g);
+      osc.start();
+      mod.start();
+      osc.stop(t + 1);
+      mod.stop(t + 1);
+    } else if (type === 'OVERLOAD') {
+      const osc = this.ctx.createOscillator();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(50, t);
+      osc.frequency.exponentialRampToValueAtTime(800, t + 0.5);
+      g.gain.setValueAtTime(0, t);
+      g.gain.linearRampToValueAtTime(0.3, t + 0.1);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.8);
+      osc.connect(g);
+      osc.start();
+      osc.stop(t + 0.9);
+    }
+  }
+
+  playTravelStart() {
+    if (!this.ctx || !this.sfxBus) return;
+    const t = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const g = this.ctx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(40, t);
+    osc.frequency.exponentialRampToValueAtTime(120, t + 1.0);
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(0.4, t + 0.5);
+    g.gain.linearRampToValueAtTime(0.2, t + 1.5);
+    osc.connect(g);
+    g.connect(this.sfxBus);
+    osc.start();
+    osc.stop(t + 1.6);
+  }
+
+  playTravelEnd() {
+    if (!this.ctx || !this.sfxBus) return;
+    const t = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const g = this.ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(120, t);
+    osc.frequency.exponentialRampToValueAtTime(40, t + 1.0);
+    g.gain.setValueAtTime(0.3, t);
+    g.gain.linearRampToValueAtTime(0, t + 1.2);
+    osc.connect(g);
+    g.connect(this.sfxBus);
+    osc.start();
+    osc.stop(t + 1.3);
+  }
+
+  playLocationDiscover() {
+    this.playAchievement();
+  }
+
+  playBaseBuild() {
+    if (!this.ctx || !this.sfxBus) return;
+    const t = this.ctx.currentTime;
+    for (let i = 0; i < 3; i++) {
+      const osc = this.ctx.createOscillator();
+      const g = this.ctx.createGain();
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(100 + i * 50, t + i * 0.2);
+      g.gain.setValueAtTime(0.1, t + i * 0.2);
+      g.gain.exponentialRampToValueAtTime(0.001, t + i * 0.2 + 0.15);
+      osc.connect(g);
+      g.connect(this.sfxBus);
+      osc.start(t + i * 0.2);
+      osc.stop(t + i * 0.2 + 0.2);
+    }
+  }
+
+  playUIPanelOpen() {
+    if (!this.ctx || !this.sfxBus) return;
+    const t = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const g = this.ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(600, t);
+    osc.frequency.exponentialRampToValueAtTime(900, t + 0.05);
+    g.gain.setValueAtTime(0.05, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
+    osc.connect(g);
+    g.connect(this.sfxBus);
+    osc.start();
+    osc.stop(t + 0.15);
+  }
+
+  playUITabSwitch() {
+    if (!this.ctx || !this.sfxBus) return;
+    const t = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const g = this.ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(800, t);
+    g.gain.setValueAtTime(0.03, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
+    osc.connect(g);
+    g.connect(this.sfxBus);
+    osc.start();
+    osc.stop(t + 0.1);
   }
 }
 

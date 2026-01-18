@@ -4,7 +4,8 @@ import { calculateStats } from '../services/gameMath';
 import { REGIONS } from '../constants/regions';
 import { calculateDistance, getRegionColor, getZoneColorEmoji } from '../services/regionMath';
 import { calculateFuelCost, FUEL_TYPES, FuelType, getFuelLabel } from '../services/travelMath';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
+import { audioEngine } from '../services/audioEngine';
 import { MarketView } from './MarketView';
 import { CaravanPanel } from './CaravanPanel';
 import QuestPanel from './QuestPanel';
@@ -51,6 +52,19 @@ export const GlobalMapView = () => {
     const [activeTab, setActiveTab] = useState<TabType>('map');
 
     const activePerks = useMemo(() => getActivePerkIds(reputation), [reputation]);
+
+    useEffect(() => {
+        audioEngine.playUIPanelOpen();
+    }, []);
+
+    const firstRender = useRef(true);
+    useEffect(() => {
+        if (firstRender.current) {
+            firstRender.current = false;
+            return;
+        }
+        audioEngine.playUITabSwitch();
+    }, [activeTab]);
 
     const currentRegionData = REGIONS[currentRegion];
     const cargoRatio = maxCapacity > 0 ? currentCargoWeight / maxCapacity : 0;

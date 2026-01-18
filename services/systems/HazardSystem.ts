@@ -7,6 +7,7 @@
  */
 
 import { GameState, VisualEvent } from '../../types';
+import { audioEngine } from '../audioEngine';
 
 export interface HazardUpdate {
     integrity?: number;
@@ -54,9 +55,9 @@ export function processHazards(state: GameState, dt: number, activePerks: string
                 const dmg = Math.floor(Math.random() * 10) + 5;
                 update.integrity = Math.max(0, state.integrity - dmg);
                 events.push({ type: 'LOG', msg: `⚠️ ОБВАЛ ПОРОДЫ! -${dmg}% КОРПУС`, color: 'text-yellow-500' });
-                // Триггер визуального эффекта будет в GameEngine через update.events
-                // Мы добавим спец. событие для GameEngine
-                events.push({ type: 'SOUND', sfx: 'GLITCH' }); // Placeholder sound
+
+                audioEngine.playHazardTrigger('CAVE_IN');
+                audioEngine.playHazardDamage();
             }
         } else if (hazardRoll < 0.7) {
             // GAS_POCKET (30%)
@@ -64,6 +65,8 @@ export function processHazards(state: GameState, dt: number, activePerks: string
             if (state.heat < 80) {
                 update.heat = Math.min(100, state.heat + 10);
                 events.push({ type: 'LOG', msg: `⚠️ ГАЗОВЫЙ КАРМАН! ТЕМПЕРАТУРА ПОВЫШЕНА`, color: 'text-green-500' });
+
+                audioEngine.playHazardTrigger('GAS');
             }
         } else {
             // MAGMA_FLOW (30%)
@@ -71,6 +74,8 @@ export function processHazards(state: GameState, dt: number, activePerks: string
             if (state.depth > 15000 && state.heat < 70) {
                 update.heat = Math.min(100, state.heat + 20);
                 events.push({ type: 'LOG', msg: `⚠️ МАГМАТИЧЕСКИЙ ПОТОК! КРИТИЧЕСКИЙ НАГРЕВ`, color: 'text-orange-500' });
+
+                audioEngine.playHazardTrigger('MAGMA');
             }
         }
     }

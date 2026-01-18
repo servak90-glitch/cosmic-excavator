@@ -6,9 +6,10 @@
  * - tick() теперь оркестрирует подсистемы
  */
 
-import { GameState, VisualEvent, Resources } from '../types';
+import { GameState, VisualEvent, Resources, ResourceType } from '../types';
 import { calculateStats, recalculateCargoWeight } from './gameMath';
 import { narrativeManager } from './narrativeManager';
+import { BIOMES } from '../constants';
 
 import { audioEngine } from './audioEngine';
 import { getActivePerkIds } from './factionLogic';
@@ -263,7 +264,18 @@ export class GameEngine {
             afkTime: (Date.now() - state.lastInteractTime) / 1000
         };
         const aiState = narrativeManager.getAIState(narrativeContext);
-        audioEngine.update(heat, depth, heatResult.update.isOverheated);
+        const currentBiome = state.selectedBiome
+            ? BIOMES.find(b => (typeof b.name === 'string' ? b.name : b.name.EN) === state.selectedBiome) || BIOMES[0]
+            : BIOMES.slice().reverse().find(b => depth >= b.depth) || BIOMES[0];
+
+        audioEngine.update(
+            heat,
+            depth,
+            heatResult.update.isOverheated,
+            !!combatResult.update.currentBoss,
+            state.isBroken,
+            currentBiome.resource as ResourceType
+        );
 
         // NARRATIVE TICK (Time based)
         const NARRATIVE_INTERVAL = 10.0; // Seconds

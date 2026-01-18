@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useGameStore } from '../store/gameStore';
+import { audioEngine } from '../services/audioEngine';
 import { SkillCategory } from '../types';
 import { SKILLS, getSkillCost } from '../services/skillRegistry';
 import { t } from '../services/localization';
@@ -14,6 +15,10 @@ const SkillsView: React.FC = () => {
   const level = useGameStore(s => s.level);
   const lang = useGameStore(s => s.settings.language);
   const onUpgradeSkill = useGameStore(s => s.upgradeSkill);
+
+  useEffect(() => {
+    audioEngine.playUIPanelOpen();
+  }, []);
 
 
   const categories: { id: SkillCategory; label: string; color: string; desc: string }[] = [
