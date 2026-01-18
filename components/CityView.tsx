@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Biome, Resources, Quest } from '../types';
-import { TradeTab, ContractsTab, JewelerTab, ServiceTab, BarTab, ExpeditionTab } from './city';
+import QuestPanel from './QuestPanel';
 
 interface CityViewProps {
   biome: Biome;
@@ -10,12 +10,9 @@ interface CityViewProps {
   maxIntegrity: number;
   xp: number;
   depth: number;
-  activeQuests: Record<string, Quest>;
   onTrade: (cost: Partial<Resources>, reward: Partial<Resources> & { XP?: number }) => void;
   onHeal: () => void;
   onRepair: () => void;
-  onCompleteQuest: (questId: string) => void;
-  onRefreshQuests: () => void;
 }
 
 type CityTab = 'TRADE' | 'CONTRACTS' | 'SERVICE' | 'BAR' | 'JEWELER' | 'EXPEDITIONS';
@@ -37,12 +34,9 @@ const CityView: React.FC<CityViewProps> = ({
   maxIntegrity,
   xp,
   depth,
-  activeQuests,
   onTrade,
   onHeal,
-  onRepair,
-  onCompleteQuest,
-  onRefreshQuests
+  onRepair
 }) => {
   const [activeTab, setActiveTab] = useState<CityTab>('EXPEDITIONS');
 
@@ -51,16 +45,7 @@ const CityView: React.FC<CityViewProps> = ({
       case 'TRADE':
         return <TradeTab resources={resources} depth={depth} onTrade={onTrade} />;
       case 'CONTRACTS':
-        return (
-          <ContractsTab
-            resources={resources}
-            depth={depth}
-            xp={xp}
-            activeQuests={activeQuests}
-            onCompleteQuest={onCompleteQuest}
-            onRefreshQuests={onRefreshQuests}
-          />
-        );
+        return <QuestPanel />;
       case 'JEWELER':
         return <JewelerTab resources={resources} depth={depth} onTrade={onTrade} />;
       case 'SERVICE':

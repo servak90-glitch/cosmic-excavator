@@ -111,6 +111,22 @@ export interface ReputationTier {
   discount: number;
 }
 
+export interface FactionPerk {
+  id: string;
+  levelRequired: number;
+  name: string;
+  description: string;
+  effectType: 'MARKET' | 'LOGISTICS' | 'SCANNER' | 'COMBAT' | 'PASSIVE';
+  value?: number;
+}
+
+export interface FactionDef {
+  id: FactionId;
+  name: string;
+  description: string;
+  perks: FactionPerk[];
+}
+
 // === PLAYER BASES ===
 
 export type BaseType = 'outpost' | 'camp' | 'station';
@@ -544,7 +560,12 @@ export enum EventActionId {
   BASE_DEFEND = 'base_defend',
   BASE_SURRENDER = 'base_surrender',
   ENCOUNTER_INVESTIGATE = 'encounter_investigate',
-  ENCOUNTER_IGNORE = 'encounter_ignore'
+  ENCOUNTER_IGNORE = 'encounter_ignore',
+
+  // Side Tunnel Actions (Phase 3.2)
+  TUNNEL_CRYSTAL = 'tunnel_crystal',
+  TUNNEL_MINE = 'tunnel_mine',
+  TUNNEL_NEST = 'tunnel_nest'
 }
 
 export interface EventOption {
@@ -664,33 +685,60 @@ export interface ReputationState {
   [key: string]: number; // FactionId -> value (0-1000+)
 }
 
+// === QUEST SYSTEM (PHASE 3.1) ===
+
+export type QuestStatus = 'available' | 'active' | 'completed' | 'failed';
+export type QuestType = 'DELIVERY' | 'COLLECTION' | 'EXPLORATION' | 'COMBAT';
+
+export type QuestObjectiveType = 'COLLECT' | 'DELIVER' | 'REACH_DEPTH' | 'DEFEAT_BOSS' | 'BUILD_BASE' | 'TRAVEL_TO';
+
+export interface QuestObjective {
+  id: string;
+  description: string;
+  type: QuestObjectiveType;
+  target: string;  // Resource ID, region ID, boss ID, etc.
+  required: number;  // Количество
+  current: number;   // Текущий прогресс
+}
+
+export type QuestRewardType = 'RESOURCE' | 'REPUTATION' | 'UNLOCK' | 'BLUEPRINT' | 'XP';
+
+export interface QuestReward {
+  type: QuestRewardType;
+  target: string;   // resource ID, faction ID, unlock ID, blueprint ID, 'player' for XP
+  amount?: number;  // Количество (для ресурсов, reputation, XP)
+}
+
+export interface Quest {
+  id: string;
+  title: string;
+  description: string;
+  status: QuestStatus;
+  type: QuestType;
+
+  objectives: QuestObjective[];
+  rewards: QuestReward[];
+
+  factionId?: FactionId;  // Какая фракция дала квест
+  prerequisites?: string[];  // IDs других квестов
+  expiresAt?: number;  // Таймер (опционально)
+}
+
+// === DEPRECATED: LEGACY QUEST TYPES (для обратной совместимости) ===
+// Используются в старом коде citySlice.ts, будут удалены после миграции
+
+/**  @deprecated Use Quest instead */
 export enum QuestIssuer {
   CORP = 'CORP',
   SCIENCE = 'SCIENCE',
   REBELS = 'REBELS'
 }
 
+/** @deprecated Use QuestObjective instead */
 export interface QuestRequirement {
   type: 'RESOURCE' | 'XP' | 'TECH' | 'DEPTH';
   target: string;
   amount: number;
-}
-
-export interface QuestReward {
-  type: 'RESOURCE' | 'XP' | 'TECH' | 'REPUTATION';
-  target: string;
-  amount: number;
-}
-
-export interface Quest {
-  id: string;
-  issuer: QuestIssuer;
-  title: string;
-  description: string;
-  requirements: QuestRequirement[];
-  rewards: QuestReward[];
-  deadline?: number;
-  reputationReward?: number; // Simplified direct field or via rewards array
 }
 
 export type SkillCategory = 'CORTEX' | 'MOTOR' | 'VISUAL' | 'CHRONOS';
@@ -787,6 +835,9 @@ export interface LogFragment {
 // --- VISUAL PROPS ---
 export type PropType = 'FOSSIL' | 'PIPE' | 'CRYSTAL' | 'RUIN' | 'TECH_DEBRIS';
 
+// Phase 3.2: Side Tunnel Types
+export type SideTunnelType = 'SAFE' | 'RISKY' | 'CRYSTAL' | 'MINE' | 'NEST';
+
 export interface TunnelPropDef {
   type: PropType;
   minDepth: number;
@@ -814,7 +865,15 @@ export interface GameState {
   // GLOBAL MAP (PLAYER BASES)
   playerBases: PlayerBase[];  // Базы игрока в регионах
 
+  // === PHASE 2: MARKET \u0026 CARAVANS ===
+  marketTransactionHistory: MarketTransaction[];  // История рыночных транзакций
+  caravans: Caravan[];  // Активные караваны
+  caravanUnlocks: CaravanUnlock[];  // Разблокированные тиры караванов
+
   activeAbilities: ActiveAbilityState[];
+
+  // [BLUEPRINT SYSTEM] - Phase 3
+  unlockedBlueprints: string[];
 
   // [DEV_CONTEXT: SHIELD]
   shieldCharge: number; // 0-100
@@ -832,7 +891,9 @@ export interface GameState {
   discoveredArtifacts: string[];
   analyzer: AnalyzerState;
 
-  activeQuests: Record<string, Quest>;
+  activeQuests: Quest[];
+  completedQuestIds: string[];
+  failedQuestIds: string[];
   lastQuestRefresh: number;
   reputation: ReputationState;
 
@@ -894,8 +955,9 @@ export interface GameState {
 
 export type VisualEvent =
   | { type: 'LOG'; msg: string; color?: string }
-  | { type: 'TEXT'; x: number; y: number; text: string; style?: 'DAMAGE' | 'RESOURCE' | 'CRIT' | 'HEAL' | 'INFO' | 'EVADE' | 'BLOCKED' }
-  | { type: 'PARTICLE'; x: number; y: number; color: string; kind: 'DEBRIS' | 'SPARK' | 'SMOKE'; count: number }
+  | { type: 'TEXT'; x?: number; y?: number; position?: 'CENTER' | 'TOP_CENTER'; text: string; style?: 'DAMAGE' | 'RESOURCE' | 'CRIT' | 'HEAL' | 'INFO' | 'EVADE' | 'BLOCKED' }
+  | { type: 'PARTICLE'; x?: number; y?: number; position?: 'CENTER' | 'DRILL_TIP'; color: string; kind: 'DEBRIS' | 'SPARK' | 'SMOKE'; count: number }
   | { type: 'BOSS_HIT' }
   | { type: 'SOUND'; sfx: 'LOG' | 'GLITCH' | 'ACHIEVEMENT' }
+  | { type: 'SCREEN_SHAKE'; intensity: number; duration: number }
   | { type: 'VISUAL_EFFECT'; option: VisualEffectType };

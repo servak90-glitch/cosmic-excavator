@@ -1,7 +1,7 @@
 {
   "project_info": {
     "name": "Cosmic Excavator: Void-Piercer",
-    "version": "0.2.0",
+    "version": "0.3.0",
     "stack": [
       "React 19.2.3",
       "TypeScript",
@@ -13,7 +13,7 @@
       "Custom Grammar Engine",
       "Capacitor 6"
     ],
-    "description": "Sci-Fi Idle кликер. ФАЗА 3: ЭКСПАНСИЯ. Приоритет: Mobile UX и Баланс, затем Визуал и Контент."
+    "description": "Sci-Fi Idle кликер. ФАЗА 3.3: Фракции (Next). Реализованы Квесты и Туннели."
   },
   "architecture_rules": [
     "СТРОГО ЗАПРЕЩЕНО: Предлагать механики Престижа/Time Warp/Сброса прогресса. Игра масштабируется линейно и бесконечно.",
@@ -48,21 +48,16 @@
     "steps": []
   },
   "last_changes": {
-    "date": "2026-01-16",
-    "description": "VERSION 0.2.0: Sistema completa - 1) HazardSystem con triggers visuales y cooldowns para Cave-in/Gas/Magma. 2) EntitySystem ampliado con sistema de rareza (Common/Rare/Epic) y GEODE_LARGE. 3) Combat System con cooldown de minijuegos. 4) Refactor completo de GameStore en slices (entitySlice, eventSlice, adminSlice). 5) Balance de habilidades (nerf THERMAL_STRIKE). 6) Audio polish.",
+    "date": "2026-01-18",
+    "description": "VERSION 0.3.0: Phase 3.1 & 3.2 Completed. 1) Quest System fully integrated (UI, Logic, Store). 2) Side Tunnel System enhancing exploration with new risk/reward types and Anomaly Scanner.",
     "affected_files": [
-      "package.json",
-      "constants.tsx",
-      "DEV_CONTEXT.json",
       "CHANGELOG.md",
-      "services/systems/HazardSystem.ts",
-      "services/systems/EntitySystem.ts",
-      "store/slices/entitySlice.ts",
-      "store/slices/eventSlice.ts",
-      "store/slices/adminSlice.ts",
+      "DEV_CONTEXT.json",
+      "store/slices/questSlice.ts",
       "store/gameStore.ts",
-      "components/PixiOverlay.tsx",
-      "services/GameEngine.ts",
+      "services/systems/SideTunnelSystem.ts",
+      "services/eventRegistry.ts",
+      "components/QuestPanel.tsx",
       "types.ts"
     ]
   }

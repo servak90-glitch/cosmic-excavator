@@ -22,7 +22,6 @@ import { calculateStats, getResourceLabel, calculateRepairCost, calculateShieldR
 import { audioEngine } from '../services/audioEngine';
 import { generateQuestBatch } from '../services/questRegistry';
 import { ARTIFACTS, rollArtifact } from '../services/artifactRegistry';
-import { createEffect, EVENTS } from '../services/eventRegistry';
 import { generateBoss } from '../services/bossRegistry';
 import { SKILLS, getSkillCost } from '../services/skillRegistry';
 import { abilitySystem } from '../services/systems/AbilitySystem';
@@ -46,6 +45,9 @@ import {
     createLicenseSlice, LicenseActions,
     createBaseSlice, BaseActions
 } from './slices';
+import { createMarketSlice, MarketSlice } from './slices/marketSlice';
+import { createCaravanSlice, CaravanSlice } from './slices/caravanSlice';
+import { createQuestSlice, QuestSlice } from './slices/questSlice';
 import { GAME_VERSION } from '../constants';
 
 // === ИНТЕРФЕЙСЫ ===
@@ -69,7 +71,8 @@ interface CoreActions {
 export interface GameStore extends GameState,
     CoreActions, EventActions, AdminActions,
     DrillActions, CityActions, InventoryActions,
-    UpgradeActions, EntityActions, SettingsActions, ExpeditionActions, FactionActions, TravelActions, LicenseActions, BaseActions {
+    UpgradeActions, EntityActions, SettingsActions, ExpeditionActions, FactionActions, TravelActions, LicenseActions, BaseActions,
+    MarketSlice, CaravanSlice, QuestSlice {
     isGameActive: boolean;
     activeView: View;
     actionLogQueue: VisualEvent[];
@@ -93,7 +96,7 @@ const INITIAL_STATE: GameState = {
         titanium: 0, uranium: 0, nanoSwarm: 0, ancientTech: 0,
         rubies: 0, emeralds: 0, diamonds: 0,
         // Fuel (MVP)
-        coal: 0, oil: 0, gas: 0
+        coal: 500, oil: 0, gas: 0  // Начальный запас топлива
     },
     drill: {
         [DrillSlot.BIT]: BITS[0],
@@ -112,7 +115,9 @@ const INITIAL_STATE: GameState = {
     equippedArtifacts: [null, null, null] as (string | null)[],
     discoveredArtifacts: [],
     analyzer: { activeItemInstanceId: null, timeLeft: 0, maxTime: 0 },
-    activeQuests: {},
+    activeQuests: [],
+    completedQuestIds: [],
+    failedQuestIds: [],
     lastQuestRefresh: 0,
     totalDrilled: 0,
     xp: 0,
@@ -128,7 +133,7 @@ const INITIAL_STATE: GameState = {
     droneLevels: { [DroneType.COLLECTOR]: 0, [DroneType.COOLER]: 0, [DroneType.BATTLE]: 0, [DroneType.REPAIR]: 0, [DroneType.MINER]: 0 },
     storageLevel: 0,
     forgeUnlocked: false,
-    cityUnlocked: false,
+    cityUnlocked: true,  // [REBALANCE] Глобальная карта доступна сразу
     skillsUnlocked: false,
 
     // NARRATIVE STATE
@@ -155,7 +160,10 @@ const INITIAL_STATE: GameState = {
     eventCheckTick: 0,
     combatMinigame: null,
     activeAbilities: [],
+    unlockedBlueprints: [],
     activeExpeditions: [],
+
+    // [DEV_CONTEXT: SHIELD],
     minigameCooldown: 0,
     reputation: { CORPORATE: 0, SCIENCE: 0, REBELS: 0 },
 
@@ -171,7 +179,16 @@ const INITIAL_STATE: GameState = {
     },
 
     // === PLAYER BASES ===
-    playerBases: []
+    playerBases: [],
+
+    // === PHASE 2: MARKET & CARAVANS ===
+    marketTransactionHistory: [],
+    caravans: [],
+    caravanUnlocks: [
+        { tier: '1star', unlocked: false },
+        { tier: '2star', unlocked: false },
+        { tier: '3star', unlocked: false },
+    ]
 };
 
 // === ПЕРСИСТЕНТНОСТЬ ===
@@ -179,12 +196,13 @@ const INITIAL_STATE: GameState = {
 const PERSISTENT_KEYS: (keyof GameState)[] = [
     'depth', 'resources', 'heat', 'integrity', 'xp', 'level', 'drill',
     'inventory', 'equippedArtifacts', 'discoveredArtifacts', 'skillLevels',
-    'activeQuests', 'settings', 'droneLevels', 'activeDrones',
+    'activeQuests', 'completedQuestIds', 'failedQuestIds', 'settings', 'droneLevels', 'activeDrones',
     'forgeUnlocked', 'cityUnlocked', 'skillsUnlocked', 'storageLevel',
     'lastBossDepth', 'analyzer', 'debugUnlocked', 'selectedBiome',
     'activeEffects', 'eventQueue', 'recentEventIds', 'lastQuestRefresh',
     'shieldCharge', 'currentCargoWeight', 'currentRegion',
-    'globalReputation', 'unlockedLicenses', 'activePermits', 'playerBases'
+    'globalReputation', 'unlockedLicenses', 'activePermits', 'playerBases',
+    'marketTransactionHistory', 'caravans', 'caravanUnlocks'  // Phase 2
 ];
 
 const createSnapshot = (state: GameState): Partial<GameState> => {
@@ -263,6 +281,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
     ...createTravelSlice(set, get),
     ...createLicenseSlice(set, get),
     ...createBaseSlice(set, get),
+    ...createMarketSlice(set, get),
+    ...createCaravanSlice(set, get),
+    ...createQuestSlice(set, get),
 
     // === CORE ACTIONS ===
 

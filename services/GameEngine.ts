@@ -156,6 +156,13 @@ export class GameEngine {
                 return newVal;
             });
             if (hasChanges) activeExpeditions = updated;
+
+            // [PHASE 2] Check caravan completions every 10 ticks (~10 seconds)
+            // This is a side-effect action that modifies the store directly
+            // TODO: Refactor to return caravan updates from this function
+            // For now, calling the action is acceptable since it's in the game loop
+            (state as any).checkAllCaravans?.();
+            (state as any).checkAllQuestsProgress?.(); // [PHASE 3.1] Quest System check
         }
 
         let integrity = eventsResult.update.integrity ?? heatResult.update.integrity ?? combatResult.update.integrity ?? state.integrity;

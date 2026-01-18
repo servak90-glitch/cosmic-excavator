@@ -3,10 +3,12 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useGameStore } from '../store/gameStore';
 import { EVENTS } from '../services/eventRegistry';
 import { ARTIFACTS } from '../services/artifactRegistry';
+import { REGIONS } from '../constants/regions';
+import type { BaseType } from '../types';
 
 const DevTools: React.FC = () => {
   const store = useGameStore();
-  const [activeTab, setActiveTab] = useState<'RES' | 'STATE' | 'NAV' | 'EVENT'>('RES');
+  const [activeTab, setActiveTab] = useState<'RES' | 'STATE' | 'NAV' | 'EVENT' | 'GLOBAL'>('RES');
   const [position, setPosition] = useState({ x: 100, y: 100 });
   const [isDragging, setIsDragging] = useState(false);
   const dragStart = useRef({ x: 0, y: 0 });
@@ -230,6 +232,84 @@ const DevTools: React.FC = () => {
               </button>
             ))}
             <button onClick={store.adminClearEvents} className="w-full text-center p-2 border border-red-900 text-red-500 mt-2">CLEAR QUEUE</button>
+          </div>
+        )}
+
+        {activeTab === 'GLOBAL' && (
+          <div className="space-y-3">
+            {/* ТОПЛИВО */}
+            <div>
+              <div className="text-green-500 text-[10px] mb-1">⛽ FUEL</div>
+              <div className="grid grid-cols-3 gap-1">
+                <button onClick={() => { store.resources.coal = (store.resources.coal || 0) + 1000; }} className="border border-amber-700 hover:bg-amber-900/20 p-1 text-[9px]">+1K COAL</button>
+                <button onClick={() => { store.resources.oil = (store.resources.oil || 0) + 500; }} className="border border-orange-700 hover:bg-orange-900/20 p-1 text-[9px]">+500 OIL</button>
+                <button onClick={() => { store.resources.gas = (store.resources.gas || 0) + 250; }} className="border border-cyan-700 hover:bg-cyan-900/20 p-1 text-[9px]">+250 GAS</button>
+              </div>
+            </div>
+
+            {/* ТЕЛЕПОРТАЦИЯ */}
+            <div className="border-t border-green-800 pt-2 
+">
+              <div className="text-green-500 text-[10px] mb-1">🌍 TELEPORT</div>
+              <div className="grid grid-cols-2 gap-1">
+                {Object.values(REGIONS).map(region => (
+                  <button
+                    key={region.id}
+                    onClick={() => (store as any).adminTeleportRegion?.(region.id)}
+                    className={`border border-green-700 hover:bg-green-900/30 p-1 text-[8px] truncate ${store.currentRegion === region.id ? 'bg-green-800 text-white' : ''
+                      }`}
+                  >
+                    {region.name.substring(0, 12)}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* ЛИЦЕНЗИИ */}
+            <div className="border-t border-green-800 pt-2">
+              <div className="text-green-500 text-[10px] mb-1">🎫 LICENSES</div>
+              <div className="grid grid-cols-3 gap-1">
+                <button onClick={() => (store as any).adminUnlockLicense?.('green')} className="border border-green-600 hover:bg-green-900/30 p-1 text-[9px]">GREEN</button>
+                <button onClick={() => (store as any).adminUnlockLicense?.('yellow')} className="border border-yellow-600 hover:bg-yellow-900/30 p-1 text-[9px]">YELLOW</button>
+                <button onClick={() => (store as any).adminUnlockLicense?.('red')} className="border border-red-600 hover:bg-red-900/30 p-1 text-[9px]">RED</button>
+              </div>
+              <button
+                onClick={() => (store as any).adminUnlockAllPermits?.()}
+                className="w-full mt-1 border border-cyan-600 hover:bg-cyan-900/20 p-1 text-[9px]"
+              >
+                UNLOCK ALL PERMITS
+              </button>
+            </div>
+
+            {/* БАЗЫ */}
+            <div className="border-t border-green-800 pt-2">
+              <div className="text-green-500 text-[10px] mb-1">🏗️ CREATE BASE</div>
+              <div className="grid grid-cols-3 gap-1">
+                <button onClick={() => (store as any).adminCreateBase?.('outpost')} className="border border-zinc-600 hover:bg-zinc-800 p-1 text-[8px]">OUTPOST</button>
+                <button onClick={() => (store as any).adminCreateBase?.('camp')} className="border border-blue-600 hover:bg-blue-900/30 p-1 text-[8px]">CAMP</button>
+                <button onClick={() => (store as any).adminCreateBase?.('station')} className="border border-purple-600 hover:bg-purple-900/30 p-1 text-[8px]">STATION</button>
+              </div>
+            </div>
+
+            {/* КАРАВАНЫ */}
+            <div className="border-t border-green-800 pt-2">
+              <div className="text-green-500 text-[10px] mb-1">🚛 CARAVAN</div>
+              <button
+                onClick={() => (store as any).adminUnlockCaravan?.('1star')}
+                className="w-full border border-amber-600 hover:bg-amber-900/20 p-1 text-[9px]"
+              >
+                UNLOCK 1★ SHUTTLE
+              </button>
+            </div>
+
+            {/* CARGO WEIGHT */}
+            <div className="border-t border-green-800 pt-2">
+              <div className="text-green-500 text-[10px] mb-1">📦 CARGO</div>
+              <div className="grid grid-cols-2 gap-1">
+                <button onClick={() => (store as any).adminSetCargo?.(0)} className="border border-green-600 hover:bg-green-900/30 p-1 text-[9px]">EMPTY</button>
+                <button onClick={() => (store as any).adminSetCargo?.(5000)} className="border border-yellow-600 hover:bg-yellow-900/30 p-1 text-[9px]">5000KG</button>
+              </div>
+            </div>
           </div>
         )}
 

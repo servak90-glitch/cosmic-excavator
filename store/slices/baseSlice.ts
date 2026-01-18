@@ -3,13 +3,15 @@
  */
 
 import { SliceCreator, pushLog } from './types';
-import type { RegionId, BaseType, PlayerBase, VisualEvent } from '../../types';
+import type { RegionId, BaseType, PlayerBase, VisualEvent, FacilityId } from '../../types';
 import { BASE_COSTS, BASE_BUILD_TIMES, BASE_STORAGE_CAPACITY, WORKSHOP_TIER_RANGES } from '../../constants/playerBases';
+import { FUEL_FACILITIES, canBuildFacility } from '../../constants/fuelFacilities';
 import { audioEngine } from '../../services/audioEngine';
 
 export interface BaseActions {
     buildBase: (regionId: RegionId, baseType: BaseType) => void;
     checkBaseCompletion: () => void;  // Проверка завершения строительства
+    buildFacility: (baseId: string, facilityId: FacilityId) => void;  // Постройка facility
 }
 
 export const createBaseSlice: SliceCreator<BaseActions> = (set, get) => ({
@@ -88,7 +90,8 @@ export const createBaseSlice: SliceCreator<BaseActions> = (set, get) => ({
             constructionCompletionTime: now + buildTime,
             lastVisitedAt: now,
 
-            upgradeLevel: 1
+            upgradeLevel: 1,
+            facilities: []  // Phase 2: пустой массив facilities при создании
         };
 
         const successEvent: VisualEvent = {
@@ -137,5 +140,58 @@ export const createBaseSlice: SliceCreator<BaseActions> = (set, get) => ({
 
             audioEngine.playAchievement();
         }
+    },
+
+    /**
+     * Постройка Fuel Facility в базе
+     */
+    buildFacility: (baseId, facilityId) => {
+        const s = get();
+        const base = s.playerBases?.find(b => b.id === baseId);
+
+        if (!base) {
+            const event: VisualEvent = {
+                type: 'LOG',
+                msg: '❌ База не найдена!',
+                color: 'text-red-500'
+            };
+            set({ actionLogQueue: pushLog(s, event) });
+            return;
+        }
+
+        // Проверка возможности постройки
+        const validation = canBuildFacility(base.facilities || [], facilityId, s.resources.rubies);
+        if (!validation.canBuild) {
+            const event: VisualEvent = {
+                type: 'LOG',
+                msg: `❌ ${validation.reason}`,
+                color: 'text-red-500'
+            };
+            set({ actionLogQueue: pushLog(s, event) });
+            return;
+        }
+
+        const facility = FUEL_FACILITIES[facilityId];
+
+        // Списать credits и добавить facility
+        const updatedBases = s.playerBases.map(b =>
+            b.id === baseId
+                ? { ...b, facilities: [...(b.facilities || []), facilityId] }
+                : b
+        );
+
+        const successEvent: VisualEvent = {
+            type: 'LOG',
+            msg: `🏭 ${facility.name} ПОСТРОЕНА!`,
+            color: 'text-green-400 font-bold'
+        };
+
+        set({
+            resources: { ...s.resources, rubies: s.resources.rubies - facility.cost },
+            playerBases: updatedBases,
+            actionLogQueue: pushLog(s, successEvent)
+        });
+
+        audioEngine.playAchievement();
     }
 });

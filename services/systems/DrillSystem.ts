@@ -150,6 +150,29 @@ export function processDrilling(
 
         const resToAdd = drillPower * 0.3 * resMult;
         resourceChanges[currentBiome.resource] = (resourceChanges[currentBiome.resource] || 0) + resToAdd;
+
+        // [VISUALS] Mining Effects
+        // 1. Particles (Sparks & Debris) relative to mining speed
+        if (Math.random() < 0.3 + (drillPower > 10 ? 0.2 : 0)) {
+            events.push({
+                type: 'PARTICLE',
+                position: 'DRILL_TIP',
+                kind: Math.random() > 0.7 ? 'SPARK' : 'DEBRIS',
+                color: currentBiome.color, // Sparkle with biome color
+                count: Math.floor(Math.random() * 3) + 1
+            });
+        }
+
+        // 2. Floating Text (Resource Gain) - Throttled by accumulation or random chance to avoid spam
+        // For distinct visual feedback, we only show > 0.1 gains or occasional small ones
+        if (resToAdd >= 1 || (resToAdd > 0 && Math.random() < 0.1)) {
+            events.push({
+                type: 'TEXT',
+                position: 'CENTER',
+                text: `+${resToAdd >= 10 ? Math.floor(resToAdd) : resToAdd.toFixed(1)} ${currentBiome.resource.toUpperCase()}`,
+                style: 'RESOURCE'
+            });
+        }
     }
 
     return {

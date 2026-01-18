@@ -12,6 +12,7 @@ import { GameState, VisualEvent, GameEvent, EventTrigger } from '../../types';
 import { rollRandomEvent } from '../eventRegistry';
 import { calculateStats } from '../gameMath';
 import { poissonProbability, normalDistribution } from '../mathUtils';
+import { getActivePerkIds } from '../factionLogic';
 
 export interface EventUpdate {
     eventCheckTick: number;
@@ -112,42 +113,64 @@ export function processEvents(state: GameState, stats: ReturnType<typeof calcula
     const updates: Partial<EventUpdate> = {};
     const currentTime = Date.now();
 
-    // === ВЕРОЯТНОСТНАЯ ПРОВЕРКА СОБЫТИЙ ===
+    // === ВЕРОЯТНОСТНАЯ ПРОВЕРКА СОБЫТИЙ (POISSON Distribution) ===
     // Проверяем каждые 10 тиков (1 секунда)
-    if (eventCheckTick >= 10 && eventQueue.length === 0 && !state.currentBoss && !state.combatMinigame?.active) {
+    // Poisson: P(at least 1) = 1 - e^(-λt)
+    // λ = базовая частота событий в секунду
+    const BASE_LAMBDA = 0.005;  // ~1 событие каждые 200 секунд (~3.3 минуты)
+    const CHECK_INTERVAL_TICKS = 10;
+
+    if (eventCheckTick >= CHECK_INTERVAL_TICKS && eventQueue.length === 0 && !state.currentBoss && !state.combatMinigame?.active) {
         eventCheckTick = 0;
 
         // Определяем текущий триггер
-        const currentTrigger = state.isDrilling ? EventTrigger.DRILLING : EventTrigger.DRILLING;  // TODO: динамически определять
+        const currentTrigger = state.isDrilling ? EventTrigger.DRILLING : EventTrigger.DRILLING;
 
-        // Получаем события, которые могут сработать
-        const candidateEvent = rollRandomEvent(recentEventIds, state.depth, state.heat);
+        // === POISSON PROBABILITY ===
+        // Модификаторы частоты на основе условий игры
+        let lambdaModifier = 1.0;
 
-        if (candidateEvent) {
-            // Проверяем триггер
-            if (!matchesTrigger(candidateEvent, currentTrigger)) {
-                // Событие не подходит по контексту
-                return {
-                    update: { eventCheckTick, eventQueue, recentEventIds, eventCooldowns },
-                    events: visualEvents
-                };
-            }
+        // Глубина увеличивает частоту событий (чем глубже — тем чаще)
+        if (state.depth > 1000) lambdaModifier *= 1.2;
+        if (state.depth > 5000) lambdaModifier *= 1.3;
+        if (state.depth > 10000) lambdaModifier *= 1.5;
 
-            // Проверяем cooldown
-            if (candidateEvent.cooldown && isOnCooldown(candidateEvent.id, eventCooldowns, currentTime, candidateEvent.cooldown)) {
-                // Событие на cooldown
-                return {
-                    update: { eventCheckTick, eventQueue, recentEventIds, eventCooldowns },
-                    events: visualEvents
-                };
-            }
+        // Высокая температура увеличивает частоту опасных событий
+        if (state.heat > 70) lambdaModifier *= 1.4;
 
-            // Вычисляем вероятность
-            const deltaTime = 1.0;  // 1 секунда между проверками
-            const probability = calculateEventProbability(candidateEvent, state, deltaTime);
+        // Вычисляем вероятность события за 1 секунду
+        const lambda = BASE_LAMBDA * lambdaModifier;
+        const poissonProbability = 1 - Math.exp(-lambda);  // P(k≥1) = 1 - e^(-λ)
 
-            // Проверяем случайный бросок
-            if (Math.random() < probability) {
+        // Бросок на событие
+        if (Math.random() < poissonProbability) {
+            // Получаем кандидата на событие
+            // Scanner unlocked via Blueprint OR Faction Perk (Science Lvl 7)
+            const activePerks = getActivePerkIds(state.reputation);
+            const hasScanner =
+                state.unlockedBlueprints.includes('anomaly_scanner') ||
+                activePerks.includes('ANOMALY_SCANNER');
+
+            const candidateEvent = rollRandomEvent(recentEventIds, state.depth, state.heat, hasScanner);
+
+            if (candidateEvent) {
+                // Проверяем триггер
+                if (!matchesTrigger(candidateEvent, currentTrigger)) {
+                    return {
+                        update: { eventCheckTick, eventQueue, recentEventIds, eventCooldowns },
+                        events: visualEvents
+                    };
+                }
+
+                // Проверяем cooldown
+                if (candidateEvent.cooldown && isOnCooldown(candidateEvent.id, eventCooldowns, currentTime, candidateEvent.cooldown)) {
+                    return {
+                        update: { eventCheckTick, eventQueue, recentEventIds, eventCooldowns },
+                        events: visualEvents
+                    };
+                }
+
+                // Событие срабатывает!
                 const newEvent = candidateEvent;
 
                 eventQueue = [...eventQueue, newEvent];
@@ -171,7 +194,9 @@ export function processEvents(state: GameState, stats: ReturnType<typeof calcula
                     const dmg = Math.floor(stats.integrity * newEvent.instantDamage);
                     updates.integrity = Math.max(0, state.integrity - dmg);
                     visualEvents.push({ type: 'LOG', msg: `>> КРИТИЧЕСКИЙ УРОН: -${dmg} HP`, color: 'text-red-500 font-bold' });
-                    visualEvents.push({ type: 'TEXT', x: window.innerWidth / 2, y: window.innerHeight / 2, text: `-${dmg}`, style: 'DAMAGE' });
+                    visualEvents.push({ type: 'TEXT', position: 'CENTER', text: `-${dmg}`, style: 'DAMAGE' });
+                    // Screen Shake for impact
+                    visualEvents.push({ type: 'SCREEN_SHAKE', intensity: 20, duration: 400 });
                 }
 
                 if (newEvent.instantDepth) {

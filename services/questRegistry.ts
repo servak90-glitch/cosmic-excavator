@@ -1,5 +1,31 @@
+import { Quest, QuestIssuer, ResourceType } from '../types';
+import { STORY_QUESTS } from '../constants/quests';
 
-import { Quest, QuestIssuer, Resources, ResourceType } from '../types';
+// Export Static Quests for easy access
+export const QUESTS = [...STORY_QUESTS];
+
+export const getQuestById = (id: string): Quest | undefined => {
+  return QUESTS.find(q => q.id === id);
+};
+
+export const getQuestsByFaction = (factionId: string): Quest[] => {
+  return QUESTS.filter(q => q.factionId === factionId);
+};
+
+export const getAvailableQuests = (completedQuestIds: string[]): Quest[] => {
+  return QUESTS.filter(quest => {
+    if (quest.status !== 'available') return false;
+    // Note: status in static definition is default 'available'. 
+    // Actual status is managed in slice, but this helper filters static definition availability logic (prereqs).
+
+    if (quest.prerequisites) {
+      return quest.prerequisites.every(prereqId => completedQuestIds.includes(prereqId));
+    }
+    return true;
+  });
+};
+
+// --- DYNAMIC QUEST GENERATION (Legacy + New) ---
 
 // Тексты для атмосферности
 const CORP_TITLES = [
@@ -30,88 +56,120 @@ const getResourcesForDepth = (depth: number): ResourceType[] => {
 const uuid = () => Math.random().toString(36).substr(2, 9);
 
 export const generateQuest = (depth: number, level: number): Quest => {
-  const issuers: QuestIssuer[] = [QuestIssuer.CORP, QuestIssuer.SCIENCE, QuestIssuer.REBELS];
+  // Use 'CORPORATE' | 'SCIENCE' | 'REBELS' directly for now as QuestIssuer enum is deprecated
+  const issuers = ['CORPORATE', 'SCIENCE', 'REBELS'] as const;
   const issuer = issuers[Math.floor(Math.random() * issuers.length)];
-  
+
   const availableRes = getResourcesForDepth(depth);
   const targetRes = availableRes[Math.floor(Math.random() * availableRes.length)];
-  
+
   // Ensure reward resource is DIFFERENT from target resource
   let rewardRes = availableRes[Math.floor(Math.random() * availableRes.length)];
   while (rewardRes === targetRes && availableRes.length > 1) {
-      rewardRes = availableRes[Math.floor(Math.random() * availableRes.length)];
+    rewardRes = availableRes[Math.floor(Math.random() * availableRes.length)];
   }
-  
+
   // Базовый мультипликатор сложности от глубины и уровня
   const scale = 1 + (depth / 1000) + (level * 0.5);
-  
+
   const quest: Quest = {
-    id: uuid(),
-    issuer,
+    id: `rnd_${uuid()}`,
     title: 'Unknown Contract',
     description: '...',
-    requirements: [],
-    rewards: []
+    status: 'available',
+    type: 'COLLECTION', // Default
+    objectives: [],
+    rewards: [],
+    factionId: issuer
   };
 
-  if (issuer === QuestIssuer.CORP) {
+  if (issuer === 'CORPORATE') {
     // КОРПОРАЦИЯ: Хочет много ресурсов, платит другими ресурсами или Tech
     const amount = Math.floor((100 + Math.random() * 200) * scale);
     quest.title = CORP_TITLES[Math.floor(Math.random() * CORP_TITLES.length)];
     quest.description = `Департамент логистики требует поставку ${targetRes.toUpperCase()}. Сроки сжатые.`;
-    quest.requirements = [{ type: 'RESOURCE', target: targetRes, amount }];
-    
-    // Награда: 50% шанс ресурсы, 50% шанс Tech
-    // RULE: Cannot give SAME resource. Value check implicit by scale.
+    quest.type = 'DELIVERY'; // Better fit
+    quest.objectives = [{
+      id: uuid(),
+      type: 'DELIVER', // Dynamic quests use manual delivery? Or check resource check?
+      // Let's use COLLECT for simple dynamic quests for now, easier to automate?
+      // No, Corp usually wants Delivery. Let's stick to COLLECT logic (have in inv) or DELIVER (action)
+      // For MVP dynamic, COLLECT is easier implementation-wise if not specifying destination
+      // But description says "supply". Let's use COLLECT for now for simplicity in dynamic context
+      // OR use DELIVER with target 'base' implicitly.
+      // Let's use COLLECT for dynamic resource quests to verify possession.
+      // Actually, let's use DELIVER but with a generic target if needed.
+      // Update: questEngine supports COLLECT (check inventory).
+      type: 'COLLECT',
+      description: `Собрать ${amount} ${targetRes}`,
+      target: targetRes,
+      required: amount,
+      current: 0
+    }];
+
+    // Reward
     if (Math.random() > 0.5) {
-       quest.rewards = [{ type: 'RESOURCE', target: rewardRes, amount: Math.floor(amount * 0.6) }]; 
+      quest.rewards = [{ type: 'RESOURCE', target: rewardRes, amount: Math.floor(amount * 0.6) }];
     } else {
-       quest.rewards = [{ type: 'TECH', target: 'ancientTech', amount: Math.floor(5 + scale) }];
+      quest.rewards = [{ type: 'RESOURCE', target: 'ancientTech', amount: Math.floor(5 + scale) }]; // mapped to RESOURCE type for now if tech is resource
     }
-  } 
-  else if (issuer === QuestIssuer.SCIENCE) {
-    // УЧЕНЫЕ: Хотят XP или Редкие ресурсы, платят XP или Tech
+  }
+  else if (issuer === 'SCIENCE') {
+    // УЧЕНЫЕ
     quest.title = SCIENCE_TITLES[Math.floor(Math.random() * SCIENCE_TITLES.length)];
-    
+    quest.type = 'COLLECTION';
+
     if (Math.random() > 0.5) {
       // Требуют XP (данные) -> Платят Ресурсами
-      // RULE: Req XP -> Give Resource OK.
-      const xpCost = Math.floor(100 * scale);
-      quest.description = `Нам нужно проанализировать ваши нейро-паттерны при бурении. Это может быть... неприятно.`;
-      quest.requirements = [{ type: 'XP', target: 'XP', amount: xpCost }];
-      quest.rewards = [{ type: 'RESOURCE', target: targetRes, amount: Math.floor(xpCost * 2) }];
-    } else {
-      // Требуют ресурсы -> Платят XP
-      // RULE: Req Res -> Give XP OK.
+      // Note: XP as requirement not fully supported in engine yet (needs 'XP' objective type)
+      // Fallback to Resource
       const amount = Math.floor(50 * scale);
       quest.description = `Для калибровки спектрометра необходим чистый ${targetRes.toUpperCase()}.`;
-      quest.requirements = [{ type: 'RESOURCE', target: targetRes, amount }];
-      quest.rewards = [{ type: 'XP', target: 'XP', amount: Math.floor(amount * 5) }]; 
-    }
-  } 
-  else if (issuer === QuestIssuer.REBELS) {
-    // ПОДПОЛЬЕ: Хотят Tech или Странные обмены
-    quest.title = REBEL_TITLES[Math.floor(Math.random() * REBEL_TITLES.length)];
-    
-    if (Math.random() > 0.7 && depth > 1000) {
-      // Tech Request -> Pay Gold
-      const techCost = Math.floor(5 + scale/2);
-      quest.description = `Нам нужны детали для бомбы... то есть, для "фейерверка". Не задавай вопросов.`;
-      quest.requirements = [{ type: 'TECH', target: 'ancientTech', amount: techCost }];
-      quest.rewards = [{ type: 'RESOURCE', target: 'gold', amount: Math.floor(100 * scale) }]; 
+      quest.objectives = [{
+        id: uuid(),
+        type: 'COLLECT',
+        description: `Собрать ${amount} ${targetRes}`,
+        target: targetRes,
+        required: amount,
+        current: 0
+      }];
+      quest.rewards = [{ type: 'XP', target: 'player', amount: Math.floor(amount * 5) }];
     } else {
-      // Resource Dump
-      const amount = Math.floor(200 * scale);
-      quest.description = `Корпорация завышает цены. Помоги нам создать резерв ${targetRes.toUpperCase()}.`;
-      quest.requirements = [{ type: 'RESOURCE', target: targetRes, amount }];
-      
-      // RULE: Cannot give SAME resource. Ensure rewardRes !== targetRes
-      // If same, switch reward to Tech or XP to avoid loop
-      if (rewardRes === targetRes) {
-          quest.rewards = [{ type: 'TECH', target: 'ancientTech', amount: Math.floor(5 + scale) }];
-      } else {
-          quest.rewards = [{ type: 'RESOURCE', target: rewardRes, amount: Math.floor(amount * 0.8) }];
-      }
+      // Требуют ресурсы -> Платят XP
+      const amount = Math.floor(50 * scale);
+      quest.description = `Нам нужно проанализировать образцы ${targetRes.toUpperCase()}.`;
+      quest.objectives = [{
+        id: uuid(),
+        type: 'COLLECT',
+        description: `Собрать ${amount} ${targetRes}`,
+        target: targetRes,
+        required: amount,
+        current: 0
+      }];
+      quest.rewards = [{ type: 'XP', target: 'player', amount: Math.floor(amount * 5) }];
+    }
+  }
+  else if (issuer === 'REBELS') {
+    // ПОДПОЛЬЕ
+    quest.title = REBEL_TITLES[Math.floor(Math.random() * REBEL_TITLES.length)];
+    quest.type = 'DELIVERY';
+
+    // Resource Dump
+    const amount = Math.floor(200 * scale);
+    quest.description = `Спрячьте у себя ${targetRes.toUpperCase()} до нашего прихода.`;
+    quest.objectives = [{
+      id: uuid(),
+      type: 'COLLECT',
+      description: `Иметь ${amount} ${targetRes}`,
+      target: targetRes,
+      required: amount,
+      current: 0
+    }];
+
+    if (rewardRes === targetRes) {
+      quest.rewards = [{ type: 'RESOURCE', target: 'ancientTech', amount: Math.floor(5 + scale) }];
+    } else {
+      quest.rewards = [{ type: 'RESOURCE', target: rewardRes, amount: Math.floor(amount * 0.8) }];
     }
   }
 

@@ -56,8 +56,8 @@ const App: React.FC = () => {
     const { currentBoss, combatMinigame, eventQueue, isCoolingGameActive, clickFlyingObject } = useCombatState();
     const { handleEventOption, completeCombatMinigame, setCoolingGame, forceVentHeat, triggerOverheat } = useCombatActions();
 
-    const { skillLevels, equippedArtifacts, inventory, activeQuests, discoveredArtifacts } = useCityState();
-    const { tradeCity, healCity, repairHull, completeQuest, refreshQuests } = useCityActions();
+    const { skillLevels, equippedArtifacts, inventory, discoveredArtifacts } = useCityState();
+    const { tradeCity, healCity, repairHull } = useCityActions();
 
     const { setLanguage, updateSettings, resetProgress, selectBiome, selectedBiome } = useSettingsActions();
     const { aiState } = useAIState();
@@ -73,6 +73,32 @@ const App: React.FC = () => {
     ]);
     const [bossHitEffect, setBossHitEffect] = useState(false);
     const [visualEffect, setVisualEffect] = useState<string>('NONE'); // VisualEffectType
+    const [screenShake, setScreenShake] = useState<{ intensity: number, duration: number, startTime: number } | null>(null);
+    const [shakeOffset, setShakeOffset] = useState({ x: 0, y: 0 });
+
+    // Screen Shake Loop
+    useEffect(() => {
+        if (!screenShake) return;
+        let animId: number;
+        const animate = () => {
+            const now = Date.now();
+            const elapsed = now - screenShake.startTime;
+            if (elapsed > screenShake.duration) {
+                setScreenShake(null);
+                setShakeOffset({ x: 0, y: 0 });
+                return;
+            }
+            const decay = 1 - (elapsed / screenShake.duration);
+            const intensity = screenShake.intensity * decay;
+            setShakeOffset({
+                x: (Math.random() - 0.5) * intensity,
+                y: (Math.random() - 0.5) * intensity
+            });
+            animId = requestAnimationFrame(animate);
+        };
+        animId = requestAnimationFrame(animate);
+        return () => cancelAnimationFrame(animId);
+    }, [screenShake]);
 
     // Refs
     const pixiOverlayRef = useRef<PixiOverlayHandle>(null);
@@ -109,12 +135,36 @@ const App: React.FC = () => {
             // ... process events ...
             events.forEach(e => {
                 if (e.type === 'LOG') addLog(e.msg, e.color);
-                else if (e.type === 'TEXT') textRef.current?.addText(e.x, e.y, e.text, e.style);
-                else if (e.type === 'PARTICLE') pixiOverlayRef.current?.emitParticle(e.x, e.y, e.color, e.kind, e.count);
+                else if (e.type === 'TEXT') {
+                    let x = e.x || window.innerWidth / 2;
+                    let y = e.y || window.innerHeight / 2;
+                    if (e.position === 'CENTER') {
+                        x = window.innerWidth / 2 + (Math.random() - 0.5) * 100; // Slight spread
+                        y = window.innerHeight * 0.4;
+                    }
+                    if (e.position === 'TOP_CENTER') {
+                        x = window.innerWidth / 2;
+                        y = window.innerHeight * 0.2;
+                    }
+                    textRef.current?.addText(x, y, e.text, e.style);
+                }
+                else if (e.type === 'PARTICLE') {
+                    let x = e.x || window.innerWidth / 2;
+                    let y = e.y || window.innerHeight / 2;
+                    // Drill tip is roughly at center X, 35% height + spread
+                    if (e.position === 'DRILL_TIP') {
+                        x = window.innerWidth / 2;
+                        y = window.innerHeight * 0.35 + 100; // Below center
+                    }
+                    pixiOverlayRef.current?.emitParticle(x, y, e.color, e.kind, e.count);
+                }
                 else if (e.type === 'BOSS_HIT') { setBossHitEffect(true); setTimeout(() => setBossHitEffect(false), 100); }
                 else if (e.type === 'VISUAL_EFFECT') {
                     setVisualEffect(e.option);
                     setTimeout(() => setVisualEffect('NONE'), 600);
+                }
+                else if (e.type === 'SCREEN_SHAKE') {
+                    setScreenShake({ intensity: e.intensity, duration: e.duration, startTime: Date.now() });
                 }
                 else if (e.type === 'SOUND') {
                     if (e.sfx === 'LOG') audioEngine.playLog();
@@ -212,7 +262,10 @@ const App: React.FC = () => {
             <DevTools />
 
             {/* --- LAYER 1: WORLD (Z-0) --- */}
-            <div className="absolute inset-0 z-0 pointer-events-auto">
+            <div
+                className="absolute inset-0 z-0 pointer-events-auto transition-transform duration-75 ease-linear"
+                style={{ transform: `translate(${shakeOffset.x}px, ${shakeOffset.y}px)` }}
+            >
                 {activeView === View.DRILL && (
                     <div className="relative w-full h-full">
                         <PixiOverlay
@@ -331,8 +384,8 @@ const App: React.FC = () => {
                         {activeView === View.FORGE && <ForgeView />}
                         {activeView === View.CITY && (
                             <CityView
-                                biome={currentBiome} resources={resources} heat={heat} integrity={integrity} maxIntegrity={stats.integrity} xp={xp} depth={depth} activeQuests={activeQuests}
-                                onTrade={tradeCity} onHeal={healCity} onRepair={repairHull} onCompleteQuest={completeQuest} onRefreshQuests={refreshQuests}
+                                biome={currentBiome} resources={resources} heat={heat} integrity={integrity} maxIntegrity={stats.integrity} xp={xp} depth={depth}
+                                onTrade={tradeCity} onHeal={healCity} onRepair={repairHull}
                             />
                         )}
                         {activeView === View.SKILLS && <SkillsView />}

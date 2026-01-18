@@ -5,6 +5,7 @@ import { audioEngine } from '../../services/audioEngine';
 import { rollArtifact } from '../../services/artifactRegistry';
 import { createEffect } from '../../services/eventRegistry';
 import { InventoryItem, VisualEvent, GameState, EventActionId } from '../../types';
+import { sideTunnelSystem } from '../../services/systems/SideTunnelSystem';
 
 export interface EventActions {
     handleEventOption: (optionId?: string | EventActionId) => void;
@@ -13,6 +14,8 @@ export interface EventActions {
     forceVentHeat: (amount: number) => void;
     triggerOverheat: () => void;
 }
+
+import { getActivePerkIds } from '../../services/factionLogic';
 
 export const createEventSlice: SliceCreator<EventActions> = (set, get) => ({
     handleEventOption: (optionId) => {
@@ -23,6 +26,7 @@ export const createEventSlice: SliceCreator<EventActions> = (set, get) => ({
         const newQueue = s.eventQueue.slice(1);
         const updates: Partial<GameState> = { eventQueue: newQueue };
         const logs: VisualEvent[] = [];
+        const activePerks = getActivePerkIds(s.reputation);
 
         const grantArtifact = () => {
             const def = rollArtifact(s.depth, calculateStats(s.drill, s.skillLevels, s.equippedArtifacts, s.inventory, s.depth).luck, s.selectedBiome || undefined);
@@ -65,7 +69,7 @@ export const createEventSlice: SliceCreator<EventActions> = (set, get) => ({
                     logs.push({ type: 'LOG', msg: '>> ДЕШИФРОВКА: +5 ANCIENT TECH', color: 'text-green-400' });
                     break;
                 case EventActionId.ACCEPT_FLUCTUATION:
-                    const eff = createEffect('QUANTUM_FLUCTUATION_EFFECT');
+                    const eff = createEffect('QUANTUM_FLUCTUATION_EFFECT', 1) as any;
                     if (eff) updates.activeEffects = [...s.activeEffects, { ...eff, id: eff.id + '_' + Date.now() }];
                     updates.heat = 90;
                     logs.push({ type: 'LOG', msg: '>> РИСК ПРИНЯТ: РЕСУРСЫ x5', color: 'text-purple-400' });
@@ -96,42 +100,25 @@ export const createEventSlice: SliceCreator<EventActions> = (set, get) => ({
                     logs.push({ type: 'LOG', msg: '>> ПОГЛОЩЕНИЕ: +2 АЛМАЗА', color: 'text-cyan-400' });
                     break;
                 // SIDE TUNNEL ACTIONS
+                // SIDE TUNNEL ACTIONS (Phase 3.2)
                 case EventActionId.TUNNEL_SAFE:
-                    const rSafe = { ...s.resources };
-                    const safeGain = Math.floor(50 * (1 + s.depth / 1000));
-                    rSafe.copper += safeGain;
-                    rSafe.iron += safeGain / 2;
-                    updates.resources = rSafe;
-                    logs.push({ type: 'LOG', msg: `>> ДОБЫЧА: +${safeGain} COPPER`, color: 'text-green-400' });
-                    break;
                 case EventActionId.TUNNEL_RISKY:
-                    const roll = Math.random();
-                    if (roll < 0.4) {
-                        // Success - Artifact or Tech
-                        if (Math.random() < 0.3) {
-                            grantArtifact();
-                        } else {
-                            const rTech = { ...s.resources };
-                            rTech.ancientTech += 10;
-                            updates.resources = rTech;
-                            logs.push({ type: 'LOG', msg: '>> НАХОДКА: +10 ANCIENT TECH', color: 'text-purple-400' });
-                        }
-                    } else if (roll < 0.7) {
-                        // Collapse
-                        const dmg = Math.floor(s.integrity * 0.3);
-                        updates.integrity = Math.max(0, s.integrity - dmg);
-                        logs.push({ type: 'LOG', msg: `>> ОБВАЛ: -${dmg} INTEGRITY`, color: 'text-red-500' });
-                        audioEngine.playAlarm();
-                    } else {
-                        // Nothing / Monster
-                        logs.push({ type: 'LOG', msg: '>> ПУСТО... ТОЛЬКО ЭХО', color: 'text-zinc-500' });
-                    }
+                case EventActionId.TUNNEL_CRYSTAL:
+                case EventActionId.TUNNEL_MINE:
+                case EventActionId.TUNNEL_NEST:
+                    const result = sideTunnelSystem.resolveTunnel(optionId, s, activePerks);
+                    updates.resources = result.updates.resources;
+                    if (result.updates.inventory) updates.inventory = result.updates.inventory;
+                    if (result.updates.integrity !== undefined) updates.integrity = result.updates.integrity; // Careful with 0
+                    if (result.updates.storageLevel) updates.storageLevel = result.updates.storageLevel;
+
+                    logs.push(...result.logs);
                     break;
             }
         }
         else {
             if (event.effectId) {
-                const effect = createEffect(event.effectId);
+                const effect = createEffect(event.effectId, 1) as any;
                 if (effect) {
                     updates.activeEffects = [...s.activeEffects, { ...effect, id: effect.id + '_' + Date.now() }];
                     logs.push({ type: 'LOG', msg: `>> НАЛОЖЕН ЭФФЕКТ: ${effect.name}`, color: 'text-yellow-400' });
