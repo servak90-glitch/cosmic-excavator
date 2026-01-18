@@ -2,7 +2,7 @@ import { useGameStore } from '../store/gameStore';
 import { RegionId } from '../types';
 import { REGIONS } from '../constants/regions';
 import { calculateDistance, getRegionColor, getZoneColorEmoji } from '../services/regionMath';
-import { calculateFuelCost, FUEL_TYPES, getFuelLabel } from '../services/travelMath';
+import { calculateFuelCost, FUEL_TYPES, FuelType, getFuelLabel } from '../services/travelMath';
 import { useState } from 'react';
 import { MarketView } from './MarketView';
 import { CaravanPanel } from './CaravanPanel';
@@ -25,7 +25,7 @@ export const GlobalMapView = () => {
     const caravans = useGameStore(s => s.caravans);
 
     const [selectedRegion, setSelectedRegion] = useState<RegionId | null>(null);
-    const [selectedFuel, setSelectedFuel] = useState<'coal' | 'oil' | 'gas' | 'uranium'>('coal');
+    const [selectedFuel, setSelectedFuel] = useState<FuelType>('coal');
     const [activeTab, setActiveTab] = useState<TabType>('map');
 
     const currentRegionData = REGIONS[currentRegion];

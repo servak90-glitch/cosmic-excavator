@@ -2,13 +2,13 @@
  * CitySlice — действия связанные с городом
  */
 
-import { SetState, GetState, SliceCreator, pushLog } from './types';
-import { Resources, ResourceType, VisualEvent, InventoryItem } from '../../types';
+import { SliceCreator, pushLog } from './types';
+import { Resources, ResourceType, VisualEvent, Quest } from '../../types';
 import { calculateStats, getResourceLabel, calculateRepairCost, recalculateCargoWeight } from '../../services/gameMath';
 import { audioEngine } from '../../services/audioEngine';
 import { createEffect } from '../../services/eventRegistry';
 import { generateQuestBatch } from '../../services/questRegistry';
-import { FUEL_RECIPES, canCraftRecipe, getRecipeById } from '../../constants/fuelRecipes';
+import { canCraftRecipe, getRecipeById } from '../../constants/fuelRecipes';
 
 export interface CityActions {
     tradeCity: (cost: Partial<Resources>, reward: Partial<Resources>) => void;
@@ -119,37 +119,31 @@ export const createCitySlice: SliceCreator<CityActions> = (set, get) => ({
 
     completeQuest: (id) => {
         const s = get();
-        const quest = s.activeQuests[id];
+        const quest = s.activeQuests.find(q => q.id === id);
         if (quest) {
             const newRes = { ...s.resources };
             let xpGain = 0;
             quest.rewards.forEach(r => {
-                if (r.type === 'RESOURCE' || r.type === 'TECH') newRes[r.target as ResourceType] += r.amount;
-                if (r.type === 'XP') xpGain += r.amount;
+                if (r.type === 'RESOURCE' && r.amount) {
+                    newRes[r.target as ResourceType] += r.amount;
+                }
+                if (r.type === 'XP' && r.amount) xpGain += r.amount;
                 // REPUTATION REWARD
-                if (r.type === 'REPUTATION') {
-                    // Since we can't easily access another slice's action directly (unless we use get().addReputation),
-                    // and addReputation is part of the store now.
-                    // But we are INSIDE the citySlice.
-                    // IMPORTANT: We need to check if FactionActions are mixed in before calling.
-                    // However, at runtime 's' (GameStore) has all methods.
-                    // Logic:
-                    // We can manually update reputation state here or call the action.
-                    // Calling action is cleaner for side effects (logs).
+                if (r.type === 'REPUTATION' && r.amount) {
                     const factionAction = (get() as any).addReputation;
                     if (factionAction) factionAction(r.target, r.amount);
                 }
             });
 
             // Legacy support if reputationReward field is used
-            if (quest.reputationReward) {
+            const legacyQuest = quest as any;
+            if (legacyQuest.reputationReward) {
                 const factionMap: Record<string, string> = { 'CORP': 'CORPORATE', 'SCIENCE': 'SCIENCE', 'REBELS': 'REBELS' };
-                const factionId = factionMap[quest.issuer] || quest.issuer;
-                (get() as any).addReputation?.(factionId, quest.reputationReward);
+                const factionId = factionMap[legacyQuest.issuer] || legacyQuest.issuer;
+                (get() as any).addReputation?.(factionId, legacyQuest.reputationReward);
             }
 
-            const newQuests = { ...s.activeQuests };
-            delete newQuests[id];
+            const newQuests = s.activeQuests.filter(q => q.id !== id);
 
             const event: VisualEvent = { type: 'LOG', msg: `КОНТРАКТ ВЫПОЛНЕН`, color: 'text-green-500' };
             set({
@@ -167,12 +161,11 @@ export const createCitySlice: SliceCreator<CityActions> = (set, get) => ({
         const s = get();
         if (s.resources.clay >= 100) {
             const quests = generateQuestBatch(s.depth, s.level);
-            const questMap = quests.reduce((acc, q) => ({ ...acc, [q.id]: q }), {});
             const newRes = { ...s.resources, clay: s.resources.clay - 100 };
             set({
                 resources: newRes,
                 currentCargoWeight: recalculateCargoWeight(newRes),
-                activeQuests: questMap
+                activeQuests: quests
             });
         }
     },

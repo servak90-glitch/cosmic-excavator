@@ -118,7 +118,7 @@ const FusionTab: React.FC<FusionTabProps> = ({
 
                         // Проверка наличия компонента (предыдущего тира)
                         // drill типизирован в props, но для надежности добавим null-check
-                        const currentPart = Object.values(drill || {}).find((p: any) => p.id === recipe.componentAId);
+                        const currentPart = Object.values(drill || {}).find((p: { id: string }) => p.id === recipe.componentAId) as { id: string } | undefined;
                         const currentPartId = currentPart ? currentPart.id : null;
                         const hasRequiredPart = currentPartId === recipe.componentAId;
 

@@ -62,18 +62,20 @@ export const createEventSlice: SliceCreator<EventActions> = (set, get) => ({
                         logs.push({ type: 'LOG', msg: '>> ВСКРЫТИЕ: +20 ANCIENT TECH', color: 'text-green-400' });
                     }
                     break;
-                case EventActionId.POD_HACK:
+                case EventActionId.POD_HACK: {
                     const rh = { ...s.resources };
                     rh.ancientTech += 5;
                     updates.resources = rh;
                     logs.push({ type: 'LOG', msg: '>> ДЕШИФРОВКА: +5 ANCIENT TECH', color: 'text-green-400' });
                     break;
-                case EventActionId.ACCEPT_FLUCTUATION:
+                }
+                case EventActionId.ACCEPT_FLUCTUATION: {
                     const eff = createEffect('QUANTUM_FLUCTUATION_EFFECT', 1) as any;
                     if (eff) updates.activeEffects = [...s.activeEffects, { ...eff, id: eff.id + '_' + Date.now() }];
                     updates.heat = 90;
                     logs.push({ type: 'LOG', msg: '>> РИСК ПРИНЯТ: РЕСУРСЫ x5', color: 'text-purple-400' });
                     break;
+                }
                 case EventActionId.REJECT_FLUCTUATION:
                     logs.push({ type: 'LOG', msg: '>> СТАБИЛИЗАЦИЯ ВЫПОЛНЕНА', color: 'text-zinc-400' });
                     break;
@@ -86,34 +88,36 @@ export const createEventSlice: SliceCreator<EventActions> = (set, get) => ({
                     updates.heat = 0;
                     logs.push({ type: 'LOG', msg: '>> ПЕРЕЗАГРУЗКА: ОХЛАЖДЕНИЕ', color: 'text-blue-400' });
                     break;
-                case EventActionId.PURGE_NANOMITES:
+                case EventActionId.PURGE_NANOMITES: {
                     const rn = { ...s.resources };
                     rn.nanoSwarm += 50;
                     updates.resources = rn;
                     logs.push({ type: 'LOG', msg: '>> ОЧИСТКА: +50 NANO SWARM', color: 'text-green-400' });
                     break;
-                case EventActionId.CRYSTAL_ABSORB:
+                }
+                case EventActionId.CRYSTAL_ABSORB: {
                     const rc = { ...s.resources };
                     rc.diamonds += 2;
                     updates.resources = rc;
                     updates.heat = Math.min(100, s.heat + 50);
                     logs.push({ type: 'LOG', msg: '>> ПОГЛОЩЕНИЕ: +2 АЛМАЗА', color: 'text-cyan-400' });
                     break;
-                // SIDE TUNNEL ACTIONS
+                }
                 // SIDE TUNNEL ACTIONS (Phase 3.2)
                 case EventActionId.TUNNEL_SAFE:
                 case EventActionId.TUNNEL_RISKY:
                 case EventActionId.TUNNEL_CRYSTAL:
                 case EventActionId.TUNNEL_MINE:
-                case EventActionId.TUNNEL_NEST:
+                case EventActionId.TUNNEL_NEST: {
                     const result = sideTunnelSystem.resolveTunnel(optionId, s, activePerks);
                     updates.resources = result.updates.resources;
                     if (result.updates.inventory) updates.inventory = result.updates.inventory;
-                    if (result.updates.integrity !== undefined) updates.integrity = result.updates.integrity; // Careful with 0
+                    if (result.updates.integrity !== undefined) updates.integrity = result.updates.integrity;
                     if (result.updates.storageLevel) updates.storageLevel = result.updates.storageLevel;
 
                     logs.push(...result.logs);
                     break;
+                }
             }
         }
         else {

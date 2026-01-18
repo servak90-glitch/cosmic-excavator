@@ -1,6 +1,11 @@
 import React, { useState } from 'react';
 import { Biome, Resources, Quest } from '../types';
 import QuestPanel from './QuestPanel';
+import TradeTab from './city/TradeTab';
+import JewelerTab from './city/JewelerTab';
+import ServiceTab from './city/ServiceTab';
+import BarTab from './city/BarTab';
+import ExpeditionTab from './city/ExpeditionTab';
 
 interface CityViewProps {
   biome: Biome;

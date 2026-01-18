@@ -1,11 +1,11 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 
-interface ErrorBoundaryProps {
-    children: ReactNode;
+interface Props {
+    children?: ReactNode;
     fallback?: ReactNode;
 }
 
-interface ErrorBoundaryState {
+interface State {
     hasError: boolean;
     error: Error | null;
     errorInfo: ErrorInfo | null;
@@ -15,14 +15,14 @@ interface ErrorBoundaryState {
  * Error Boundary component to catch React render errors
  * and display a fallback UI instead of crashing the entire app.
  */
-class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
-    public state: ErrorBoundaryState = {
+class ErrorBoundary extends Component<Props, State> {
+    public state: State = {
         hasError: false,
         error: null,
         errorInfo: null
     };
 
-    public static getDerivedStateFromError(error: Error): Partial<ErrorBoundaryState> {
+    public static getDerivedStateFromError(error: Error): Partial<State> {
         return { hasError: true, error };
     }
 

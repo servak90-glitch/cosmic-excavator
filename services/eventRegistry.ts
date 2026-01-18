@@ -230,11 +230,43 @@ export function rollRandomEvent(
 
 /**
  * Создаёт эффект из события (legacy support)
+ * Поддерживает вызов с 1 аргументом (effectId) или 2 аргументами (effectType, value)
  */
-export function createEffect(effectType: string, value: number) {
+
+// Реестр предопределённых эффектов для lookup по effectId
+const EFFECT_PRESETS: Record<string, { type: 'BUFF' | 'DEBUFF' | 'NEUTRAL' | 'ANOMALY'; value: number; name: string; description: string; duration: number }> = {
+    'BAR_XP_BOOST': { type: 'BUFF', value: 25, name: 'XP Boost', description: '+25% XP за 5 минут', duration: 300 },
+    'BAR_DRILL_BOOST': { type: 'BUFF', value: 20, name: 'Drill Boost', description: '+20% скорости бурения', duration: 300 },
+    'BAR_LUCK_BOOST': { type: 'BUFF', value: 15, name: 'Fortune', description: '+15% к удаче', duration: 300 },
+    'JEWELER_CRIT': { type: 'BUFF', value: 10, name: 'Critical Eye', description: '+10% крит шанс', duration: 600 },
+    'OVERHEAT_DEBUFF': { type: 'DEBUFF', value: -20, name: 'Overheated', description: '-20% охлаждения', duration: 60 },
+    'RADIATION_SICKNESS': { type: 'ANOMALY', value: -10, name: 'Radiation', description: 'Радиационное заражение', duration: 120 },
+    'VOID_BLESSING': { type: 'ANOMALY', value: 50, name: 'Void Blessing', description: 'Благословение Пустоты', duration: 180 }
+};
+
+export function createEffect(effectIdOrType: string, value?: number) {
+    // Если вызвано с 1 аргументом - ищем в реестре
+    if (value === undefined) {
+        const preset = EFFECT_PRESETS[effectIdOrType];
+        if (preset) {
+            return {
+                id: Math.random().toString(36).substr(2, 9),
+                type: preset.type,
+                value: preset.value,
+                name: preset.name,
+                description: preset.description,
+                duration: preset.duration,
+                modifiers: {}
+            };
+        }
+        // Не найдено - возвращаем null
+        return null;
+    }
+
+    // Legacy: вызвано с 2 аргументами
     return {
         id: Math.random().toString(36).substr(2, 9),
-        type: effectType,
+        type: effectIdOrType as 'BUFF' | 'DEBUFF' | 'NEUTRAL' | 'ANOMALY',
         value,
         name: 'Legacy Effect',
         description: 'Auto-generated effect',

@@ -57,37 +57,32 @@ const ContractsTab: React.FC<ContractsTabProps> = ({
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
                     {questList.map(quest => {
-                        const style = getFactionStyle(quest.issuer);
+                        const style = getFactionStyle(quest.factionId || 'CORPORATE');
                         let canComplete = true;
-                        quest.requirements.forEach(req => {
-                            if (req.type === 'RESOURCE' || req.type === 'TECH') {
-                                if (resources[req.target as keyof Resources] < req.amount) canComplete = false;
-                            } else if (req.type === 'XP') {
-                                if (xp < req.amount) canComplete = false;
-                            } else if (req.type === 'DEPTH') {
-                                if (depth < req.amount) canComplete = false;
-                            }
+                        // Проверяем objectives вместо requirements
+                        quest.objectives.forEach(obj => {
+                            if (obj.current < obj.required) canComplete = false;
                         });
                         return (
                             <div key={quest.id} className={`border p-3 md:p-4 flex flex-col justify-between relative group ${style.border} ${style.bg}`}>
                                 <div>
                                     <div className="flex justify-between items-start mb-2">
                                         <span className={`text-[8px] md:text-[9px] px-1.5 py-0.5 rounded font-bold ${style.badge} text-white`}>
-                                            {quest.issuer}
+                                            {quest.factionId || 'NEUTRAL'}
                                         </span>
                                     </div>
                                     <h4 className={`text-xs md:text-sm font-bold mb-1 ${style.text}`}>{quest.title}</h4>
                                     <p className="text-[9px] text-zinc-400 mb-3 leading-tight">{quest.description}</p>
 
-                                    {/* REQUIREMENTS */}
+                                    {/* OBJECTIVES (вместо REQUIREMENTS) */}
                                     <div className="mb-3">
-                                        <div className="text-[8px] text-zinc-500 font-bold mb-1">ТРЕБОВАНИЯ:</div>
+                                        <div className="text-[8px] text-zinc-500 font-bold mb-1">ЦЕЛИ:</div>
                                         <div className="bg-black/30 p-1.5 md:p-2 border-l-2 border-red-900/30">
-                                            {quest.requirements.map((req, i) => (
+                                            {quest.objectives.map((obj, i) => (
                                                 <div key={i} className="flex justify-between text-[10px] md:text-xs font-mono">
-                                                    <span>{getResourceLabel(req.target)}</span>
-                                                    <span className={(req.type === 'RESOURCE' && resources[req.target as keyof Resources] >= req.amount) ? 'text-green-500' : 'text-red-500'}>
-                                                        {req.amount.toLocaleString()}
+                                                    <span>{obj.description}</span>
+                                                    <span className={obj.current >= obj.required ? 'text-green-500' : 'text-red-500'}>
+                                                        {obj.current}/{obj.required}
                                                     </span>
                                                 </div>
                                             ))}
@@ -101,16 +96,9 @@ const ContractsTab: React.FC<ContractsTabProps> = ({
                                             {quest.rewards.map((rew, i) => (
                                                 <div key={i} className="flex justify-between text-[10px] md:text-xs font-mono">
                                                     <span>{rew.type === 'REPUTATION' ? 'REP' : getResourceLabel(rew.target)}</span>
-                                                    <span className="text-green-400">+{rew.amount.toLocaleString()}</span>
+                                                    <span className="text-green-400">+{rew.amount?.toLocaleString() || 0}</span>
                                                 </div>
                                             ))}
-                                            {/* Legacy Display */}
-                                            {quest.reputationReward && (
-                                                <div className="flex justify-between text-[10px] md:text-xs font-mono">
-                                                    <span>REP</span>
-                                                    <span className="text-green-400">+{quest.reputationReward}</span>
-                                                </div>
-                                            )}
                                         </div>
                                     </div>
                                 </div>

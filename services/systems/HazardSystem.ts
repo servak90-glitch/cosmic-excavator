@@ -17,7 +17,7 @@ export interface HazardUpdate {
 const HAZARD_COOLDOWN = 15 * 60; // 15 секунд (при 60 FPS)
 const MIN_DEPTH_FOR_HAZARDS = 2000; // Начинаются с 2км
 
-export function processHazards(state: GameState): { update: HazardUpdate; events: VisualEvent[] } {
+export function processHazards(state: GameState, dt: number): { update: HazardUpdate; events: VisualEvent[] } {
     const events: VisualEvent[] = [];
     const update: HazardUpdate = {};
 
@@ -30,27 +30,16 @@ export function processHazards(state: GameState): { update: HazardUpdate; events
         return { update, events };
     }
 
-    // 2. Проверка кулдауна (используем lastInteractTime как временный хак или лучше добавить поле в стейт?)
-    // Лучше добавим локальный трекер времени, но так как это чистая функция, нам нужно хранить состояние в GameState.
-    // В GameState нет поля для HazardCooldown. 
-    // [WORKAROUND] Используем narrativeTick или eventCheckTick для редких проверок.
-
-    // Проверка раз в 1 секунду (60 тиков)
-    if (state.eventCheckTick % 60 !== 0) {
-        return { update, events };
-    }
-
-    // 3. Расчет вероятности (растет с глубиной)
-    // 2000м = 0%
-    // 10000м = 0.5% в секунду
-    // 50000м = 2% в секунду (максимум)
+    // 2. Расчет вероятности (растет с глубиной)
+    // Вероятность проверяется каждый тик, поэтому масштабируем шанс через dt.
     const deepness = Math.max(0, state.depth - MIN_DEPTH_FOR_HAZARDS);
-    const chancePerSecond = Math.min(0.02, deepness / 2000000); // Очень низкий шанс
+    // chancePerSecond: 0.5% - 2% в секунду
+    const chancePerSecond = Math.min(0.02, 0.005 + deepness / 2000000);
 
     // Доп. защита от спама: если недавно было событие (eventQueue не пуст), не триггерим
     if (state.eventQueue.length > 0) return { update, events };
 
-    if (Math.random() < chancePerSecond) {
+    if (Math.random() < chancePerSecond * dt) {
         const hazardRoll = Math.random();
 
         if (hazardRoll < 0.4) {

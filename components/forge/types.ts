@@ -2,12 +2,20 @@
  * Shared types for Forge tab components
  */
 
-import { Resources, DrillPart, DrillSlot, InventoryItem } from '../../types';
+import {
+    Resources, DrillPart, EnginePart, CoolerPart, HullPart,
+    LogicPart, ControlPart, GearboxPart, PowerCorePart, ArmorPart,
+    DrillSlot, InventoryItem, DrillState
+} from '../../types';
+
+// Объединение всех типов частей бура
+export type AnyDrillPart = DrillPart | EnginePart | CoolerPart | HullPart |
+    LogicPart | ControlPart | GearboxPart | PowerCorePart | ArmorPart;
 
 export interface UpgradeCardProps {
     title: string;
-    current: DrillPart;
-    next?: DrillPart;
+    current: AnyDrillPart;
+    next?: AnyDrillPart;
     type: DrillSlot;
     resources: Resources;
     onBuy: (type: DrillSlot) => void;
@@ -16,8 +24,8 @@ export interface UpgradeCardProps {
 export interface DrillTabProps {
     drill: {
         bit: DrillPart;
-        engine: DrillPart;
-        cooling: DrillPart;
+        engine: EnginePart;
+        cooling: CoolerPart;
     };
     resources: Resources;
     onBuy: (type: DrillSlot) => void;
@@ -25,9 +33,9 @@ export interface DrillTabProps {
 
 export interface SystemsTabProps {
     drill: {
-        logic: DrillPart;
-        control: DrillPart;
-        gearbox: DrillPart;
+        logic: LogicPart;
+        control: ControlPart;
+        gearbox: GearboxPart;
     };
     resources: Resources;
     onBuy: (type: DrillSlot) => void;
@@ -35,9 +43,9 @@ export interface SystemsTabProps {
 
 export interface HullTabProps {
     drill: {
-        hull: DrillPart;
-        power: DrillPart;
-        armor: DrillPart;
+        hull: HullPart;
+        power: PowerCorePart;
+        armor: ArmorPart;
     };
     resources: Resources;
     onBuy: (type: DrillSlot) => void;
@@ -49,7 +57,7 @@ export interface FusionTabProps {
     depth: number;
     heatStabilityTimer: number;
     integrity: number;
-    drill: Record<string, DrillPart>; // Добавлено для проверки макс. тира
+    drill: DrillState;
 }
 
 export interface DronesTabProps {

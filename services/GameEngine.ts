@@ -87,10 +87,10 @@ export class GameEngine {
         // COOLING MANAGER moved to separate high-frequency loop
 
         // 4. Щит
-        const shieldResult = processShield(state);
+        const shieldResult = processShield(state, dt);
 
         // 5. Нагрев/Охлаждение
-        const heatResult = processHeat(state, stats, activeEffects);
+        const heatResult = processHeat(state, stats, activeEffects, dt);
         visualEvents.push(...heatResult.events);
 
         // 6. Бурение и добыча
@@ -101,7 +101,8 @@ export class GameEngine {
             // Override drilling state if event changed heat or other blockers?
             // Assume drilling continues unless heat stops it
             heatResult.update.isDrilling,
-            heatResult.update.isOverheated
+            heatResult.update.isOverheated,
+            dt
         );
         visualEvents.push(...drillResult.events);
         Object.assign(resourceChanges, drillResult.resourceChanges);
@@ -197,7 +198,7 @@ export class GameEngine {
             heat, // Use current accumulated heat
             integrity, // Use current accumulated integrity
             depth
-        });
+        }, dt);
         if (hazardResult.update.integrity !== undefined) integrity = hazardResult.update.integrity;
         if (hazardResult.update.heat !== undefined) heat = hazardResult.update.heat;
         visualEvents.push(...hazardResult.events);

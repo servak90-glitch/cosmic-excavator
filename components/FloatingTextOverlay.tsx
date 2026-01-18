@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useImperativeHandle, forwardRef, useRef } from 'react';
 
 export interface FloatingTextHandle {
-  addText: (x: number, y: number, text: string, type?: 'DAMAGE' | 'RESOURCE' | 'CRIT' | 'HEAL' | 'INFO' | 'EVADE') => void;
+  addText: (x: number, y: number, text: string, type?: 'DAMAGE' | 'RESOURCE' | 'CRIT' | 'HEAL' | 'INFO' | 'EVADE' | 'BLOCKED') => void;
 }
 
 interface TextItem {
@@ -10,7 +10,7 @@ interface TextItem {
   x: number;
   y: number;
   text: string;
-  type: 'DAMAGE' | 'RESOURCE' | 'CRIT' | 'HEAL' | 'INFO' | 'EVADE';
+  type: 'DAMAGE' | 'RESOURCE' | 'CRIT' | 'HEAL' | 'INFO' | 'EVADE' | 'BLOCKED';
 }
 
 const FloatingTextOverlay = forwardRef<FloatingTextHandle, {}>((props, ref) => {
@@ -23,7 +23,7 @@ const FloatingTextOverlay = forwardRef<FloatingTextHandle, {}>((props, ref) => {
       // Randomize position slightly to prevent stacking
       const offsetX = (Math.random() - 0.5) * 40;
       const offsetY = (Math.random() - 0.5) * 20;
-      
+
       setItems(prev => [...prev, { id, x: x + offsetX, y: y + offsetY, text, type }]);
 
       // Auto-remove after animation
@@ -39,23 +39,27 @@ const FloatingTextOverlay = forwardRef<FloatingTextHandle, {}>((props, ref) => {
         let colorClass = 'text-white';
         let sizeClass = 'text-xs md:text-sm';
         let fontClass = 'font-mono font-bold';
-        
+
         if (item.type === 'DAMAGE') {
-            colorClass = 'text-white drop-shadow-[0_0_2px_black]';
+          colorClass = 'text-white drop-shadow-[0_0_2px_black]';
         } else if (item.type === 'CRIT') {
-            colorClass = 'text-yellow-400 drop-shadow-[0_0_5px_red]';
-            sizeClass = 'text-lg md:text-2xl';
-            fontClass = 'pixel-text';
+          colorClass = 'text-yellow-400 drop-shadow-[0_0_5px_red]';
+          sizeClass = 'text-lg md:text-2xl';
+          fontClass = 'pixel-text';
         } else if (item.type === 'RESOURCE') {
-            colorClass = 'text-green-400 drop-shadow-[0_0_2px_black]';
+          colorClass = 'text-green-400 drop-shadow-[0_0_2px_black]';
         } else if (item.type === 'HEAL') {
-            colorClass = 'text-cyan-400';
+          colorClass = 'text-cyan-400';
         } else if (item.type === 'INFO') {
-            colorClass = 'text-zinc-400 text-[10px]';
+          colorClass = 'text-zinc-400 text-[10px]';
         } else if (item.type === 'EVADE') {
-            colorClass = 'text-zinc-300 opacity-80';
-            sizeClass = 'text-sm';
-            fontClass = 'font-mono italic';
+          colorClass = 'text-zinc-300 opacity-80';
+          sizeClass = 'text-sm';
+          fontClass = 'font-mono italic';
+        } else if (item.type === 'BLOCKED') {
+          colorClass = 'text-blue-400 opacity-90';
+          sizeClass = 'text-sm';
+          fontClass = 'font-mono';
         }
 
         return (

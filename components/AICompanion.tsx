@@ -40,8 +40,8 @@ const AICompanion: React.FC<AICompanionProps> = ({ state, heat }) => {
   if (state === 'BROKEN') animClass = 'animate-pulse skew-x-12';
   if (state === 'LUCID' && heat > 50) animClass = 'animate-pulse';
 
-  // Breathing effect for Idle
-  const breathing = state === 'IDLE' ? { transform: `scale(${1 + Math.sin(frame * 0.5) * 0.05})` } : {};
+  // Breathing effect for Lucid idle state
+  const breathing = state === 'LUCID' ? { transform: `scale(${1 + Math.sin(frame * 0.5) * 0.05})` } : {};
 
   return (
     <div className={`
@@ -65,7 +65,7 @@ const AICompanion: React.FC<AICompanionProps> = ({ state, heat }) => {
         className={`text-xs md:text-2xl font-black pixel-text ${color} ${animClass} whitespace-nowrap`}
         style={breathing}
       >
-        {state === 'GLITCH' ? (Math.random() > 0.5 ? face : '[ ERROR ]') : face}
+        {state === 'BROKEN' ? (Math.random() > 0.5 ? face : '[ ERROR ]') : face}
       </div>
 
       {/* Status Bar */}

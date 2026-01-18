@@ -122,8 +122,53 @@ export const TL = {
   }
 };
 
-export const t = (key: string): string => {
-  // Simple dot notation access for now, e.g. t('ui.map')
-  // This is a placeholder if we need dynamic lookup, but direct import of TL is often easier in TS
-  return key;
+// Локализованные текстовые строки с поддержкой RU/EN
+export const TEXT_IDS = {
+  // Меню и навигация
+  SETTINGS_TITLE: { RU: 'НАСТРОЙКИ', EN: 'SETTINGS' },
+  SETTINGS_BUTTON: { RU: 'НАСТРОЙКИ', EN: 'SETTINGS' },
+  MANUAL_BUTTON: { RU: 'РУКОВОДСТВО', EN: 'MANUAL' },
+  EXIT_BUTTON: { RU: 'ВЫХОД', EN: 'EXIT' },
+  MENU_DRILL: { RU: 'БУР', EN: 'DRILL' },
+  MENU_CITY: { RU: 'ГОРОД', EN: 'CITY' },
+  MENU_FORGE: { RU: 'КУЗНИЦА', EN: 'FORGE' },
+  MENU_SKILLS: { RU: 'НАВЫКИ', EN: 'SKILLS' },
+  MENU_ARTIFACTS: { RU: 'АРТЕФАКТЫ', EN: 'ARTIFACTS' },
+
+  // Настройки аудио
+  MUSIC_VOLUME: { RU: 'МУЗЫКА', EN: 'MUSIC' },
+  SFX_VOLUME: { RU: 'ЗВУКИ', EN: 'SFX' },
+
+  // Сброс прогресса
+  RESET_PROGRESS: { RU: 'СБРОСИТЬ ПРОГРЕСС', EN: 'RESET PROGRESS' },
+  RESET_CONFIRM_TITLE: { RU: 'ПОДТВЕРЖДЕНИЕ', EN: 'CONFIRMATION' },
+  RESET_CONFIRM_BODY: { RU: 'Все данные будут удалены навсегда. Это действие необратимо!', EN: 'All data will be permanently deleted. This action cannot be undone!' },
+
+  // Кнопки
+  BTN_OK: { RU: 'ОК', EN: 'OK' },
+  BTN_CANCEL: { RU: 'ОТМЕНА', EN: 'CANCEL' },
+
+  // Справка
+  HELP_SECTION_SAVE_TITLE: { RU: 'СОХРАНЕНИЕ', EN: 'SAVING' },
+  HELP_SECTION_SAVE_BODY: { RU: 'Игра НЕ сохраняется автоматически. Используйте кнопку "ЗАПИСЬ" в настройках.', EN: 'The game does NOT auto-save. Use the "SAVE" button in settings.' },
+  HELP_SECTION_EXPORT_TITLE: { RU: 'ЭКСПОРТ/ИМПОРТ', EN: 'EXPORT/IMPORT' },
+  HELP_SECTION_EXPORT_BODY: { RU: 'Вы можете экспортировать сохранение как текстовый код и импортировать его позже.', EN: 'You can export your save as a text code and import it later.' },
+
+  // Начальный экран / AI
+  AI_INIT: { RU: 'ИНИЦИАЛИЗАЦИЯ СИСТЕМЫ...', EN: 'INITIALIZING SYSTEM...' },
+  AI_READY: { RU: 'СИСТЕМА ГОТОВА', EN: 'SYSTEM READY' },
+  HARDCORE_WARNING: { RU: '⚠️ ВНИМАНИЕ: Прогресс НЕ сохраняется автоматически!', EN: '⚠️ WARNING: Progress is NOT auto-saved!' },
+  INIT_BUTTON: { RU: 'НАЧАТЬ СПУСК', EN: 'BEGIN DESCENT' },
+  FIRST_RUN_TITLE: { RU: 'ПЕРВЫЙ ЗАПУСК', EN: 'FIRST RUN' },
+  FIRST_RUN_BODY: { RU: 'Добро пожаловать в Пустоту. Это хардкорный опыт без автосохранения. Удачи.', EN: 'Welcome to the Void. This is a hardcore experience without auto-save. Good luck.' },
+  BTN_ACKNOWLEDGE: { RU: 'ПОНЯЛ', EN: 'UNDERSTOOD' }
+} as const;
+
+// Тип для ключей TEXT_IDS
+type TextIdKey = keyof typeof TEXT_IDS;
+type Language = 'RU' | 'EN';
+
+// Функция локализации с поддержкой языка
+export const t = (textId: { RU: string; EN: string }, lang: Language = 'RU'): string => {
+  return textId[lang] || textId.RU;
 };

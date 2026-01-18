@@ -17,20 +17,20 @@ export interface ShieldUpdate {
 /**
  * Обработка заряда/разряда щита
  */
-export function processShield(state: GameState): ShieldUpdate {
+export function processShield(state: GameState, dt: number): ShieldUpdate {
     let shieldCharge = state.shieldCharge;
     let isShielding = false;
 
     if (state.isDrilling && !state.isOverheated) {
-        // Заряд при бурении: +5 в секунду (0.5 за тик)
-        shieldCharge = Math.min(100, shieldCharge + 0.5);
+        // Заряд при бурении: +5 в секунду
+        shieldCharge = Math.min(100, shieldCharge + 5.0 * dt);
     } else if (!state.isDrilling && !state.isOverheated && shieldCharge > 0 && !state.isCoolingGameActive) {
-        // Разряд при активной защите: -20 в секунду (2.0 за тик)
-        shieldCharge = Math.max(0, shieldCharge - 2.0);
+        // Разряд при активной защите: -20 в секунду
+        shieldCharge = Math.max(0, shieldCharge - 20.0 * dt);
         if (shieldCharge > 0) isShielding = true;
     } else {
-        // Пассивная утечка
-        shieldCharge = Math.max(0, shieldCharge - 0.1);
+        // Пассивная утечка: -1 в секунду
+        shieldCharge = Math.max(0, shieldCharge - 1.0 * dt);
     }
 
     return { shieldCharge, isShielding };

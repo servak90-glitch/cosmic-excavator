@@ -65,7 +65,8 @@ export function processDrilling(
     stats: Stats,
     activeEffects: GameState['activeEffects'],
     isDrilling: boolean,
-    isOverheated: boolean
+    isOverheated: boolean,
+    dt: number
 ): { update: DrillUpdate; resourceChanges: ResourceChanges; events: VisualEvent[] } {
     const events: VisualEvent[] = [];
     const resourceChanges: ResourceChanges = {};
@@ -108,7 +109,7 @@ export function processDrilling(
         }
 
         // Лог предупреждения при низкой эффективности
-        if (stats.drillingEfficiency < 0.5 && Math.random() < 0.02) {
+        if (stats.drillingEfficiency < 0.5 && Math.random() < 0.02 * dt * 60) {
             events.push({
                 type: 'LOG',
                 msg: `ОШИБКА: ПЛОТНОСТЬ ПОРОДЫ > ТВЕРДОСТЬ БУРА. ТРЕБУЕТСЯ TIER ${stats.requiredTier}.`,
@@ -135,12 +136,13 @@ export function processDrilling(
         if (state.isOverdrive) drillPower *= 100;
 
         // === ПОТРЕБЛЕНИЕ ТОПЛИВА ===
-        const fuelCost = (drillPower * FUEL_CONSUMPTION_RATE) / fuel.efficiency;
+        // Балансировка: 1 единица угля на 1 метр бурения при базовой эффективности
+        const fuelCost = (drillPower * FUEL_CONSUMPTION_RATE * dt * 10) / fuel.efficiency;
         resourceChanges[fuel.fuelType] = (resourceChanges[fuel.fuelType] || 0) - fuelCost;
 
         // Увеличение глубины (только если не выбран конкретный биом)
         if (!state.selectedBiome) {
-            depth += drillPower;
+            depth += drillPower * dt;
         }
 
         // Добыча ресурсов
@@ -148,24 +150,22 @@ export function processDrilling(
             ? BIOMES.find(b => b.name === state.selectedBiome) || BIOMES[0]
             : BIOMES.slice().reverse().find(b => depth >= b.depth) || BIOMES[0];
 
-        const resToAdd = drillPower * 0.3 * resMult;
+        const resToAdd = drillPower * 0.3 * resMult * dt;
         resourceChanges[currentBiome.resource] = (resourceChanges[currentBiome.resource] || 0) + resToAdd;
 
         // [VISUALS] Mining Effects
-        // 1. Particles (Sparks & Debris) relative to mining speed
-        if (Math.random() < 0.3 + (drillPower > 10 ? 0.2 : 0)) {
+        if (Math.random() < (0.3 + (drillPower > 10 ? 0.2 : 0)) * dt * 60) {
             events.push({
                 type: 'PARTICLE',
                 position: 'DRILL_TIP',
                 kind: Math.random() > 0.7 ? 'SPARK' : 'DEBRIS',
-                color: currentBiome.color, // Sparkle with biome color
+                color: currentBiome.color,
                 count: Math.floor(Math.random() * 3) + 1
             });
         }
 
-        // 2. Floating Text (Resource Gain) - Throttled by accumulation or random chance to avoid spam
-        // For distinct visual feedback, we only show > 0.1 gains or occasional small ones
-        if (resToAdd >= 1 || (resToAdd > 0 && Math.random() < 0.1)) {
+        // Floating Text - ограничиваем частоту появления через dt
+        if (resToAdd >= 1 || (resToAdd > 0 && Math.random() < 0.1 * dt * 60)) {
             events.push({
                 type: 'TEXT',
                 position: 'CENTER',

@@ -91,15 +91,6 @@ export const generateQuest = (depth: number, level: number): Quest => {
     quest.type = 'DELIVERY'; // Better fit
     quest.objectives = [{
       id: uuid(),
-      type: 'DELIVER', // Dynamic quests use manual delivery? Or check resource check?
-      // Let's use COLLECT for simple dynamic quests for now, easier to automate?
-      // No, Corp usually wants Delivery. Let's stick to COLLECT logic (have in inv) or DELIVER (action)
-      // For MVP dynamic, COLLECT is easier implementation-wise if not specifying destination
-      // But description says "supply". Let's use COLLECT for now for simplicity in dynamic context
-      // OR use DELIVER with target 'base' implicitly.
-      // Let's use COLLECT for dynamic resource quests to verify possession.
-      // Actually, let's use DELIVER but with a generic target if needed.
-      // Update: questEngine supports COLLECT (check inventory).
       type: 'COLLECT',
       description: `Собрать ${amount} ${targetRes}`,
       target: targetRes,

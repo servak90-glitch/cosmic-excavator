@@ -32,14 +32,14 @@ const UpgradeCard: React.FC<UpgradeCardProps> = ({ title, current, next, type, r
                 <div className="bg-black/50 p-2 mb-2 border border-zinc-800 min-h-[40px] md:min-h-[50px]">
                     <p className="text-[9px] md:text-[10px] text-zinc-300 italic leading-tight">"{next.description}"</p>
                     <div className="mt-1 text-[8px] md:text-[9px] text-green-400 font-mono grid grid-cols-2 gap-x-2">
-                        {next.baseStats.damage && <span>DMG: {next.baseStats.damage}</span>}
-                        {next.baseStats.speed && <span>SPD: {next.baseStats.speed}</span>}
-                        {next.baseStats.cooling && <span>COOL: {next.baseStats.cooling}</span>}
-                        {next.baseStats.energyOutput && <span>PWR: {next.baseStats.energyOutput}</span>}
-                        {next.baseStats.torque && <span className="text-amber-400">TRQ: {next.baseStats.torque}%</span>}
-                        {next.baseStats.regen && <span className="text-emerald-400">REG: {next.baseStats.regen}/s</span>}
-                        {next.baseStats.luck && <span className="text-purple-400">LCK: {next.baseStats.luck}%</span>}
-                        {next.baseStats.energyCost > 0 && <span className="text-red-500 col-span-2">LOAD: -{next.baseStats.energyCost} W</span>}
+                        {(next.baseStats as any).damage && <span>DMG: {(next.baseStats as any).damage}</span>}
+                        {(next.baseStats as any).speed && <span>SPD: {(next.baseStats as any).speed}</span>}
+                        {(next.baseStats as any).cooling && <span>COOL: {(next.baseStats as any).cooling}</span>}
+                        {(next.baseStats as any).energyOutput && <span>PWR: {(next.baseStats as any).energyOutput}</span>}
+                        {(next.baseStats as any).torque && <span className="text-amber-400">TRQ: {(next.baseStats as any).torque}%</span>}
+                        {(next.baseStats as any).regen && <span className="text-emerald-400">REG: {(next.baseStats as any).regen}/s</span>}
+                        {(next.baseStats as any).luck && <span className="text-purple-400">LCK: {(next.baseStats as any).luck}%</span>}
+                        {(next.baseStats as any).energyCost > 0 && <span className="text-red-500 col-span-2">LOAD: -{(next.baseStats as any).energyCost} W</span>}
                     </div>
                 </div>
 

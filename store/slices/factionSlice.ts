@@ -18,7 +18,7 @@ export const createFactionSlice: SliceCreator<FactionActions> = (set, get) => ({
             // Cap at 10000 for new Legend tier
             const newRep = Math.min(10000, Math.max(0, current + amount));
 
-            let updates: Partial<Record<FactionId, number>> = {
+            const updates: Partial<Record<FactionId, number>> = {
                 [faction]: newRep
             };
 

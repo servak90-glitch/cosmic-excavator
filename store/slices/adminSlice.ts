@@ -31,8 +31,8 @@ export const createAdminSlice: SliceCreator<AdminActions> = (set, get) => ({
         return { resources: nr };
     }),
 
-    adminResetResources: () => set(state => ({
-        resources: { clay: 0, stone: 0, copper: 0, iron: 0, silver: 0, gold: 0, titanium: 0, uranium: 0, nanoSwarm: 0, ancientTech: 0, rubies: 0, emeralds: 0, diamonds: 0 }
+    adminResetResources: () => set(() => ({
+        resources: { clay: 0, stone: 0, copper: 0, iron: 0, silver: 0, gold: 0, titanium: 0, uranium: 0, nanoSwarm: 0, ancientTech: 0, rubies: 0, emeralds: 0, diamonds: 0, coal: 0, oil: 0, gas: 0 }
     })),
 
     adminAddArtifact: (defId) => {

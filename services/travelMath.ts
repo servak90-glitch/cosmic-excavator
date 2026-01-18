@@ -40,7 +40,8 @@ export const FUEL_EFFICIENCY: Record<ResourceType, number> = {
 /**
  * Список доступных видов топлива для UI dropdown
  */
-export const FUEL_TYPES: ResourceType[] = ['coal', 'oil', 'gas', 'uranium'];
+export const FUEL_TYPES = ['coal', 'oil', 'gas', 'uranium'] as const;
+export type FuelType = typeof FUEL_TYPES[number];
 
 /**
  * Базовый множитель расхода топлива (калибровка баланса)

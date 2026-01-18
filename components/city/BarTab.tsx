@@ -11,7 +11,7 @@ type DiceResult = { won: boolean; amount: number } | null;
 const BarTab: React.FC<BarTabProps> = ({ resources }) => {
     const [barTab, setBarTab] = useState<'DRINKS' | 'DICE'>('DRINKS');
     const [diceBetRes, setDiceBetRes] = useState<ResourceType>('stone');
-    const [diceBetAmount, setDiceBetAmount] = useState(GAMBLING.MIN_BET);
+    const [diceBetAmount, setDiceBetAmount] = useState<number>(GAMBLING.MIN_BET);
     const [lastResult, setLastResult] = useState<DiceResult>(null);
     const [isRolling, setIsRolling] = useState(false);
 

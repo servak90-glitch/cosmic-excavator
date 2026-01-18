@@ -26,7 +26,8 @@ export interface HeatUpdate {
 export function processHeat(
     state: GameState,
     stats: Stats,
-    activeEffects: GameState['activeEffects']
+    activeEffects: GameState['activeEffects'],
+    dt: number
 ): { update: HeatUpdate; events: VisualEvent[] } {
     const events: VisualEvent[] = [];
 
@@ -43,9 +44,9 @@ export function processHeat(
     }
     if (state.isInfiniteCoolant) heat = 0;
 
-    // Счётчик стабильности при низком нагреве
+    // Счётчик стабильности при низком нагреве (используем dt для секунд)
     if (heat <= 1) {
-        heatStabilityTimer += 0.1;
+        heatStabilityTimer += dt;
     } else {
         heatStabilityTimer = 0;
     }
@@ -72,7 +73,8 @@ export function processHeat(
             });
 
             if (!state.isInfiniteCoolant) {
-                heat += 0.85 * heatMult * heatReduction;
+                // Базовая скорость нагрева: ~8.5% в секунду
+                heat += 8.5 * heatMult * heatReduction * dt;
             }
 
             // Перегрев — урон по корпусу
@@ -99,13 +101,15 @@ export function processHeat(
         const coolingDisabled = activeEffects.some(e => e.modifiers && e.modifiers.coolingDisabled);
 
         if (!coolingDisabled && !isCoolingGameActive) {
-            const coolingAmount = (stats.totalCooling * 0.2 + 0.1) * stats.ventSpeed;
+            // stats.totalCooling — это базовое значение охлаждения
+            // Базовое охлаждение ~10% в секунду при totalCooling=50
+            const coolingAmount = (stats.totalCooling * 0.2 + 0.1) * stats.ventSpeed * dt;
             heat = Math.max(stats.ambientHeat, heat - coolingAmount);
 
             if (heat <= stats.ambientHeat + 1 && isOverheated) {
                 isOverheated = false;
                 events.push({ type: 'LOG', msg: "СИСТЕМЫ ОХЛАЖДЕНЫ.", color: "text-green-500" });
-            } else if (heat > stats.ambientHeat + 10 && coolingAmount < 0.1 && Math.random() < 0.02) {
+            } else if (heat > stats.ambientHeat + 10 && coolingAmount < 0.01 && Math.random() < 0.02 * dt * 60) {
                 events.push({ type: 'LOG', msg: "ПРЕДУПРЕЖДЕНИЕ: ВНЕШНЯЯ СРЕДА СЛИШКОМ ГОРЯЧАЯ.", color: "text-orange-400" });
             }
         }

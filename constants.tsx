@@ -111,21 +111,21 @@ export const COOLERS: CoolerPart[] = [
 ];
 
 export const HULLS: HullPart[] = [
-  { id: 'hull_1', tier: 1, rarity: 'Common', name: 'Каркас из труб', description: '1 слот. Скрежещет, но держит.', cost: { clay: 50 }, baseStats: { maxIntegrity: 50, slots: 1, heatCap: 100, regen: 0 } },
-  { id: 'hull_2', tier: 2, rarity: 'Common', name: 'Грузовой бокс', description: '1 слот. Простой и дешевый.', cost: { stone: 200 }, baseStats: { maxIntegrity: 150, slots: 1, heatCap: 150, regen: 0 } },
-  { id: 'hull_3', tier: 3, rarity: 'Common', name: 'Сплав "Шахтер"', description: '2 слота. Рабочая лошадка.', cost: { copper: 500 }, baseStats: { maxIntegrity: 200, slots: 2, heatCap: 200, regen: 0.1 } },
-  { id: 'hull_4', tier: 4, rarity: 'Rare', name: 'Укрепленный кокон', description: '2 слота. Выдержит обвал.', cost: { iron: 1000 }, baseStats: { maxIntegrity: 400, slots: 2, heatCap: 250, regen: 0.2 } },
-  { id: 'hull_5', tier: 5, rarity: 'Rare', name: 'Рама "Авангард"', description: '3 слота. Для передовой.', cost: { silver: 1500 }, baseStats: { maxIntegrity: 500, slots: 3, heatCap: 300, regen: 0.5 } },
-  { id: 'hull_6', tier: 6, rarity: 'Rare', name: 'Корпус "Бункер"', description: '3 слота. Тяжелый и надежный.', cost: { gold: 2500, emeralds: 5 }, baseStats: { maxIntegrity: 1000, slots: 3, heatCap: 400, regen: 1 } },
-  { id: 'hull_7', tier: 7, rarity: 'Epic', name: 'Штурмовой дек', description: '4 слота. Боевая платформа.', cost: { titanium: 4000, emeralds: 20 }, baseStats: { maxIntegrity: 800, slots: 4, heatCap: 350, regen: 2 } },
-  { id: 'hull_8', tier: 8, rarity: 'Epic', name: 'Оболочка "Стелс"', description: '4 слота. Гасит вибрации.', cost: { uranium: 1500, nanoSwarm: 50 }, baseStats: { maxIntegrity: 600, slots: 4, heatCap: 500, regen: 3 } },
-  { id: 'hull_9', tier: 9, rarity: 'Epic', name: 'Титановый Монолит', description: '5 слотов. Несокрушимый.', cost: { ancientTech: 50, rubies: 10, diamonds: 20 }, baseStats: { maxIntegrity: 1500, slots: 5, heatCap: 600, regen: 5 } },
-  { id: 'hull_10', tier: 10, rarity: 'Legendary', name: 'Экзо-скелет "Атлант"', description: '5 слотов. Поднимает горы.', cost: { ancientTech: 150, emeralds: 50, nanoSwarm: 200 }, baseStats: { maxIntegrity: 2500, slots: 5, heatCap: 700, regen: 10 } },
-  { id: 'hull_11', tier: 11, rarity: 'Legendary', name: 'Живая броня', description: '6 слотов. Регенерация структуры.', cost: { ancientTech: 400, diamonds: 30, nanoSwarm: 500 }, baseStats: { maxIntegrity: 3000, slots: 6, heatCap: 800, regen: 25 } },
-  { id: 'hull_12', tier: 12, rarity: 'Legendary', name: 'Композит "Зеркало"', description: '6 слотов. Отражает реальность.', cost: { ancientTech: 1000, nanoSwarm: 1500, rubies: 100 }, baseStats: { maxIntegrity: 3500, slots: 6, heatCap: 900, regen: 50 } },
-  { id: 'hull_13', tier: 13, rarity: 'Godly', name: 'Ковчег Предтеч', description: '7 слотов. Дом в пустоте.', cost: { ancientTech: 3000, rubies: 1000, diamonds: 500 }, baseStats: { maxIntegrity: 5000, slots: 7, heatCap: 1200, regen: 100 } },
-  { id: 'hull_14', tier: 14, rarity: 'Godly', name: 'Сингулярная оболочка', description: '8 слотов. Поглощает урон в энергию.', cost: { ancientTech: 8000, emeralds: 1000, nanoSwarm: 3000 }, baseStats: { maxIntegrity: 8000, slots: 8, heatCap: 2000, regen: 250 } },
-  { id: 'hull_15', tier: 15, rarity: 'Godly', name: 'Несокрушимый', description: '10 слотов. Вечность.', cost: { ancientTech: 20000, diamonds: 1000, nanoSwarm: 8000 }, baseStats: { maxIntegrity: 20000, slots: 10, heatCap: 5000, regen: 1000 } }
+  { id: 'hull_1', tier: 1, rarity: 'Common', name: 'Каркас из труб', description: '1 слот. Скрежещет, но держит.', cost: { clay: 50 }, baseStats: { maxIntegrity: 50, slots: 1, heatCap: 100, regen: 0, cargoCapacity: 100 } },
+  { id: 'hull_2', tier: 2, rarity: 'Common', name: 'Грузовой бокс', description: '1 слот. Простой и дешевый.', cost: { stone: 200 }, baseStats: { maxIntegrity: 150, slots: 1, heatCap: 150, regen: 0, cargoCapacity: 150 } },
+  { id: 'hull_3', tier: 3, rarity: 'Common', name: 'Сплав "Шахтер"', description: '2 слота. Рабочая лошадка.', cost: { copper: 500 }, baseStats: { maxIntegrity: 200, slots: 2, heatCap: 200, regen: 0.1, cargoCapacity: 200 } },
+  { id: 'hull_4', tier: 4, rarity: 'Rare', name: 'Укрепленный кокон', description: '2 слота. Выдержит обвал.', cost: { iron: 1000 }, baseStats: { maxIntegrity: 400, slots: 2, heatCap: 250, regen: 0.2, cargoCapacity: 300 } },
+  { id: 'hull_5', tier: 5, rarity: 'Rare', name: 'Рама "Авангард"', description: '3 слота. Для передовой.', cost: { silver: 1500 }, baseStats: { maxIntegrity: 500, slots: 3, heatCap: 300, regen: 0.5, cargoCapacity: 400 } },
+  { id: 'hull_6', tier: 6, rarity: 'Rare', name: 'Корпус "Бункер"', description: '3 слота. Тяжелый и надежный.', cost: { gold: 2500, emeralds: 5 }, baseStats: { maxIntegrity: 1000, slots: 3, heatCap: 400, regen: 1, cargoCapacity: 600 } },
+  { id: 'hull_7', tier: 7, rarity: 'Epic', name: 'Штурмовой дек', description: '4 слота. Боевая платформа.', cost: { titanium: 4000, emeralds: 20 }, baseStats: { maxIntegrity: 800, slots: 4, heatCap: 350, regen: 2, cargoCapacity: 800 } },
+  { id: 'hull_8', tier: 8, rarity: 'Epic', name: 'Оболочка "Стелс"', description: '4 слота. Гасит вибрации.', cost: { uranium: 1500, nanoSwarm: 50 }, baseStats: { maxIntegrity: 600, slots: 4, heatCap: 500, regen: 3, cargoCapacity: 1000 } },
+  { id: 'hull_9', tier: 9, rarity: 'Epic', name: 'Титановый Монолит', description: '5 слотов. Несокрушимый.', cost: { ancientTech: 50, rubies: 10, diamonds: 20 }, baseStats: { maxIntegrity: 1500, slots: 5, heatCap: 600, regen: 5, cargoCapacity: 1500 } },
+  { id: 'hull_10', tier: 10, rarity: 'Legendary', name: 'Экзо-скелет "Атлант"', description: '5 слотов. Поднимает горы.', cost: { ancientTech: 150, emeralds: 50, nanoSwarm: 200 }, baseStats: { maxIntegrity: 2500, slots: 5, heatCap: 700, regen: 10, cargoCapacity: 2000 } },
+  { id: 'hull_11', tier: 11, rarity: 'Legendary', name: 'Живая броня', description: '6 слотов. Регенерация структуры.', cost: { ancientTech: 400, diamonds: 30, nanoSwarm: 500 }, baseStats: { maxIntegrity: 3000, slots: 6, heatCap: 800, regen: 25, cargoCapacity: 3000 } },
+  { id: 'hull_12', tier: 12, rarity: 'Legendary', name: 'Композит "Зеркало"', description: '6 слотов. Отражает реальность.', cost: { ancientTech: 1000, nanoSwarm: 1500, rubies: 100 }, baseStats: { maxIntegrity: 3500, slots: 6, heatCap: 900, regen: 50, cargoCapacity: 4000 } },
+  { id: 'hull_13', tier: 13, rarity: 'Godly', name: 'Ковчег Предтеч', description: '7 слотов. Дом в пустоте.', cost: { ancientTech: 3000, rubies: 1000, diamonds: 500 }, baseStats: { maxIntegrity: 5000, slots: 7, heatCap: 1200, regen: 100, cargoCapacity: 6000 } },
+  { id: 'hull_14', tier: 14, rarity: 'Godly', name: 'Сингулярная оболочка', description: '8 слотов. Поглощает урон в энергию.', cost: { ancientTech: 8000, emeralds: 1000, nanoSwarm: 3000 }, baseStats: { maxIntegrity: 8000, slots: 8, heatCap: 2000, regen: 250, cargoCapacity: 10000 } },
+  { id: 'hull_15', tier: 15, rarity: 'Godly', name: 'Несокрушимый', description: '10 слотов. Вечность.', cost: { ancientTech: 20000, diamonds: 1000, nanoSwarm: 8000 }, baseStats: { maxIntegrity: 20000, slots: 10, heatCap: 5000, regen: 1000, cargoCapacity: 20000 } }
 ];
 
 export const LOGIC_CORES: LogicPart[] = [
