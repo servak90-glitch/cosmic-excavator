@@ -18,40 +18,35 @@ export type LocalizedString = { RU: string; EN: string } | string;
 export interface GameSettings {
   musicVolume: number;
   sfxVolume: number;
+  drillVolume: number;
   musicMuted: boolean;
   sfxMuted: boolean;
+  drillMuted: boolean;
   language: Language;
 }
 
-export interface Resources {
-  clay: number;
-  stone: number;
-  copper: number;
-  iron: number;
-  silver: number;
-  gold: number;
-  titanium: number;
-  uranium: number;
-  nanoSwarm: number;
-  ancientTech: number;
-  rubies: number;
-  emeralds: number;
-  diamonds: number;
-
-  // === FUEL RESOURCES (MVP) ===
-  coal: number;   // Efficiency ×1.0
-  oil: number;    // Efficiency ×1.5
-  gas: number;    // Efficiency ×2.0
-
-  // TODO (FULL): enriched uranium variants, void crystals, nano fuel
-  // enrichedUraniumLow?: number;
-  // enrichedUraniumMedium?: number;
-  // enrichedUraniumHigh?: number;
-  // voidCrystal?: number;
-  // nanoFuel?: number;
+export enum ResourceType {
+  CLAY = 'clay',
+  STONE = 'stone',
+  COPPER = 'copper',
+  IRON = 'iron',
+  SILVER = 'silver',
+  GOLD = 'gold',
+  TITANIUM = 'titanium',
+  URANIUM = 'uranium',
+  NANO_SWARM = 'nanoSwarm',
+  ANCIENT_TECH = 'ancientTech',
+  RUBIES = 'rubies',
+  EMERALDS = 'emeralds',
+  DIAMONDS = 'diamonds',
+  COAL = 'coal',
+  OIL = 'oil',
+  GAS = 'gas'
 }
 
-export type ResourceType = keyof Resources;
+export type Resources = {
+  [key in ResourceType]: number;
+};
 
 // === GLOBAL MAP: REGIONS ===
 
@@ -484,7 +479,7 @@ export interface Biome {
   hub?: string;
   hazard: HazardType;
   hazardLevel: number;
-  gemResource?: 'rubies' | 'emeralds' | 'diamonds';
+  gemResource?: ResourceType;
 }
 
 export enum BossType {
@@ -986,6 +981,6 @@ export type VisualEvent =
   | { type: 'TEXT'; x?: number; y?: number; position?: 'CENTER' | 'TOP_CENTER'; text: string; style?: 'DAMAGE' | 'RESOURCE' | 'CRIT' | 'HEAL' | 'INFO' | 'EVADE' | 'BLOCKED' }
   | { type: 'PARTICLE'; x?: number; y?: number; position?: 'CENTER' | 'DRILL_TIP'; color: string; kind: 'DEBRIS' | 'SPARK' | 'SMOKE'; count: number }
   | { type: 'BOSS_HIT' }
-  | { type: 'SOUND'; sfx: 'LOG' | 'GLITCH' | 'ACHIEVEMENT' }
+  | { type: 'SOUND'; sfx: 'LOG' | 'GLITCH' | 'ACHIEVEMENT' | 'RAID_ALARM' | 'RAID_SUCCESS' | 'RAID_FAILURE' | 'MARKET_TRADE' }
   | { type: 'SCREEN_SHAKE'; intensity: number; duration: number }
   | { type: 'VISUAL_EFFECT'; option: VisualEffectType };

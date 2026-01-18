@@ -20,13 +20,12 @@ export const getAmbientTemp = (depth: number) => {
 // 3. Repair Cost: Exponential scaling with depth + Critical Tax
 export const calculateRepairCost = (depth: number, currentHp: number, maxHp: number): { resource: ResourceType, cost: number } => {
     const missingHp = maxHp - currentHp;
-    if (missingHp <= 0) return { resource: 'stone', cost: 0 };
-
+    if (missingHp <= 0) return { resource: ResourceType.STONE, cost: 0 };
     // Resource Tiering based on Depth
-    let resource: ResourceType = 'stone';
-    if (depth > 40000) resource = 'titanium';
-    else if (depth > 15000) resource = 'gold';
-    else if (depth > 4000) resource = 'iron';
+    let resource: ResourceType = ResourceType.STONE;
+    if (depth > 40000) resource = ResourceType.TITANIUM;
+    else if (depth > 15000) resource = ResourceType.GOLD;
+    else if (depth > 4000) resource = ResourceType.IRON;
 
     // Depth Multiplier
     const depthMult = 1 + (depth / 2000);
@@ -40,15 +39,15 @@ export const calculateRepairCost = (depth: number, currentHp: number, maxHp: num
 
 // 4. Shield Recharge Cost
 export const calculateShieldRechargeCost = (depth: number): { resource: ResourceType, cost: number } => {
-    if (depth < 2000) return { resource: 'stone', cost: 0 }; // Free early game
+    if (depth < 2000) return { resource: ResourceType.STONE, cost: 0 }; // Free early game
 
-    let resource: ResourceType = 'stone';
+    let resource: ResourceType = ResourceType.STONE;
     let baseCost = 100;
 
-    if (depth > 30000) { resource = 'uranium'; baseCost = 50; }
-    else if (depth > 15000) { resource = 'gold'; baseCost = 100; }
-    else if (depth > 5000) { resource = 'iron'; baseCost = 200; }
-    else { resource = 'copper'; baseCost = 300; }
+    if (depth > 30000) { resource = ResourceType.URANIUM; baseCost = 50; }
+    else if (depth > 15000) { resource = ResourceType.GOLD; baseCost = 100; }
+    else if (depth > 5000) { resource = ResourceType.IRON; baseCost = 200; }
+    else { resource = ResourceType.COPPER; baseCost = 300; }
 
     const cost = Math.ceil(baseCost * (1 + depth / 10000));
     return { resource, cost };

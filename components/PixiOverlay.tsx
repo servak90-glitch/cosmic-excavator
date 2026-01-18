@@ -26,6 +26,7 @@ interface PixiOverlayProps {
     // Callbacks remain as they are functional and stable
     onObjectClick: (id: string, x: number, y: number) => void;
     onDrillClick: () => void;
+    visualEffect?: string;
 }
 
 interface Particle {
@@ -45,14 +46,14 @@ interface DustParticle {
     speed: number;
 }
 
-const PixiOverlay = forwardRef<PixiOverlayHandle, PixiOverlayProps>(({ onObjectClick, onDrillClick }, ref) => {
+const PixiOverlay = forwardRef<PixiOverlayHandle, PixiOverlayProps>(({ onObjectClick, onDrillClick, visualEffect }, ref) => {
     const containerRef = useRef<HTMLDivElement>(null);
 
-    // Ref to hold stable callbacks for the ticker
-    const callbacksRef = useRef({ onObjectClick, onDrillClick });
+    // Ref to hold stable callbacks and props for the ticker
+    const propsRef = useRef({ onObjectClick, onDrillClick, visualEffect });
     useEffect(() => {
-        callbacksRef.current = { onObjectClick, onDrillClick };
-    }, [onObjectClick, onDrillClick]);
+        propsRef.current = { onObjectClick, onDrillClick, visualEffect };
+    }, [onObjectClick, onDrillClick, visualEffect]);
 
     useEffect(() => {
         let isMounted = true;
@@ -189,12 +190,28 @@ const PixiOverlay = forwardRef<PixiOverlayHandle, PixiOverlayProps>(({ onObjectC
                                 }
 
                                 const heatRatio = heat / 100;
-                                const glitchIntensity = Math.max(0, (heatRatio - 0.6) * 2.5);
+                                let glitchIntensity = Math.max(0, (heatRatio - 0.6) * 2.5);
+
+                                // FORCE VISUAL EFFECTS
+                                const currentEffect = propsRef.current.visualEffect;
+                                if (currentEffect === 'GLITCH_RED' || currentEffect === 'RAID_ALARM') {
+                                    glitchIntensity = 0.8;
+                                    crtFilter.vignetting = 0.6;
+                                    crtFilter.vignettingAlpha = 0.8; // Red tint handled? No, CRT v5 maybe not.
+                                    // Use RGB split for Red effect
+                                }
 
                                 if (glitchIntensity > 0) {
                                     const offset = glitchIntensity * 5;
                                     rgbSplitFilter.red = { x: offset * Math.sin(time * 20), y: 0 };
                                     rgbSplitFilter.blue = { x: -offset * Math.cos(time * 15), y: 0 };
+
+                                    if (currentEffect === 'GLITCH_RED') {
+                                        // Extra Red Shift
+                                        rgbSplitFilter.red = { x: 10, y: 0 };
+                                        rgbSplitFilter.green = { x: 0, y: 0 };
+                                        rgbSplitFilter.blue = { x: 0, y: 0 };
+                                    }
                                 } else {
                                     rgbSplitFilter.red = { x: 0, y: 0 };
                                     rgbSplitFilter.blue = { x: 0, y: 0 };
@@ -357,7 +374,10 @@ const PixiOverlay = forwardRef<PixiOverlayHandle, PixiOverlayProps>(({ onObjectC
                                         g.hitArea = new Circle(0, 0, 30);
                                         g.on('pointerdown', (e) => {
                                             e.stopPropagation();
-                                            callbacksRef.current.onObjectClick(obj.id, e.global.x, e.global.y);
+                                            g.on('pointerdown', (e) => {
+                                                e.stopPropagation();
+                                                propsRef.current.onObjectClick(obj.id, e.global.x, e.global.y);
+                                            });
                                         });
                                         objectLayer.addChild(g);
                                         objectGraphicsMap.set(obj.id, g);

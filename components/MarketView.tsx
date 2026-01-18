@@ -3,11 +3,13 @@
  * Phase 2: региональные цены + buy/sell
  */
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useGameStore } from '../store/gameStore';
+import { audioEngine } from '../services/audioEngine';
 import { getAllMarketPrices } from '../services/marketEngine';
 import { getActivePerkIds } from '../services/factionLogic';
 import { TL, t } from '../services/localization';
+import { BLACK_MARKET_ITEMS } from '../constants/blackMarket';
 import type { Resources } from '../types';
 
 export const MarketView = () => {
@@ -16,17 +18,25 @@ export const MarketView = () => {
     const playerBases = useGameStore(s => s.playerBases);
     const buyFromMarket = useGameStore(s => s.buyFromMarket);
     const sellToMarket = useGameStore(s => s.sellToMarket);
+    const buyBlackMarketItem = useGameStore(s => s.buyBlackMarketItem);
     const reputation = useGameStore(s => s.reputation);
     const lang = useGameStore(s => s.settings.language);
 
     const [selectedResource, setSelectedResource] = useState<keyof Resources | null>(null);
     const [amount, setAmount] = useState<number>(1);
+    const [activeTab, setActiveTab] = useState<'regular' | 'black_market'>('regular');
+
+    useEffect(() => {
+        audioEngine.playUIPanelOpen();
+    }, []);
 
     // Проверка: игрок в Station?
     const currentBase = playerBases.find(b => b.regionId === currentRegion);
     const canAccessMarket = currentBase?.type === 'station';
 
     const activePerks = useMemo(() => getActivePerkIds(reputation), [reputation]);
+    const hasBlackMarket = activePerks.includes('BLACK_MARKET');
+
     const marketPrices = useMemo(() => getAllMarketPrices(currentRegion, [], activePerks), [currentRegion, activePerks]);
 
     if (!canAccessMarket) {
@@ -48,6 +58,7 @@ export const MarketView = () => {
     const handleBuy = () => {
         if (selectedResource && amount > 0) {
             buyFromMarket(selectedResource, amount);
+            audioEngine.playMarketTrade();
             setAmount(1);
         }
     };
@@ -55,6 +66,7 @@ export const MarketView = () => {
     const handleSell = () => {
         if (selectedResource && amount > 0) {
             sellToMarket(selectedResource, amount);
+            audioEngine.playMarketTrade();
             setAmount(1);
         }
     };
@@ -89,66 +101,151 @@ export const MarketView = () => {
             <div className="max-w-6xl mx-auto grid lg:grid-cols-3 gap-6">
                 {/* Price List */}
                 <div className="lg:col-span-2">
-                    <h2 className="text-2xl font-bold text-white mb-4">📊 Рыночные цены</h2>
-                    <div className="grid md:grid-cols-2 gap-3">
-                        {marketPrices.map(price => {
-                            // Perk: Black Market (Science Level 3) - Unlocks illegal goods
-                            const illegalResources = ['nanoSwarm', 'ancientTech'];
-                            const isIllegal = illegalResources.includes(price.resource);
-                            const hasBlackMarket = activePerks.includes('BLACK_MARKET');
+                    {/* Tab Selector */}
+                    {hasBlackMarket && (
+                        <div className="flex gap-4 mb-4 border-b border-gray-700 pb-2">
+                            <button
+                                onClick={() => setActiveTab('regular')}
+                                className={`px-4 py-2 rounded font-bold transition-all ${activeTab === 'regular' ? 'bg-cyan-600 text-white' : 'bg-gray-800 text-gray-400 hover:text-cyan-400'}`}
+                            >
+                                📊 {t(TL.ui.market, lang)}
+                            </button>
+                            <button
+                                onClick={() => setActiveTab('black_market')}
+                                className={`px-4 py-2 rounded font-bold transition-all ${activeTab === 'black_market' ? 'bg-purple-900 border border-purple-500 text-purple-200' : 'bg-gray-900 text-gray-500 hover:text-purple-400'}`}
+                            >
+                                👁️ SHADOW NETWORK
+                            </button>
+                        </div>
+                    )}
 
-                            if (isIllegal && !hasBlackMarket) return null;
-                            if (price.resource === 'rubies') return null; // Credits are not traded
+                    {activeTab === 'regular' ? (
+                        <>
+                            <h2 className="text-2xl font-bold text-white mb-4">📊 {t(TL.ui.market, lang)}</h2>
+                            <div className="grid md:grid-cols-2 gap-3">
+                                {marketPrices.map(price => {
+                                    // Perk: Black Market (Science Level 3) - Unlocks illegal goods
+                                    const illegalResources = ['nanoSwarm', 'ancientTech'];
+                                    const isIllegal = illegalResources.includes(price.resource);
+                                    const hasBlackMarket = activePerks.includes('BLACK_MARKET');
 
-                            const isSelected = price.resource === selectedResource;
-                            const hasResource = (resources[price.resource] || 0) > 0;
+                                    if (isIllegal && !hasBlackMarket) return null;
+                                    if (price.resource === 'rubies') return null; // Credits are not traded
 
-                            return (
-                                <div
-                                    key={price.resource}
-                                    onClick={() => setSelectedResource(price.resource)}
-                                    className={`
+                                    const isSelected = price.resource === selectedResource;
+                                    const hasResource = (resources[price.resource] || 0) > 0;
+
+                                    return (
+                                        <div
+                                            key={price.resource}
+                                            onClick={() => setSelectedResource(price.resource)}
+                                            className={`
                                         bg-gray-800/70 border-2 rounded-lg p-4 cursor-pointer transition-all
                                         ${isSelected ? 'border-cyan-500 ring-2 ring-cyan-500/50' : 'border-gray-700 hover:border-cyan-500/50'}
                                     `}
-                                >
-                                    <div className="flex items-center justify-between mb-2">
-                                        <h3 className="font-bold text-white capitalize">{t(TL.resources[price.resource], lang) || price.resource}</h3>
-                                        <span className="text-xl">
-                                            {hasResource ? '✅' : ''}
-                                        </span>
-                                    </div>
-
-                                    <div className="space-y-1 text-sm">
-                                        <div className="flex justify-between">
-                                            <span className="text-gray-400">{t(TL.ui.buy, lang)}:</span>
-                                            <span className="text-green-400 font-bold">{price.finalPrice} 💎</span>
-                                        </div>
-                                        <div className="flex justify-between">
-                                            <span className="text-gray-400">{t(TL.ui.sell, lang)}:</span>
-                                            <span className="text-yellow-400 font-bold">
-                                                {Math.floor(price.finalPrice * 0.8)} 💎
-                                            </span>
-                                        </div>
-                                        <div className="flex justify-between pt-1 border-t border-gray-700">
-                                            <span className="text-gray-500 text-xs">У вас:</span>
-                                            <span className="text-white text-xs">{resources[price.resource] || 0}</span>
-                                        </div>
-
-                                        {/* Regional modifier indicator */}
-                                        {price.regionalModifier !== 1.0 && (
-                                            <div className="pt-1">
-                                                <span className={`text-xs px-2 py-0.5 rounded ${price.regionalModifier < 1.0 ? 'bg-green-900/50 text-green-300' : 'bg-red-900/50 text-red-300'
-                                                    }`}>
-                                                    {price.regionalModifier < 1.0 ? '🔽' : '🔼'} {Math.round((price.regionalModifier - 1) * 100)}%
+                                        >
+                                            <div className="flex items-center justify-between mb-2">
+                                                <h3 className="font-bold text-white capitalize">{t(TL.resources[price.resource], lang) || price.resource}</h3>
+                                                <span className="text-xl">
+                                                    {hasResource ? '✅' : ''}
                                                 </span>
                                             </div>
-                                        )}
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </div>
+
+                                            <div className="space-y-1 text-sm">
+                                                <div className="flex justify-between">
+                                                    <span className="text-gray-400">{t(TL.ui.buy, lang)}:</span>
+                                                    <span className="text-green-400 font-bold">{price.finalPrice} 💎</span>
+                                                </div>
+                                                <div className="flex justify-between">
+                                                    <span className="text-gray-400">{t(TL.ui.sell, lang)}:</span>
+                                                    <span className="text-yellow-400 font-bold">
+                                                        {Math.floor(price.finalPrice * 0.8)} 💎
+                                                    </span>
+                                                </div>
+                                                <div className="flex justify-between pt-1 border-t border-gray-700">
+                                                    <span className="text-gray-500 text-xs">У вас:</span>
+                                                    <span className="text-white text-xs">{resources[price.resource] || 0}</span>
+                                                </div>
+
+                                                {/* Regional modifier indicator */}
+                                                {price.regionalModifier !== 1.0 && (
+                                                    <div className="pt-1">
+                                                        <span className={`text-xs px-2 py-0.5 rounded ${price.regionalModifier < 1.0 ? 'bg-green-900/50 text-green-300' : 'bg-red-900/50 text-red-300'
+                                                            }`}>
+                                                            {price.regionalModifier < 1.0 ? '🔽' : '🔼'} {Math.round((price.regionalModifier - 1) * 100)}%
+                                                        </span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </>
+                    ) : (
+                        <div className="space-y-4">
+                            <h2 className="text-2xl font-bold text-purple-400 mb-4 tracking-widest glitch-text">👁️ SHADOW NETWORK</h2>
+
+                            <div className="grid gap-4">
+                                {BLACK_MARKET_ITEMS.map(item => {
+                                    const isBlueprint = item.type === 'BLUEPRINT';
+                                    const isUnlocked = isBlueprint && item.targetId && useGameStore.getState().unlockedBlueprints.includes(item.targetId);
+
+                                    const canAfford = item.cost.every(c => (resources[c.resource] || 0) >= c.amount);
+
+                                    // Localized Name/Desc
+                                    const itemName = typeof item.name === 'string' ? item.name : (item.name[lang] || item.name.EN);
+                                    const itemDesc = typeof item.description === 'string' ? item.description : (item.description[lang] || item.description.EN);
+
+                                    return (
+                                        <div key={item.id} className="bg-gray-900/90 border border-purple-600/50 p-4 rounded flex justify-between items-center relative overflow-hidden group">
+                                            <div className="absolute inset-0 bg-purple-500/5 group-hover:bg-purple-500/10 transition-colors pointer-events-none" />
+
+                                            <div>
+                                                <h3 className="text-lg font-bold text-purple-200">
+                                                    {itemName}
+                                                </h3>
+                                                <p className="text-gray-400 text-sm italic">
+                                                    {itemDesc}
+                                                </p>
+
+                                                <div className="flex gap-2 mt-2">
+                                                    {item.cost.map((c, i) => (
+                                                        <span key={i} className={`text-xs px-2 py-1 rounded bg-gray-800 border items-center flex gap-1 ${(resources[c.resource] || 0) >= c.amount ? 'border-gray-600 text-gray-300' : 'border-red-900 text-red-400'
+                                                            }`}>
+                                                            {c.amount} {c.resource}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            </div>
+
+                                            <button
+                                                onClick={() => {
+                                                    buyBlackMarketItem(item.id);
+                                                    audioEngine.playGlitch(); // Darker sound for black market
+                                                }}
+                                                disabled={!canAfford || (isUnlocked as boolean)}
+                                                className={`
+                                                    px-6 py-2 rounded font-bold border-2 transition-all
+                                                    ${isUnlocked
+                                                        ? 'bg-gray-800 border-gray-700 text-gray-500 cursor-not-allowed'
+                                                        : canAfford
+                                                            ? 'bg-purple-900/50 border-purple-500 hover:bg-purple-800 text-purple-200 shadow-[0_0_10px_rgba(168,85,247,0.3)]'
+                                                            : 'bg-gray-900 border-red-900/50 text-gray-600 cursor-not-allowed'}
+                                                `}
+                                            >
+                                                {isUnlocked ? 'OWNED' : 'ACQUIRE'}
+                                            </button>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+
+                            <p className="text-xs text-center text-purple-900 font-mono mt-8">
+                                WARNING: TRANSACTIONS ARE UNTRACEABLE. NO REFUNDS.
+                            </p>
+                        </div>
+                    )}
                 </div>
 
                 {/* Trading Panel */}

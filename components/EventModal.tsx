@@ -4,6 +4,8 @@ import { GameEvent, EventOption } from '../types';
 import { motion, AnimatePresence, Variants } from 'framer-motion';
 import { useGameStore } from '../store/gameStore';
 import { t } from '../services/localization';
+import { audioEngine } from '../services/audioEngine';
+import { useEffect } from 'react';
 
 
 interface EventModalProps {
@@ -13,6 +15,15 @@ interface EventModalProps {
 
 const EventModal: React.FC<EventModalProps> = ({ event, onOptionSelect }) => {
   const lang = useGameStore(s => s.settings.language);
+
+  useEffect(() => {
+    if (event.type === 'ANOMALY' || event.type === 'WARNING') {
+      audioEngine.playUIError();
+    } else {
+      audioEngine.playUIPanelOpen();
+    }
+  }, [event.id]);
+
   const isAnomaly = event.type === 'ANOMALY' || event.type === 'WARNING';
 
   const isSuccess = event.type === 'NOTIFICATION' && (t(event.title, lang).includes('ДОСТУП') || t(event.title, lang).includes('РАЗРЕШЕН') || t(event.title, lang).includes('ОПЕРАТОР'));
@@ -99,7 +110,10 @@ const EventModal: React.FC<EventModalProps> = ({ event, onOptionSelect }) => {
                 event.options.map((opt) => (
                   <motion.button
                     key={opt.actionId}
-                    onClick={() => onOptionSelect(opt.actionId)}
+                    onClick={() => {
+                      audioEngine.playUIPanelClose();
+                      onOptionSelect(opt.actionId);
+                    }}
                     variants={buttonVariants}
                     whileHover="hover"
                     whileTap="tap"
@@ -119,7 +133,10 @@ const EventModal: React.FC<EventModalProps> = ({ event, onOptionSelect }) => {
                 ))
               ) : (
                 <motion.button
-                  onClick={() => onOptionSelect()}
+                  onClick={() => {
+                    audioEngine.playUIPanelClose();
+                    onOptionSelect();
+                  }}
                   variants={buttonVariants}
                   whileHover="hover"
                   whileTap="tap"

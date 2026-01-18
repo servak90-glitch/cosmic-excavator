@@ -4,6 +4,8 @@ import { GameSettings, Language } from '../types';
 import { t, TEXT_IDS } from '../services/localization';
 import { useGameStore } from '../store/gameStore';
 import { GAME_VERSION } from '../constants';
+import { audioEngine } from '../services/audioEngine';
+import { useEffect } from 'react';
 
 interface SettingsModalProps {
     settings: GameSettings;
@@ -22,6 +24,10 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
     language,
     onSetLanguage
 }) => {
+    useEffect(() => {
+        audioEngine.playUIPanelOpen();
+    }, []);
+
     const [showResetConfirm, setShowResetConfirm] = useState(false);
     const [importString, setImportString] = useState("");
     const [exportMessage, setExportMessage] = useState("");
@@ -132,7 +138,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                         >
                             {t(TEXT_IDS.SETTINGS_TITLE, language)}
                         </h2>
-                        <button onClick={onClose} className="text-zinc-500 hover:text-white text-xl">✕</button>
+                        <button onClick={() => { audioEngine.playUIPanelClose(); onClose(); }} className="text-zinc-500 hover:text-white text-xl">✕</button>
                     </div>
 
                     <div className="space-y-6">
@@ -228,6 +234,26 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                                     className="w-full accent-cyan-500 h-1 bg-zinc-800 appearance-none cursor-pointer"
                                 />
                             </div>
+
+                            {/* DRILL SFX */}
+                            <div className="flex flex-col gap-2">
+                                <div className="flex justify-between items-center">
+                                    <span className="font-mono text-zinc-300 text-xs font-bold">{t(TEXT_IDS.DRILL_VOLUME, language)}</span>
+                                    <button
+                                        onClick={() => onUpdateSettings({ drillMuted: !settings.drillMuted })}
+                                        className={`text-[10px] px-2 py-0.5 border ${settings.drillMuted ? 'border-red-500 text-red-500' : 'border-green-500 text-green-500'}`}
+                                    >
+                                        {settings.drillMuted ? 'OFF' : 'ON'}
+                                    </button>
+                                </div>
+                                <input
+                                    type="range"
+                                    min="0" max="1" step="0.05"
+                                    value={settings.drillVolume}
+                                    onChange={(e) => onUpdateSettings({ drillVolume: parseFloat(e.target.value) })}
+                                    className="w-full accent-cyan-500 h-1 bg-zinc-800 appearance-none cursor-pointer"
+                                />
+                            </div>
                         </div>
 
                         {/* DATA MANAGEMENT */}
@@ -295,7 +321,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                                         <button onClick={handleReset} className="flex-1 bg-red-600 hover:bg-red-500 text-black font-bold py-2 text-xs">
                                             {t(TEXT_IDS.BTN_OK, language)}
                                         </button>
-                                        <button onClick={() => setShowResetConfirm(false)} className="flex-1 border border-zinc-500 hover:border-white text-white font-bold py-2 text-xs">
+                                        <button onClick={() => { audioEngine.playUIPanelClose(); setShowResetConfirm(false); }} className="flex-1 border border-zinc-500 hover:border-white text-white font-bold py-2 text-xs">
                                             {t(TEXT_IDS.BTN_CANCEL, language)}
                                         </button>
                                     </div>

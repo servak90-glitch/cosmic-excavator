@@ -26,6 +26,7 @@ export const createSettingsSlice: SliceCreator<SettingsActions> = (set, get) => 
         const next = { ...s.settings, ...newSettings };
         audioEngine.setMusicVolume(next.musicMuted ? 0 : next.musicVolume);
         audioEngine.setSfxVolume(next.sfxMuted ? 0 : next.sfxVolume);
+        audioEngine.setDrillVolume(next.drillMuted ? 0 : next.drillVolume);
         return { settings: next };
     }),
 

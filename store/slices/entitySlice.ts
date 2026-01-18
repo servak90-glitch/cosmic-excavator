@@ -28,9 +28,9 @@ export const createEntitySlice: SliceCreator<EntityActions> = (set, get) => ({
         if (obj.hp <= 0) {
             objects.splice(objIndex, 1);
             if (obj.type === 'SATELLITE_DEBRIS') {
-                audioEngine.playSatelliteCollect();
+                audioEngine.playSatelliteCollect(x);
             } else {
-                audioEngine.playGeodeCollect(obj.rarity);
+                audioEngine.playGeodeCollect(obj.rarity, x);
             }
 
             const newRes = { ...s.resources };
@@ -91,7 +91,7 @@ export const createEntitySlice: SliceCreator<EntityActions> = (set, get) => ({
             });
         } else {
             objects[objIndex] = obj;
-            audioEngine.playClick();
+            audioEngine.playClick(x);
             set({ flyingObjects: objects, actionLogQueue: pushLogs(s, logs) });
         }
     },

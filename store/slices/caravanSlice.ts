@@ -7,6 +7,7 @@ import { SliceCreator } from './types';
 import type { Caravan, CaravanUnlock, CaravanTier, Resources } from '../../types';
 import { createCaravan, checkCaravanCompletion, canSendCaravan } from '../../services/caravanManager';
 import { BASIC_LOGISTICS_UNLOCK_COST, CARAVAN_SPECS } from '../../constants/caravans';
+import { audioEngine } from '../../services/audioEngine';
 
 export interface CaravanSlice {
     caravans: Caravan[];
@@ -106,6 +107,8 @@ export const createCaravanSlice: SliceCreator<CaravanSlice> = (set, get) => ({
             caravans: [...state.caravans, caravan],
         }));
 
+        audioEngine.playCaravanSend();
+
         const spec = CARAVAN_SPECS['1star'];
         const etaMinutes = Math.ceil(spec.travelTime / 60000);
         console.log(`🚛 Караван отправлен! ETA: ${etaMinutes} минут. Риск потери: ${Math.round(caravan.lossChance * 100)}%`);
@@ -144,6 +147,7 @@ export const createCaravanSlice: SliceCreator<CaravanSlice> = (set, get) => ({
                 }));
 
                 console.log(`✅ Караван ${caravan.id} прибыл успешно!`);
+                audioEngine.playCaravanReturn(true);
                 // TODO Phase 3: Trigger event 'CARAVAN_ARRIVED'
             } else {
                 // Караван потерян
@@ -154,6 +158,7 @@ export const createCaravanSlice: SliceCreator<CaravanSlice> = (set, get) => ({
                 }));
 
                 console.log(`💀 Караван ${caravan.id} потерян! (Пираты/авария)`);
+                audioEngine.playCaravanReturn(false);
                 // TODO Phase 3: Trigger event 'CARAVAN_LOST'
             }
         }

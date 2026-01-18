@@ -138,7 +138,7 @@ const INITIAL_STATE: GameState = {
 
     // SETTINGS
     // SETTINGS
-    settings: { musicVolume: 0.5, sfxVolume: 0.5, musicMuted: false, sfxMuted: false, language: 'RU' },
+    settings: { musicVolume: 0.5, sfxVolume: 0.5, drillVolume: 0.5, musicMuted: false, sfxMuted: false, drillMuted: false, language: 'RU' },
     selectedBiome: null,
     debugUnlocked: false,
     isGodMode: false,
@@ -431,6 +431,21 @@ export const useGameStore = create<GameStore>((set, get) => ({
             }
 
             audioEngine.playClick();
+
+            // [VISUAL POLISH] Trigger effects based on ability
+            const newEvents: VisualEvent[] = [];
+            if (id === 'THERMAL_STRIKE') {
+                newEvents.push({ type: 'PARTICLE', kind: 'SPARK', count: 60, color: '0xFF4400', position: 'DRILL_TIP' });
+                newEvents.push({ type: 'VISUAL_EFFECT', option: 'GLITCH_RED' }); // Quick glitch
+            } else if (id === 'EMP_BURST') {
+                newEvents.push({ type: 'PARTICLE', kind: 'SPARK', count: 40, color: '0x00FFFF', position: 'CENTER' });
+            } else if (id === 'OVERLOAD') {
+                newEvents.push({ type: 'PARTICLE', kind: 'SMOKE', count: 30, color: '0xFF0000', position: 'DRILL_TIP' });
+            }
+
+            if (newEvents.length > 0) {
+                set(s => ({ actionLogQueue: [...s.actionLogQueue, ...newEvents] }));
+            }
         }
     },
 

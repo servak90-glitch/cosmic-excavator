@@ -7,12 +7,15 @@ import { SliceCreator } from './types';
 import type { MarketTransaction, Resources } from '../../types';
 import { calculateMarketPrice, calculateSellRevenue } from '../../services/marketEngine';
 import { recalculateCargoWeight } from '../../services/gameMath';
+import { audioEngine } from '../../services/audioEngine';
+import { BLACK_MARKET_ITEMS } from '../../constants/blackMarket';
 
 export interface MarketSlice {
     marketTransactionHistory: MarketTransaction[];
 
     buyFromMarket: (resource: keyof Resources, amount: number) => void;
     sellToMarket: (resource: keyof Resources, amount: number) => void;
+    buyBlackMarketItem: (itemId: string) => void;
 }
 
 import { getActivePerkIds } from '../../services/factionLogic';
@@ -38,11 +41,13 @@ export const createMarketSlice: SliceCreator<MarketSlice> = (set, get) => ({
 
         // Проверки
         if (state.resources.rubies < totalCost) {
+            audioEngine.playUIError();
             console.warn(`❌ Недостаточно credits (нужно ${totalCost}, есть ${state.resources.rubies})`);
             return;
         }
 
         // Транзакция
+        audioEngine.playMarketTrade();
         set((state) => {
             const newResources = {
                 ...state.resources,
@@ -83,6 +88,7 @@ export const createMarketSlice: SliceCreator<MarketSlice> = (set, get) => ({
 
         // Проверка наличия ресурсов
         if ((state.resources[resource] || 0) < amount) {
+            audioEngine.playUIError();
             console.warn(`❌ Недостаточно ${resource} (нужно ${amount}, есть ${state.resources[resource] || 0})`);
             return;
         }
@@ -93,6 +99,7 @@ export const createMarketSlice: SliceCreator<MarketSlice> = (set, get) => ({
         const { sellPrice, totalRevenue } = calculateSellRevenue(resource, amount, state.currentRegion, [], activePerks);
 
         // Транзакция
+        audioEngine.playMarketTrade();
         set((state) => {
             const newResources = {
                 ...state.resources,
@@ -120,4 +127,68 @@ export const createMarketSlice: SliceCreator<MarketSlice> = (set, get) => ({
 
         console.log(`✅ Продано ${amount} ${resource} за ${totalRevenue} credits (цена продажи: ${sellPrice}/шт)`);
     },
+
+    buyBlackMarketItem: (itemId: string) => {
+        const state = get();
+        const item = BLACK_MARKET_ITEMS.find(i => i.id === itemId);
+        if (!item) return;
+
+        // Check stock (if implemented globally, currently static constant so stock doesn't deplete per save)
+        // For MVP, allow infinite or check if already bought if blueprint
+        if (item.type === 'BLUEPRINT' && item.targetId && state.unlockedBlueprints.includes(item.targetId)) {
+            audioEngine.playUIError();
+            return;
+        }
+
+        // Check costs
+        for (const cost of item.cost) {
+            if ((state.resources[cost.resource] || 0) < cost.amount) {
+                audioEngine.playUIError();
+                return; // Not enough resources
+            }
+        }
+
+        // Deduct resources
+        audioEngine.playMarketTrade(); // Or a specific darker sound
+
+        set(state => {
+            const newResources = { ...state.resources };
+            item.cost.forEach(c => {
+                newResources[c.resource] = (newResources[c.resource] || 0) - c.amount;
+            });
+
+            const updates: Partial<any> = { resources: newResources };
+            const visuals: any[] = [];
+
+            // Apply Reward
+            if (item.type === 'BLUEPRINT' && item.targetId) {
+                updates.unlockedBlueprints = [...state.unlockedBlueprints, item.targetId];
+                visuals.push({ type: 'LOG', msg: `📜 BLUEPRINT UNLOCKED: ${item.name}`, color: 'text-purple-400' });
+            } else if (item.type === 'RESOURCE' && item.targetId) {
+                // Parse targetId e.g. "nanoSwarm_1000"
+                const [res, amtStr] = item.targetId.split('_');
+                const amt = parseInt(amtStr);
+                if (res && amt) {
+                    newResources[res as keyof Resources] = (newResources[res as keyof Resources] || 0) + amt;
+                    visuals.push({ type: 'LOG', msg: `📦 SMUGGLED: ${amt} ${res}`, color: 'text-green-400' });
+                }
+            } else if (item.type === 'GADGET') {
+                if (item.targetId === 'consumable_shield_50') {
+                    updates.shieldCharge = Math.min(state.maxShieldCharge, state.shieldCharge + 50);
+                    visuals.push({ type: 'LOG', msg: `🛡️ SHIELD BOOSTED`, color: 'text-cyan-400' });
+                } else if (item.targetId === 'consumable_heat_vent') {
+                    updates.heat = 0;
+                    visuals.push({ type: 'LOG', msg: `❄️ EMERGENCY VENTING`, color: 'text-cyan-400' });
+                }
+            }
+
+            visuals.push({ type: 'VISUAL_EFFECT', option: 'GLITCH_RED' });
+
+            return {
+                ...updates,
+                currentCargoWeight: recalculateCargoWeight(newResources), // Cargo might change
+                actionLogQueue: [...state.actionLogQueue, ...visuals]
+            }
+        });
+    }
 });

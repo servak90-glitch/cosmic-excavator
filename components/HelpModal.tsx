@@ -3,6 +3,8 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useGameStore } from '../store/gameStore'; // Need store for lang
 import { t, TEXT_IDS } from '../services/localization';
+import { audioEngine } from '../services/audioEngine';
+import { useEffect } from 'react';
 
 interface HelpModalProps {
     onClose: () => void;
@@ -10,6 +12,10 @@ interface HelpModalProps {
 
 const HelpModal: React.FC<HelpModalProps> = ({ onClose }) => {
     const lang = useGameStore(s => s.settings.language);
+
+    useEffect(() => {
+        audioEngine.playUIPanelOpen();
+    }, []);
 
     return (
         <AnimatePresence>
@@ -34,7 +40,7 @@ const HelpModal: React.FC<HelpModalProps> = ({ onClose }) => {
                             <h2 className="pixel-text text-lg md:text-xl text-cyan-400 tracking-widest">{t(TEXT_IDS.MANUAL_BUTTON, lang)}</h2>
                             <p className="text-[10px] text-zinc-500 font-mono">АКТУАЛЬНО ДЛЯ: v0.3.0 (QUESTS & TUNNELS UPDATE)</p>
                         </div>
-                        <button onClick={onClose} className="text-zinc-500 hover:text-white text-xl px-2">✕</button>
+                        <button onClick={() => { audioEngine.playUIPanelClose(); onClose(); }} className="text-zinc-500 hover:text-white text-xl px-2">✕</button>
                     </div>
 
                     {/* CONTENT SCROLL AREA */}
@@ -404,7 +410,7 @@ const HelpModal: React.FC<HelpModalProps> = ({ onClose }) => {
                     {/* FOOTER */}
                     <div className="p-4 border-t border-zinc-800 bg-zinc-900/80 z-10 flex justify-end">
                         <button
-                            onClick={onClose}
+                            onClick={() => { audioEngine.playUIPanelClose(); onClose(); }}
                             className="px-6 py-2 bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 text-white font-bold pixel-text text-xs transition-colors"
                         >
                             {t(TEXT_IDS.BTN_OK, lang)}

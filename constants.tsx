@@ -1,46 +1,46 @@
 
-import { Biome, DrillPart, EnginePart, CoolerPart, HullPart, LogicPart, ControlPart, GearboxPart, PowerCorePart, ArmorPart, CargoBayPart, DroneDefinition, MergeRecipe, TunnelPropDef, DroneType } from './types';
+import { Biome, DrillPart, EnginePart, CoolerPart, HullPart, LogicPart, ControlPart, GearboxPart, PowerCorePart, ArmorPart, CargoBayPart, DroneDefinition, MergeRecipe, TunnelPropDef, DroneType, ResourceType } from './types';
 
 export const BIOMES: Biome[] = [
   {
-    depth: 0, name: { RU: "ПОВЕРХНОСТЬ", EN: "SURFACE" }, resource: "clay", color: "#8B4513",
+    depth: 0, name: { RU: "ПОВЕРХНОСТЬ", EN: "SURFACE" }, resource: ResourceType.CLAY, color: "#8B4513",
     description: { RU: "Пыльный горизонт, где всё начинается.", EN: "Dusty horizon where it all begins." }, hub: "БАЗА 'ГОРИЗОНТ'",
-    hazard: 'CORROSION', hazardLevel: 1, gemResource: 'rubies'
+    hazard: 'CORROSION', hazardLevel: 1, gemResource: ResourceType.RUBIES
   },
   {
-    depth: 500, name: { RU: "ТВЕРДЫЙ КАМЕНЬ", EN: "HARD ROCK" }, resource: "stone", color: "#555555",
+    depth: 500, name: { RU: "ТВЕРДЫЙ КАМЕНЬ", EN: "HARD ROCK" }, resource: ResourceType.STONE, color: "#555555",
     description: { RU: "Непрощающая кора. Проверь свою решимость.", EN: "Unforgiving crust. Test your resolve." },
-    hazard: 'NONE', hazardLevel: 0, gemResource: 'rubies'
+    hazard: 'NONE', hazardLevel: 0, gemResource: ResourceType.RUBIES
   },
   {
-    depth: 1500, name: { RU: "МЕДНЫЕ ЖИЛЫ", EN: "COPPER VEINS" }, resource: "copper", color: "#B87333",
+    depth: 1500, name: { RU: "МЕДНЫЕ ЖИЛЫ", EN: "COPPER VEINS" }, resource: ResourceType.COPPER, color: "#B87333",
     description: { RU: "Проводящие пути в глубине. Осторожно: ЭМ-поля.", EN: "Conductive paths in the deep. Caution: EM fields." },
-    hazard: 'MAGNETIC', hazardLevel: 15, gemResource: 'emeralds'
+    hazard: 'MAGNETIC', hazardLevel: 15, gemResource: ResourceType.EMERALDS
   },
   {
-    depth: 4000, name: { RU: "ЗАЛЕЖИ ЖЕЛЕЗА", EN: "IRON DEPOSITS" }, resource: "iron", color: "#A19D94",
+    depth: 4000, name: { RU: "ЗАЛЕЖИ ЖЕЛЕЗА", EN: "IRON DEPOSITS" }, resource: ResourceType.IRON, color: "#A19D94",
     description: { RU: "Позвоночник машины.", EN: "The backbone of the machine." },
-    hazard: 'CORROSION', hazardLevel: 10, gemResource: 'emeralds'
+    hazard: 'CORROSION', hazardLevel: 10, gemResource: ResourceType.EMERALDS
   },
   {
-    depth: 10000, name: { RU: "КРИСТАЛЬНЫЕ ГРОТЫ", EN: "CRYSTAL GROTTOES" }, resource: "silver", color: "#00CED1",
+    depth: 10000, name: { RU: "КРИСТАЛЬНЫЕ ГРОТЫ", EN: "CRYSTAL GROTTOES" }, resource: ResourceType.SILVER, color: "#00CED1",
     description: { RU: "Сияние в темноте. Отражают тепло.", EN: "Glitter in the dark. Reflect heat." }, hub: "КРИСТАЛЬНАЯ ГАВАНЬ",
-    hazard: 'HEAT_REFLECTION', hazardLevel: 25, gemResource: 'diamonds'
+    hazard: 'HEAT_REFLECTION', hazardLevel: 25, gemResource: ResourceType.DIAMONDS
   },
   {
-    depth: 20000, name: { RU: "ЗОЛОТАЯ ЗЕМЛЯ", EN: "GOLDEN LAND" }, resource: "gold", color: "#FFD700",
+    depth: 20000, name: { RU: "ЗОЛОТАЯ ЗЕМЛЯ", EN: "GOLDEN LAND" }, resource: ResourceType.GOLD, color: "#FFD700",
     description: { RU: "Богатства спрессованной пустоты.", EN: "Riches of compressed void." },
-    hazard: 'MAGNETIC', hazardLevel: 30, gemResource: 'diamonds'
+    hazard: 'MAGNETIC', hazardLevel: 30, gemResource: ResourceType.DIAMONDS
   },
   {
-    depth: 50000, name: { RU: "ПЛАСТЫ ПУСТОТЫ", EN: "VOID LAYERS" }, resource: "titanium", color: "#1A1A1A",
+    depth: 50000, name: { RU: "ПЛАСТЫ ПУСТОТЫ", EN: "VOID LAYERS" }, resource: ResourceType.TITANIUM, color: "#1A1A1A",
     description: { RU: "Здесь свет гаснет. Давление критическое.", EN: "Where the light fades. Critical pressure." }, hub: "КУЗНИЦА МАГМЫ",
-    hazard: 'VOID_PRESSURE', hazardLevel: 50, gemResource: 'diamonds'
+    hazard: 'VOID_PRESSURE', hazardLevel: 50, gemResource: ResourceType.DIAMONDS
   },
   {
-    depth: 100000, name: { RU: "РАДИОАКТИВНОЕ ЯДРО", EN: "RADIOACTIVE CORE" }, resource: "uranium", color: "#32CD32",
+    depth: 100000, name: { RU: "РАДИОАКТИВНОЕ ЯДРО", EN: "RADIOACTIVE CORE" }, resource: ResourceType.URANIUM, color: "#32CD32",
     description: { RU: "Последний барьер. Сердце бытия.", EN: "The final barrier. Heart of existence." }, hub: "СВЯТИЛИЩЕ ЯДРА",
-    hazard: 'RADIATION', hazardLevel: 100, gemResource: 'emeralds'
+    hazard: 'RADIATION', hazardLevel: 100, gemResource: ResourceType.EMERALDS
   }
 ];
 
@@ -250,50 +250,50 @@ export const CARGO_BAYS: CargoBayPart[] = [
 
 export const FUSION_RECIPES: MergeRecipe[] = [
   // BITS
-  { id: 'fus_bit_13', resultId: 'bit_13', componentAId: 'bit_12', componentBId: 'NONE', catalyst: { resource: 'ancientTech', amount: 500 }, description: 'Разрыв реальности требует жертв.' },
-  { id: 'fus_bit_14', resultId: 'bit_14', componentAId: 'bit_13', componentBId: 'NONE', catalyst: { resource: 'ancientTech', amount: 1000 }, description: 'Спираль судьбы закручивается.', condition: { type: 'DEPTH_REACHED', target: 20000, description: 'Глубина > 20,000м' } },
-  { id: 'fus_bit_15', resultId: 'bit_15', componentAId: 'bit_14', componentBId: 'NONE', catalyst: { resource: 'ancientTech', amount: 5000 }, description: 'Последний рубеж материи.', condition: { type: 'DEPTH_REACHED', target: 50000, description: 'Глубина > 50,000м' } },
+  { id: 'fus_bit_13', resultId: 'bit_13', componentAId: 'bit_12', componentBId: 'NONE', catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 500 }, description: 'Разрыв реальности требует жертв.' },
+  { id: 'fus_bit_14', resultId: 'bit_14', componentAId: 'bit_13', componentBId: 'NONE', catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 1000 }, description: 'Спираль судьбы закручивается.', condition: { type: 'DEPTH_REACHED', target: 20000, description: 'Глубина > 20,000м' } },
+  { id: 'fus_bit_15', resultId: 'bit_15', componentAId: 'bit_14', componentBId: 'NONE', catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 5000 }, description: 'Последний рубеж материи.', condition: { type: 'DEPTH_REACHED', target: 50000, description: 'Глубина > 50,000м' } },
   // ENGINES
-  { id: 'fus_eng_13', resultId: 'eng_13', componentAId: 'eng_12', componentBId: 'NONE', catalyst: { resource: 'ancientTech', amount: 500 }, description: 'Движение без инерции.' },
-  { id: 'fus_eng_14', resultId: 'eng_14', componentAId: 'eng_13', componentBId: 'NONE', catalyst: { resource: 'ancientTech', amount: 1000 }, description: 'Вращение в 4-х измерениях.' },
-  { id: 'fus_eng_15', resultId: 'eng_15', componentAId: 'eng_14', componentBId: 'NONE', catalyst: { resource: 'ancientTech', amount: 5000 }, description: 'Чистая воля как топливо.', condition: { type: 'ZERO_HEAT', target: 30, description: 'Температура 0% (30 сек)' } },
-  { id: 'fuse_eng_13', componentAId: 'eng_11', componentBId: 'eng_12', resultId: 'fus_eng_13', catalyst: { resource: 'ancientTech', amount: 500 }, description: { RU: 'Стабилизация нулевой точки.', EN: 'Zero point stabilization.' } },
-  { id: 'fuse_eng_14', componentAId: 'fus_eng_13', componentBId: 'eng_12', resultId: 'fus_eng_14', catalyst: { resource: 'ancientTech', amount: 1500 }, description: { RU: 'Суперпозиция вращения.', EN: 'Rotation superposition.' } },
-  { id: 'fuse_eng_15', componentAId: 'fus_eng_14', componentBId: 'fus_eng_13', resultId: 'fus_eng_15', catalyst: { resource: 'ancientTech', amount: 5000 }, description: { RU: 'ПЕРВОДВИГАТЕЛЬ.', EN: 'PRIME MOVER.' } },
+  { id: 'fus_eng_13', resultId: 'eng_13', componentAId: 'eng_12', componentBId: 'NONE', catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 500 }, description: 'Движение без инерции.' },
+  { id: 'fus_eng_14', resultId: 'eng_14', componentAId: 'eng_13', componentBId: 'NONE', catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 1000 }, description: 'Вращение в 4-х измерениях.' },
+  { id: 'fus_eng_15', resultId: 'eng_15', componentAId: 'eng_14', componentBId: 'NONE', catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 5000 }, description: 'Чистая воля как топливо.', condition: { type: 'ZERO_HEAT', target: 30, description: 'Температура 0% (30 сек)' } },
+  { id: 'fuse_eng_13', componentAId: 'eng_11', componentBId: 'eng_12', resultId: 'fus_eng_13', catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 500 }, description: { RU: 'Стабилизация нулевой точки.', EN: 'Zero point stabilization.' } },
+  { id: 'fuse_eng_14', componentAId: 'fus_eng_13', componentBId: 'eng_12', resultId: 'fus_eng_14', catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 1500 }, description: { RU: 'Суперпозиция вращения.', EN: 'Rotation superposition.' } },
+  { id: 'fuse_eng_15', componentAId: 'fus_eng_14', componentBId: 'fus_eng_13', resultId: 'fus_eng_15', catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 5000 }, description: { RU: 'ПЕРВОДВИГАТЕЛЬ.', EN: 'PRIME MOVER.' } },
 
   // COOLERS
-  { id: 'fuse_cool_13', componentAId: 'cool_11', componentBId: 'cool_12', resultId: 'cool_13', catalyst: { resource: 'ancientTech', amount: 500 }, description: { RU: 'Остановка энтропии.', EN: 'Stopping entropy.' } },
-  { id: 'fuse_cool_14', componentAId: 'cool_13', componentBId: 'cool_12', resultId: 'cool_14', catalyst: { resource: 'ancientTech', amount: 1500 }, description: { RU: 'Сердце замерзшей звезды.', EN: 'Heart of a frozen star.' } },
-  { id: 'fuse_cool_15', componentAId: 'cool_14', componentBId: 'cool_13', resultId: 'cool_15', catalyst: { resource: 'ancientTech', amount: 5000 }, description: { RU: 'ХЛАД ВСЕЛЕННОЙ.', EN: 'COLD OF THE UNIVERSE.' } },
+  { id: 'fuse_cool_13', componentAId: 'cool_11', componentBId: 'cool_12', resultId: 'cool_13', catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 500 }, description: { RU: 'Остановка энтропии.', EN: 'Stopping entropy.' } },
+  { id: 'fuse_cool_14', componentAId: 'cool_13', componentBId: 'cool_12', resultId: 'cool_14', catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 1500 }, description: { RU: 'Сердце замерзшей звезды.', EN: 'Heart of a frozen star.' } },
+  { id: 'fuse_cool_15', componentAId: 'cool_14', componentBId: 'cool_13', resultId: 'cool_15', catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 5000 }, description: { RU: 'ХЛАД ВСЕЛЕННОЙ.', EN: 'COLD OF THE UNIVERSE.' } },
 
   // HULLS
-  { id: 'fuse_hull_13', componentAId: 'hull_11', componentBId: 'hull_12', resultId: 'hull_13', catalyst: { resource: 'ancientTech', amount: 1000 }, description: { RU: 'Создание Ковчега.', EN: 'Creating the Ark.' } },
-  { id: 'fuse_hull_14', componentAId: 'hull_13', componentBId: 'hull_12', resultId: 'hull_14', catalyst: { resource: 'ancientTech', amount: 2500 }, description: { RU: 'Формирование оболочки.', EN: 'Shell formation.' } },
-  { id: 'fuse_hull_15', componentAId: 'hull_14', componentBId: 'hull_13', resultId: 'hull_15', catalyst: { resource: 'ancientTech', amount: 10000 }, description: { RU: 'НЕУЯЗВИМОСТЬ.', EN: 'INVULNERABILITY.' } },
+  { id: 'fuse_hull_13', componentAId: 'hull_11', componentBId: 'hull_12', resultId: 'hull_13', catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 1000 }, description: { RU: 'Создание Ковчега.', EN: 'Creating the Ark.' } },
+  { id: 'fuse_hull_14', componentAId: 'hull_13', componentBId: 'hull_12', resultId: 'hull_14', catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 2500 }, description: { RU: 'Формирование оболочки.', EN: 'Shell formation.' } },
+  { id: 'fuse_hull_15', componentAId: 'hull_14', componentBId: 'hull_13', resultId: 'hull_15', catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 10000 }, description: { RU: 'НЕУЯЗВИМОСТЬ.', EN: 'INVULNERABILITY.' } },
   // LOGIC
-  { id: 'fus_cpu_13', resultId: 'cpu_13', componentAId: 'cpu_12', componentBId: 'NONE', catalyst: { resource: 'ancientTech', amount: 500 }, description: { RU: 'Доминация над вероятностями.', EN: 'Domination over probabilities.' } },
-  { id: 'fus_cpu_14', resultId: 'cpu_14', componentAId: 'cpu_13', componentBId: 'NONE', catalyst: { resource: 'ancientTech', amount: 1000 }, description: { RU: 'Братский код вселенной.', EN: 'Brotherly code of the universe.' } },
-  { id: 'fus_cpu_15', resultId: 'cpu_15', componentAId: 'cpu_14', componentBId: 'NONE', catalyst: { resource: 'ancientTech', amount: 5000 }, description: { RU: 'Архитектура бога.', EN: 'Architecture of God.' }, condition: { type: 'ZERO_HEAT', target: 60, description: 'Температура 0% (60 сек)' } },
+  { id: 'fus_cpu_13', resultId: 'cpu_13', componentAId: 'cpu_12', componentBId: 'NONE', catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 500 }, description: { RU: 'Доминация над вероятностями.', EN: 'Domination over probabilities.' } },
+  { id: 'fus_cpu_14', resultId: 'cpu_14', componentAId: 'cpu_13', componentBId: 'NONE', catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 1000 }, description: { RU: 'Братский код вселенной.', EN: 'Brotherly code of the universe.' } },
+  { id: 'fus_cpu_15', resultId: 'cpu_15', componentAId: 'cpu_14', componentBId: 'NONE', catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 5000 }, description: { RU: 'Архитектура бога.', EN: 'Architecture of God.' }, condition: { type: 'ZERO_HEAT', target: 60, description: 'Температура 0% (60 сек)' } },
   // CONTROL
-  { id: 'fus_ctrl_13', resultId: 'ctrl_13', componentAId: 'ctrl_12', componentBId: 'NONE', catalyst: { resource: 'ancientTech', amount: 500 }, description: { RU: 'Полный симбиоз с машиной.', EN: 'Full symbiosis with the machine.' } },
-  { id: 'fus_ctrl_14', resultId: 'ctrl_14', componentAId: 'ctrl_13', componentBId: 'NONE', catalyst: { resource: 'ancientTech', amount: 1000 }, description: { RU: 'Душа стала кодом.', EN: 'The soul became code.' } },
-  { id: 'fus_ctrl_15', resultId: 'ctrl_15', componentAId: 'ctrl_14', componentBId: 'NONE', catalyst: { resource: 'ancientTech', amount: 5000 }, description: { RU: 'Мысль материальна.', EN: 'Thought is material.' } },
+  { id: 'fus_ctrl_13', resultId: 'ctrl_13', componentAId: 'ctrl_12', componentBId: 'NONE', catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 500 }, description: { RU: 'Полный симбиоз с машиной.', EN: 'Full symbiosis with the machine.' } },
+  { id: 'fus_ctrl_14', resultId: 'ctrl_14', componentAId: 'ctrl_13', componentBId: 'NONE', catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 1000 }, description: { RU: 'Душа стала кодом.', EN: 'The soul became code.' } },
+  { id: 'fus_ctrl_15', resultId: 'ctrl_15', componentAId: 'ctrl_14', componentBId: 'NONE', catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 5000 }, description: { RU: 'Мысль материальна.', EN: 'Thought is material.' } },
   // GEARBOXES
-  { id: 'fus_gear_13', resultId: 'gear_13', componentAId: 'gear_12', componentBId: 'NONE', catalyst: { resource: 'ancientTech', amount: 500 }, description: { RU: 'Разрыв межатомных связей.', EN: 'Breaking interatomic bonds.' } },
-  { id: 'fus_gear_14', resultId: 'gear_14', componentAId: 'gear_13', componentBId: 'NONE', catalyst: { resource: 'ancientTech', amount: 1000 }, description: { RU: 'Сопротивление бесполезно.', EN: 'Resistance is useless.' }, condition: { type: 'DEPTH_REACHED', target: 10000, description: 'Глубина > 10,000м' } },
-  { id: 'fus_gear_15', resultId: 'gear_15', componentAId: 'gear_14', componentBId: 'NONE', catalyst: { resource: 'ancientTech', amount: 5000 }, description: { RU: 'Тяга черной дыры.', EN: 'Black hole thrust.' }, condition: { type: 'DEPTH_REACHED', target: 40000, description: 'Глубина > 40,000м' } },
+  { id: 'fus_gear_13', resultId: 'gear_13', componentAId: 'gear_12', componentBId: 'NONE', catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 500 }, description: { RU: 'Разрыв межатомных связей.', EN: 'Breaking interatomic bonds.' } },
+  { id: 'fus_gear_14', resultId: 'gear_14', componentAId: 'gear_13', componentBId: 'NONE', catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 1000 }, description: { RU: 'Сопротивление бесполезно.', EN: 'Resistance is useless.' }, condition: { type: 'DEPTH_REACHED', target: 10000, description: 'Глубина > 10,000м' } },
+  { id: 'fus_gear_15', resultId: 'gear_15', componentAId: 'gear_14', componentBId: 'NONE', catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 5000 }, description: { RU: 'Тяга черной дыры.', EN: 'Black hole thrust.' }, condition: { type: 'DEPTH_REACHED', target: 40000, description: 'Глубина > 40,000м' } },
   // POWER
-  { id: 'fus_pwr_13', resultId: 'pwr_13', componentAId: 'pwr_12', componentBId: 'NONE', catalyst: { resource: 'ancientTech', amount: 500 }, description: { RU: 'Энергия самой Пустоты.', EN: 'Energy of the Void itself.' } },
-  { id: 'fus_pwr_14', resultId: 'pwr_14', componentAId: 'pwr_13', componentBId: 'NONE', catalyst: { resource: 'ancientTech', amount: 1000 }, description: { RU: 'Дыхание рождающейся вселенной.', EN: 'Breath of the nascent universe.' } },
-  { id: 'fus_pwr_15', resultId: 'pwr_15', componentAId: 'pwr_14', componentBId: 'NONE', catalyst: { resource: 'ancientTech', amount: 5000 }, description: { RU: 'Вечный двигатель первого рода.', EN: 'Perpetual motion machine of the first kind.' } },
+  { id: 'fus_pwr_13', resultId: 'pwr_13', componentAId: 'pwr_12', componentBId: 'NONE', catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 500 }, description: { RU: 'Энергия самой Пустоты.', EN: 'Energy of the Void itself.' } },
+  { id: 'fus_pwr_14', resultId: 'pwr_14', componentAId: 'pwr_13', componentBId: 'NONE', catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 1000 }, description: { RU: 'Дыхание рождающейся вселенной.', EN: 'Breath of the nascent universe.' } },
+  { id: 'fus_pwr_15', resultId: 'pwr_15', componentAId: 'pwr_14', componentBId: 'NONE', catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 5000 }, description: { RU: 'Вечный двигатель первого рода.', EN: 'Perpetual motion machine of the first kind.' } },
   // ARMOR
-  { id: 'fus_arm_13', resultId: 'arm_13', componentAId: 'arm_12', componentBId: 'NONE', catalyst: { resource: 'ancientTech', amount: 500 }, description: { RU: 'Абсолютная защита.', EN: 'Absolute defense.' } },
-  { id: 'fus_arm_14', resultId: 'arm_14', componentAId: 'arm_13', componentBId: 'NONE', catalyst: { resource: 'ancientTech', amount: 1000 }, description: { RU: 'Фрактальное поглощение урона.', EN: 'Fractal damage absorption.' }, condition: { type: 'NO_DAMAGE', target: 100, description: 'Целостность 100%' } },
-  { id: 'fus_arm_15', resultId: 'arm_15', componentAId: 'arm_14', componentBId: 'NONE', catalyst: { resource: 'ancientTech', amount: 5000 }, description: { RU: 'Божественная неуязвимость.', EN: 'Divine invulnerability.' }, condition: { type: 'NO_DAMAGE', target: 100, description: 'Целостность 100%' } },
+  { id: 'fus_arm_13', resultId: 'arm_13', componentAId: 'arm_12', componentBId: 'NONE', catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 500 }, description: { RU: 'Абсолютная защита.', EN: 'Absolute defense.' } },
+  { id: 'fus_arm_14', resultId: 'arm_14', componentAId: 'arm_13', componentBId: 'NONE', catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 1000 }, description: { RU: 'Фрактальное поглощение урона.', EN: 'Fractal damage absorption.' }, condition: { type: 'NO_DAMAGE', target: 100, description: 'Целостность 100%' } },
+  { id: 'fus_arm_15', resultId: 'arm_15', componentAId: 'arm_14', componentBId: 'NONE', catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 5000 }, description: { RU: 'Божественная неуязвимость.', EN: 'Divine invulnerability.' }, condition: { type: 'NO_DAMAGE', target: 100, description: 'Целостность 100%' } },
   // CARGO BAYS
-  { id: 'fus_cargo_13', resultId: 'cargo_13', componentAId: 'cargo_12', componentBId: 'NONE', catalyst: { resource: 'ancientTech', amount: 1000 }, description: { RU: 'Сжатие пространства до атома.', EN: 'Compression of space to an atom.' } },
-  { id: 'fus_cargo_14', resultId: 'cargo_14', componentAId: 'cargo_13', componentBId: 'NONE', catalyst: { resource: 'ancientTech', amount: 3000 }, description: { RU: 'Черная дыра для ваших ресурсов.', EN: 'A black hole for your resources.' } },
-  { id: 'fus_cargo_15', resultId: 'cargo_15', componentAId: 'cargo_14', componentBId: 'NONE', catalyst: { resource: 'ancientTech', amount: 8000 }, description: { RU: 'Вечность внутри маленькой коробки.', EN: 'Eternity inside a small box.' } }
+  { id: 'fus_cargo_13', resultId: 'cargo_13', componentAId: 'cargo_12', componentBId: 'NONE', catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 1000 }, description: { RU: 'Сжатие пространства до атома.', EN: 'Compression of space to an atom.' } },
+  { id: 'fus_cargo_14', resultId: 'cargo_14', componentAId: 'cargo_13', componentBId: 'NONE', catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 3000 }, description: { RU: 'Черная дыра для ваших ресурсов.', EN: 'A black hole for your resources.' } },
+  { id: 'fus_cargo_15', resultId: 'cargo_15', componentAId: 'cargo_14', componentBId: 'NONE', catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 8000 }, description: { RU: 'Вечность внутри маленькой коробки.', EN: 'Eternity inside a small box.' } }
 ];
 
 export const DRONES: DroneDefinition[] = [

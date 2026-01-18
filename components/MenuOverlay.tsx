@@ -3,6 +3,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useGameStore } from '../store/gameStore';
 import { t, TEXT_IDS } from '../services/localization';
+import { audioEngine } from '../services/audioEngine';
 
 interface MenuOverlayProps {
     isOpen: boolean;
@@ -16,6 +17,7 @@ const MenuOverlay: React.FC<MenuOverlayProps> = ({ isOpen, onClose, onOpenSettin
     const lang = useGameStore(s => s.settings.language);
 
     const handleExit = () => {
+        audioEngine.playUIPanelClose();
         onClose();
         exitToMenu();
     };
@@ -23,13 +25,13 @@ const MenuOverlay: React.FC<MenuOverlayProps> = ({ isOpen, onClose, onOpenSettin
     return (
         <AnimatePresence>
             {isOpen && (
-                <motion.div 
+                <motion.div
                     className="fixed inset-0 z-[80] flex items-center justify-center bg-black/90 backdrop-blur-md"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                 >
-                    <motion.div 
+                    <motion.div
                         className="w-64 flex flex-col gap-4 p-6 border-2 border-zinc-800 bg-zinc-950 relative overflow-hidden"
                         initial={{ scale: 0.9, y: 20 }}
                         animate={{ scale: 1, y: 0 }}
@@ -42,21 +44,21 @@ const MenuOverlay: React.FC<MenuOverlayProps> = ({ isOpen, onClose, onOpenSettin
                             <p className="text-[10px] text-zinc-600 font-mono">SYSTEM INTERRUPT</p>
                         </div>
 
-                        <button 
-                            onClick={onClose}
+                        <button
+                            onClick={() => { audioEngine.playUIPanelClose(); onClose(); }}
                             className="w-full py-3 bg-white text-black font-black pixel-text text-sm hover:bg-cyan-400 transition-colors"
                         >
                             RESUME
                         </button>
 
-                        <button 
+                        <button
                             onClick={() => { onClose(); onOpenSettings(); }}
                             className="w-full py-3 border border-zinc-700 text-zinc-300 font-bold font-mono text-xs hover:border-white hover:text-white transition-colors"
                         >
                             {t(TEXT_IDS.SETTINGS_BUTTON, lang)}
                         </button>
 
-                        <button 
+                        <button
                             onClick={() => { onClose(); onOpenHelp(); }}
                             className="w-full py-3 border border-zinc-700 text-zinc-300 font-bold font-mono text-xs hover:border-white hover:text-white transition-colors"
                         >
@@ -65,7 +67,7 @@ const MenuOverlay: React.FC<MenuOverlayProps> = ({ isOpen, onClose, onOpenSettin
 
                         <div className="h-px bg-zinc-800 my-2" />
 
-                        <button 
+                        <button
                             onClick={handleExit}
                             className="w-full py-3 border border-red-900/50 text-red-600 font-bold font-mono text-xs hover:bg-red-950/30 hover:border-red-600 transition-colors"
                         >

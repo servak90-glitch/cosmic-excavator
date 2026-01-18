@@ -25,25 +25,25 @@ const FUEL_CONSUMPTION_RATE = 0.01;
  * Эффективность топлива (как долго 1 единица топлива работает)
  * Чем выше значение, тем МЕНЬШЕ расходуется топлива
  */
-const FUEL_EFFICIENCY: Record<string, number> = {
-    coal: 1.0,  // Базовая эффективность
-    oil: 1.5,   // На 50% эффективнее угля
-    gas: 2.0,   // В 2 раза эффективнее угля
+const FUEL_EFFICIENCY: Partial<Record<ResourceType, number>> = {
+    [ResourceType.COAL]: 1.0,  // Базовая эффективность
+    [ResourceType.OIL]: 1.5,   // На 50% эффективнее угля
+    [ResourceType.GAS]: 2.0,   // В 2 раза эффективнее угля
 };
 
 /**
  * Выбор лучшего доступного топлива (приоритет: gas > oil > coal)
  * Возвращает { fuelType, efficiency } или null если топливо закончилось
  */
-function selectBestAvailableFuel(resources: Resources): { fuelType: keyof Resources; efficiency: number } | null {
-    if (resources.gas > 0) {
-        return { fuelType: 'gas', efficiency: FUEL_EFFICIENCY.gas };
+function selectBestAvailableFuel(resources: Resources): { fuelType: ResourceType; efficiency: number } | null {
+    if (resources[ResourceType.GAS] > 0) {
+        return { fuelType: ResourceType.GAS, efficiency: FUEL_EFFICIENCY[ResourceType.GAS]! };
     }
-    if (resources.oil > 0) {
-        return { fuelType: 'oil', efficiency: FUEL_EFFICIENCY.oil };
+    if (resources[ResourceType.OIL] > 0) {
+        return { fuelType: ResourceType.OIL, efficiency: FUEL_EFFICIENCY[ResourceType.OIL]! };
     }
-    if (resources.coal > 0) {
-        return { fuelType: 'coal', efficiency: FUEL_EFFICIENCY.coal };
+    if (resources[ResourceType.COAL] > 0) {
+        return { fuelType: ResourceType.COAL, efficiency: FUEL_EFFICIENCY[ResourceType.COAL]! };
     }
     return null; // Топливо закончилось
 }

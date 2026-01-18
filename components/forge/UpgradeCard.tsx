@@ -3,6 +3,7 @@ import { UpgradeCardProps } from './types';
 import { Resources } from '../../types';
 import { useGameStore } from '../../store/gameStore';
 import { t } from '../../services/localization';
+import { audioEngine } from '../../services/audioEngine';
 
 
 /**
@@ -68,7 +69,10 @@ const UpgradeCard: React.FC<UpgradeCardProps> = ({ title, current, next, type, r
 
             <button
                 disabled={!canAfford}
-                onClick={() => onBuy(type)}
+                onClick={() => {
+                    onBuy(type);
+                    audioEngine.playBaseBuild(next.id as any);
+                }}
                 className={`w-full py-2 md:py-3 text-[10px] md:text-xs font-bold pixel-text transition-all border active:scale-95
             ${isFusionLocked
                         ? 'bg-zinc-950 border-purple-900/50 text-zinc-600 cursor-not-allowed opacity-50'

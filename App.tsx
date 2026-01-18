@@ -170,6 +170,10 @@ const App: React.FC = () => {
                     if (e.sfx === 'LOG') audioEngine.playLog();
                     if (e.sfx === 'GLITCH') audioEngine.playGlitch();
                     if (e.sfx === 'ACHIEVEMENT') audioEngine.playAchievement();
+                    if (e.sfx === 'RAID_ALARM') audioEngine.playRaidAlarm();
+                    if (e.sfx === 'RAID_SUCCESS') audioEngine.playRaidRepelled();
+                    if (e.sfx === 'RAID_FAILURE') audioEngine.playRaidBreeched();
+                    if (e.sfx === 'MARKET_TRADE') audioEngine.playMarketTrade();
                 }
             });
         }, 100);
@@ -177,7 +181,7 @@ const App: React.FC = () => {
     }, [isGameActive, tick, addLog]);
 
     const handleInitClick = async () => {
-        try { await audioEngine.init(settings.musicVolume, settings.sfxVolume, settings.musicMuted, settings.sfxMuted); } catch (e) { console.warn(e); }
+        try { await audioEngine.init(settings.musicVolume, settings.sfxVolume, settings.drillVolume, settings.musicMuted, settings.sfxMuted, settings.drillMuted); } catch (e) { console.warn(e); }
 
         const hasSeenDisclaimer = localStorage.getItem('HAS_SEEN_HARDCORE_DISCLAIMER');
 
@@ -272,6 +276,7 @@ const App: React.FC = () => {
                             ref={pixiOverlayRef}
                             onObjectClick={clickFlyingObject}
                             onDrillClick={() => { }}
+                            visualEffect={visualEffect}
                         />
                         <DrillRenderer />
                     </div>
@@ -283,6 +288,7 @@ const App: React.FC = () => {
                             ref={pixiOverlayRef}
                             onObjectClick={clickFlyingObject}
                             onDrillClick={() => { }}
+                            visualEffect={visualEffect}
                         />
                         <BossRenderer
                             isHit={bossHitEffect}

@@ -1,5 +1,5 @@
 import { useGameStore } from '../store/gameStore';
-import { DrillSlot, RegionId } from '../types';
+import { DrillSlot, RegionId, ResourceType } from '../types';
 import { calculateStats } from '../services/gameMath';
 import { REGIONS } from '../constants/regions';
 import { calculateDistance, getRegionColor, getZoneColorEmoji } from '../services/regionMath';
@@ -48,7 +48,7 @@ export const GlobalMapView = () => {
     const maxCapacity = stats.totalCargoCapacity;
 
     const [selectedRegion, setSelectedRegion] = useState<RegionId | null>(null);
-    const [selectedFuel, setSelectedFuel] = useState<FuelType>('coal');
+    const [selectedFuel, setSelectedFuel] = useState<FuelType>(ResourceType.COAL);
     const [activeTab, setActiveTab] = useState<TabType>('map');
 
     const activePerks = useMemo(() => getActivePerkIds(reputation), [reputation]);
@@ -74,6 +74,7 @@ export const GlobalMapView = () => {
     const handleTravel = () => {
         if (selectedRegion && selectedRegion !== currentRegion) {
             travelToRegion(selectedRegion, selectedFuel);
+            audioEngine.playTravelStart();
         }
     };
 

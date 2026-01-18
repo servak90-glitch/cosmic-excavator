@@ -13,34 +13,34 @@ import { ResourceType } from '../types';
  * Формула: actualDistance = baseDistance / efficiency
  * Пример: 1000 единиц пути с oil (×1.5) = 667 единиц топлива
  */
-export const FUEL_EFFICIENCY: Record<ResourceType, number> = {
+export const FUEL_EFFICIENCY: Partial<Record<ResourceType, number>> = {
     // Углеводороды (MVP)
-    coal: 1.0,      // Базовая эффективность
-    oil: 1.5,       // +50% дальность
-    gas: 2.0,       // +100% дальность (самый чистый)
+    [ResourceType.COAL]: 1.0,      // Базовая эффективность
+    [ResourceType.OIL]: 1.5,       // +50% дальность
+    [ResourceType.GAS]: 2.0,       // +100% дальность (самый чистый)
 
     // Ядерное топливо (уже есть в игре)
-    uranium: 5.0,   // ×5 дальность
+    [ResourceType.URANIUM]: 5.0,   // ×5 дальность
 
     // Остальные ресурсы не используются как топливо
-    clay: 0,
-    stone: 0,
-    copper: 0,
-    iron: 0,
-    silver: 0,
-    gold: 0,
-    titanium: 0,
-    nanoSwarm: 0,
-    ancientTech: 0,
-    rubies: 0,
-    emeralds: 0,
-    diamonds: 0
+    [ResourceType.CLAY]: 0,
+    [ResourceType.STONE]: 0,
+    [ResourceType.COPPER]: 0,
+    [ResourceType.IRON]: 0,
+    [ResourceType.SILVER]: 0,
+    [ResourceType.GOLD]: 0,
+    [ResourceType.TITANIUM]: 0,
+    [ResourceType.NANO_SWARM]: 0,
+    [ResourceType.ANCIENT_TECH]: 0,
+    [ResourceType.RUBIES]: 0,
+    [ResourceType.EMERALDS]: 0,
+    [ResourceType.DIAMONDS]: 0
 };
 
 /**
  * Список доступных видов топлива для UI dropdown
  */
-export const FUEL_TYPES = ['coal', 'oil', 'gas', 'uranium'] as const;
+export const FUEL_TYPES = [ResourceType.COAL, ResourceType.OIL, ResourceType.GAS, ResourceType.URANIUM] as const;
 export type FuelType = typeof FUEL_TYPES[number];
 
 /**

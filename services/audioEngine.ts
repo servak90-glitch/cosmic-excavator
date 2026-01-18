@@ -58,6 +58,7 @@ export class AudioEngine {
   private masterBus: GainNode | null = null;
   private musicBus: GainNode | null = null;
   private sfxBus: GainNode | null = null;
+  private drillBus: GainNode | null = null;
 
   // Dynamics Processing (Fixes Crackling/Clipping)
   private compressor: DynamicsCompressorNode | null = null;
@@ -77,6 +78,7 @@ export class AudioEngine {
   private drillFilter: BiquadFilterNode | null = null;
   private drillGain: GainNode | null = null;
   private drillOsc: OscillatorNode | null = null;
+  private motorGain: GainNode | null = null;
 
   // Steam (Overheat) Nodes
   private steamNoise: AudioBufferSourceNode | null = null;
@@ -104,6 +106,7 @@ export class AudioEngine {
   private lastHeat: number = 0;
   private lfoPhase: number = 0;
   private drillMaterial: 'rock' | 'crystal' | 'metal' = 'rock';
+  private overheatStartTime: number | null = null;
 
   // Modulation Nodes
   private droneLFO_L: OscillatorNode | null = null;
@@ -121,6 +124,9 @@ export class AudioEngine {
   // Steam Turbulence
   private steamModulator: OscillatorNode | null = null;
   private steamModGain: GainNode | null = null;
+
+  // CD System (Anti-Spam)
+  private sfxCooldowns: Map<string, number> = new Map();
 
   public get isReady(): boolean {
     return this._isReady && !!this.ctx && this.ctx.state === 'running';
@@ -143,7 +149,7 @@ export class AudioEngine {
     }
   }
 
-  async init(initialMusicVol: number = 0.5, initialSfxVol: number = 0.5, musicMuted: boolean = false, sfxMuted: boolean = false) {
+  async init(initialMusicVol: number = 0.5, initialSfxVol: number = 0.5, initialDrillVol: number = 0.5, musicMuted: boolean = false, sfxMuted: boolean = false, drillMuted: boolean = false) {
     if (this.ctx) {
       if (this.ctx.state === 'suspended') await this.ctx.resume();
       this.setMusicVolume(musicMuted ? 0 : initialMusicVol);
@@ -155,14 +161,12 @@ export class AudioEngine {
     this.ctx = new AudioContextClass();
     if (!this.ctx) return;
 
-    // --- 0. Dynamics Compressor (CRITICAL FIX FOR CRACKLING) ---
-    // Prevents the signal from exceeding 0dB which causes clipping/crackling
     this.compressor = this.ctx.createDynamicsCompressor();
-    this.compressor.threshold.value = -10; // Start compressing at -10dB
-    this.compressor.knee.value = 30; // Smooth transition
-    this.compressor.ratio.value = 12; // High compression ratio to act as a limiter
-    this.compressor.attack.value = 0.003; // Fast attack
-    this.compressor.release.value = 0.25;
+    this.compressor.threshold.value = -12; // Порог чуть ниже для запаса
+    this.compressor.knee.value = 40;       // Более мягкое колено
+    this.compressor.ratio.value = 20;      // Жесткое лимитирование (20:1)
+    this.compressor.attack.value = 0.001;  // Мгновенная атака
+    this.compressor.release.value = 0.5;   // Плавное восстановление
     this.compressor.connect(this.ctx.destination);
 
     // --- 1. Master Bus Structure ---
@@ -217,6 +221,10 @@ export class AudioEngine {
     this.sfxBus = this.ctx.createGain(); // Dry
     this.sfxBus.connect(this.masterBus);
 
+    // Drill & Motor Bus
+    this.drillBus = this.ctx.createGain();
+    this.drillBus.connect(this.masterBus);
+
     this.sfxReverbBus = this.ctx.createGain(); // Wet Reverb Send
     this.sfxReverbBus.connect(this.reverbNode);
 
@@ -226,6 +234,7 @@ export class AudioEngine {
     // Set initial volumes
     this.setMusicVolume(musicMuted ? 0 : initialMusicVol);
     this.setSfxVolume(sfxMuted ? 0 : initialSfxVol);
+    this.setDrillVolume(drillMuted ? 0 : initialDrillVol);
 
     // --- 4. Synths ---
     this.initDrillSound();
@@ -266,7 +275,67 @@ export class AudioEngine {
     if (this.sfxDelayBus) this.sfxDelayBus.gain.setTargetAtTime(vol, t, 0.1);
   }
 
+  setDrillVolume(vol: number) {
+    if (!this.ctx || !this.drillBus) return;
+    const t = this.ctx.currentTime;
+    this.drillBus.gain.setTargetAtTime(vol, t, 0.1);
+  }
+
+  // --- CD SYSTEM ---
+  private checkCooldown(id: string, ms: number = 80): boolean {
+    const now = Date.now();
+    const last = this.sfxCooldowns.get(id) || 0;
+    if (now - last < ms) return false;
+    this.sfxCooldowns.set(id, now);
+    return true;
+  }
+
   // --- HELPERS ---
+
+  /**
+   * Рассчитывает значение стереопанорамы (-1 до 1) на основе координаты X (0-100).
+   * 50 - центр экрана (0 панорама).
+   */
+  private getPanValue(x?: number): number {
+    if (x === undefined) return 0;
+    // x передается в пределах 0-100 (координаты системы игры)
+    // 0 -> -1.0, 50 -> 0.0, 100 -> 1.0
+    const pan = (x / 50) - 1;
+    return Math.max(-1, Math.min(1, pan));
+  }
+
+  /**
+   * Рассчитывает громкость в зависимости от расстояния до бура (центр: 50, 40).
+   * Возвращает множитель от 0.2 до 1.0.
+   */
+  private getDistanceVolume(x?: number, y?: number): number {
+    if (x === undefined || y === undefined) return 1.0;
+
+    // Центр бура в игровых координатах (0-100)
+    const centerX = 50;
+    const centerY = 40;
+
+    const dx = x - centerX;
+    const dy = y - centerY;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+
+    // Максимальное расстояние (углы) ~70. 
+    // На расстоянии 60 громкость падает до 30%
+    const falloff = 1 - Math.min(0.7, distance / 80);
+    return Math.max(0.3, falloff);
+  }
+
+  /**
+   * Creates a Panner node if pan is needed.
+   * Returns { panner, targetBus } where targetBus is the node to connect the source to.
+   */
+  private routeWithPan(pan: number, defaultBus: GainNode): { startNode: AudioNode; endNode: AudioNode } {
+    if (!this.ctx || pan === 0) return { startNode: defaultBus, endNode: defaultBus };
+    const panner = this.ctx.createStereoPanner();
+    panner.pan.value = pan;
+    panner.connect(defaultBus);
+    return { startNode: panner, endNode: defaultBus };
+  }
 
   private createImpulseResponse(duration: number, decay: number): AudioBuffer {
     const rate = this.ctx!.sampleRate;
@@ -350,10 +419,15 @@ export class AudioEngine {
     this.drillGain = this.ctx.createGain();
     this.drillGain.gain.value = 0;
 
+    this.motorGain = this.ctx.createGain();
+    this.motorGain.gain.value = 0;
+
     this.drillNoise.connect(this.drillFilter);
-    this.drillOsc.connect(this.drillFilter);
+    this.drillOsc.connect(this.motorGain);
+    this.motorGain.connect(this.drillBus!);
+
     this.drillFilter.connect(this.drillGain);
-    this.drillGain.connect(this.sfxBus);
+    this.drillGain.connect(this.drillBus!);
 
     this.drillNoise.start();
     this.drillOsc.start();
@@ -592,7 +666,7 @@ export class AudioEngine {
   }
 
 
-  update(heat: number, depth: number, isOverheated: boolean, isCombat: boolean = false, isBroken: boolean = false, resourceType?: ResourceType) {
+  update(heat: number, depth: number, isOverheated: boolean, isCombat: boolean = false, isBroken: boolean = false, resourceType?: ResourceType, isDrilling: boolean = false) {
     if (!this.ctx) return;
 
     const now = this.ctx.currentTime;
@@ -639,10 +713,14 @@ export class AudioEngine {
     }
 
     // --- 2. DRILL SYNTH (Physical Modeling) ---
-    if (this.drillFilter && this.drillOsc && this.drillGain && this.drillModGain) {
-      const targetGain = isOverheated || isBroken || isCombat ? 0 : Math.min(0.4, (heat / 100) * 0.5 + 0.05);
-      const actualGain = heat > 0 ? targetGain : 0;
-      this.drillGain.gain.setTargetAtTime(actualGain, now, 0.2);
+    if (this.drillFilter && this.drillOsc && this.drillGain && this.drillModGain && this.motorGain) {
+      // Motor background hum (proportional to heat/activity but always present if not broken)
+      const motorTarget = isBroken ? 0 : Math.min(0.2, (heat / 100) * 0.15 + 0.05);
+      this.motorGain.gain.setTargetAtTime(motorTarget, now, 0.5);
+
+      // Drilling friction noise (only when isDrilling is true)
+      const drillTarget = isDrilling && !isOverheated && !isBroken ? Math.min(0.4, (heat / 100) * 0.3 + 0.1) : 0;
+      this.drillGain.gain.setTargetAtTime(drillTarget, now, 0.3);
 
       let material: 'rock' | 'crystal' | 'metal' = 'rock';
       if (resourceType) {
@@ -676,8 +754,17 @@ export class AudioEngine {
 
     // --- 3. STEAM SYNTH (Turbulence) ---
     if (this.steamGain && this.steamFilter && this.steamModGain) {
+      if (isOverheated) {
+        if (this.overheatStartTime === null) this.overheatStartTime = Date.now();
+      } else {
+        this.overheatStartTime = null;
+      }
+
+      const overheatDuration = this.overheatStartTime ? (Date.now() - this.overheatStartTime) : 0;
+      const steamFadeOut = Math.max(0, 1.0 - (overheatDuration / 10000)); // Fades out over 10 seconds (10000ms)
+
       const coolingRate = Math.max(0, this.lastHeat - heat);
-      const steamTarget = isOverheated ? Math.min(0.8, (heat / 100) * 0.6 + (coolingRate * 0.05)) : 0;
+      const steamTarget = isOverheated ? Math.min(0.8, ((heat / 100) * 0.6 + (coolingRate * 0.05)) * steamFadeOut) : 0;
 
       this.steamGain.gain.setTargetAtTime(steamTarget, now, 0.1);
 
@@ -690,16 +777,27 @@ export class AudioEngine {
       }
     }
 
+    // --- 4. REVERB DEPTH (Dynamic Ambiance) ---
+    if (this.sfxReverbBus) {
+      // Increase reverb wetness with depth
+      const depthRatio = Math.min(1.0, depth / 50000);
+      const reverbWet = 0.3 + (depthRatio * 0.5); // 30% to 80% wet
+      this.sfxReverbBus.gain.setTargetAtTime(reverbWet, now, 1.0);
+    }
+
     this.lastHeat = heat;
   }
 
   // --- SFX API ---
 
-  playClick() {
-    if (!this.ctx || !this.sfxBus) return;
+  playClick(x?: number) {
+    if (!this.ctx || !this.sfxBus || !this.checkCooldown('click', 50)) return;
     const t = this.ctx.currentTime;
     const osc = this.ctx.createOscillator();
     const g = this.ctx.createGain();
+
+    const pan = this.getPanValue(x);
+    const { startNode } = this.routeWithPan(pan, this.sfxBus);
 
     osc.type = 'square';
     // [VARIATION] Slight pitch shift +/- 50 cents
@@ -712,7 +810,7 @@ export class AudioEngine {
     g.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
 
     osc.connect(g);
-    g.connect(this.sfxBus);
+    g.connect(startNode);
     osc.start();
     // Stop slightly after the ramp to prevent click
     osc.stop(t + 0.15);
@@ -720,6 +818,7 @@ export class AudioEngine {
     osc.onended = () => {
       osc.disconnect();
       g.disconnect();
+      if (startNode !== this.sfxBus) startNode.disconnect();
     };
   }
 
@@ -781,9 +880,13 @@ export class AudioEngine {
     };
   }
 
-  playLegendary() {
+  playLegendary(x?: number) {
     if (!this.ctx || !this.sfxBus || !this.sfxReverbBus) return;
     const now = this.ctx.currentTime;
+
+    const pan = this.getPanValue(x);
+    const { startNode } = this.routeWithPan(pan, this.sfxBus);
+
     [440, 554.37, 659.25, 830.61, 880].forEach((freq, i) => {
       const osc = this.ctx!.createOscillator();
       const g = this.ctx!.createGain();
@@ -795,8 +898,8 @@ export class AudioEngine {
       g.gain.exponentialRampToValueAtTime(0.001, now + i * 0.08 + 1.5);
 
       osc.connect(g);
-      g.connect(this.sfxBus!);
-      g.connect(this.sfxReverbBus!); // Wet Send
+      g.connect(startNode);
+      g.connect(this.sfxReverbBus!); // Wet Send (Global)
 
       osc.start(now + i * 0.08);
       osc.stop(now + i * 0.08 + 1.6);
@@ -806,11 +909,18 @@ export class AudioEngine {
         g.disconnect();
       };
     });
+
+    if (startNode !== this.sfxBus) {
+      setTimeout(() => startNode.disconnect(), 2000);
+    }
   }
 
-  playBossHit() {
+  playBossHit(x?: number) {
     if (!this.ctx || !this.sfxBus) return;
     const t = this.ctx.currentTime;
+
+    const pan = this.getPanValue(x);
+    const { startNode } = this.routeWithPan(pan, this.sfxBus);
 
     const noise = this.ctx.createBufferSource();
     noise.buffer = this.drillNoise?.buffer || this.createPinkNoise();
@@ -830,7 +940,7 @@ export class AudioEngine {
 
     noise.connect(noiseFilter);
     noiseFilter.connect(noiseGain);
-    noiseGain.connect(this.sfxBus);
+    noiseGain.connect(startNode);
 
     noise.start();
     noise.stop(t + 0.35);
@@ -839,27 +949,42 @@ export class AudioEngine {
       noise.disconnect();
       noiseFilter.disconnect();
       noiseGain.disconnect();
+      if (startNode !== this.sfxBus) startNode.disconnect();
     };
   }
 
-  playExplosion() {
+  playExplosion(x?: number) {
     if (!this.ctx || !this.sfxBus) return;
     const t = this.ctx.currentTime;
 
-    // 1. IMPACT (Kick)
+    const pan = this.getPanValue(x);
+    const { startNode } = this.routeWithPan(pan, this.sfxBus);
+
+    // 1. IMPACT (Kick + SUB)
     const osc = this.ctx.createOscillator();
     const oscGain = this.ctx.createGain();
 
     osc.type = 'triangle';
-    // Deep impact dropping pitch
+    // Deep impact dropping pitch from 120Hz to 20Hz
     osc.frequency.setValueAtTime(120, t);
-    osc.frequency.exponentialRampToValueAtTime(10, t + 0.4);
+    osc.frequency.exponentialRampToValueAtTime(20, t + 0.6);
 
-    oscGain.gain.setValueAtTime(1.0, t);
-    oscGain.gain.exponentialRampToValueAtTime(0.001, t + 0.4);
+    oscGain.gain.setValueAtTime(1.5, t); // Increased volume for "fatter" sound
+    oscGain.gain.exponentialRampToValueAtTime(0.001, t + 0.7);
 
     osc.connect(oscGain);
-    oscGain.connect(this.sfxBus);
+    oscGain.connect(startNode);
+
+    // 1b. SUB BOOM (Pure sine SUB)
+    const sub = this.ctx.createOscillator();
+    const subGain = this.ctx.createGain();
+    sub.type = 'sine';
+    sub.frequency.setValueAtTime(45, t); // Deep sub 45Hz
+    sub.frequency.exponentialRampToValueAtTime(25, t + 1.2); // Even deeper
+    subGain.gain.setValueAtTime(0.8, t); // Boosted sub
+    subGain.gain.exponentialRampToValueAtTime(0.001, t + 1.8);
+    sub.connect(subGain);
+    subGain.connect(startNode);
 
     // 2. RUMBLE (Pink Noise + Lowpass)
     const noise = this.ctx.createBufferSource();
@@ -867,46 +992,57 @@ export class AudioEngine {
 
     const noiseFilter = this.ctx.createBiquadFilter();
     noiseFilter.type = 'lowpass';
-    noiseFilter.frequency.setValueAtTime(400, t);
-    noiseFilter.frequency.linearRampToValueAtTime(100, t + 1.5); // Filter closes down
+    noiseFilter.frequency.setValueAtTime(600, t);
+    noiseFilter.frequency.exponentialRampToValueAtTime(40, t + 4.0); // Slower, deeper closure
 
     const noiseGain = this.ctx.createGain();
-    noiseGain.gain.setValueAtTime(0.8, t);
-    noiseGain.gain.exponentialRampToValueAtTime(0.001, t + 1.5); // Long tail
+    noiseGain.gain.setValueAtTime(1.0, t); // More rumble
+    noiseGain.gain.linearRampToValueAtTime(0.001, t + 4.5); // Very long tail
 
     noise.connect(noiseFilter);
     noiseFilter.connect(noiseGain);
-    noiseGain.connect(this.sfxBus);
+    noiseGain.connect(startNode);
 
     // 3. CRACKLE (High freq noise burst)
     const crackle = this.ctx.createBufferSource();
     crackle.buffer = this.createWhiteNoise();
     const crackleFilter = this.ctx.createBiquadFilter();
     crackleFilter.type = 'highpass';
-    crackleFilter.frequency.value = 1000;
+    crackleFilter.frequency.value = 2000;
 
     const crackleGain = this.ctx.createGain();
-    crackleGain.gain.setValueAtTime(0.3, t);
-    crackleGain.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
+    crackleGain.gain.setValueAtTime(0.4, t);
+    crackleGain.gain.exponentialRampToValueAtTime(0.001, t + 0.4);
 
     crackle.connect(crackleFilter);
     crackleFilter.connect(crackleGain);
-    crackleGain.connect(this.sfxBus);
+    crackleGain.connect(startNode);
 
     // START ALL
     osc.start(t);
-    osc.stop(t + 0.5);
+    osc.stop(t + 0.8);
+    sub.start(t);
+    sub.stop(t + 1.8);
     noise.start(t);
-    noise.stop(t + 2.0);
+    noise.stop(t + 4.5);
     crackle.start(t);
-    crackle.stop(t + 0.3);
+    crackle.stop(t + 0.5);
 
     // CLEANUP
     const cleanup = () => {
-      // Simple heuristic cleanup or fire-and-forget
-      // In a real engine, we'd track these nodes
+      osc.disconnect();
+      oscGain.disconnect();
+      sub.disconnect();
+      subGain.disconnect();
+      noise.disconnect();
+      noiseFilter.disconnect();
+      noiseGain.disconnect();
+      crackle.disconnect();
+      crackleFilter.disconnect();
+      crackleGain.disconnect();
+      if (startNode !== this.sfxBus) startNode.disconnect();
     };
-    setTimeout(cleanup, 2000);
+    setTimeout(cleanup, 5000);
   }
 
   playFusion() {
@@ -1031,17 +1167,22 @@ export class AudioEngine {
     });
   }
 
-  playGeodeCollect(rarity: string) {
+  playGeodeCollect(rarity: string, x?: number) {
     if (!this.ctx || !this.sfxBus) return;
     const t = this.ctx.currentTime;
 
+    const pan = this.getPanValue(x);
+    const distVol = this.getDistanceVolume(x, 40); // Y для жеод обычно в центре
+    const { startNode } = this.routeWithPan(pan, this.sfxBus);
+
     if (rarity === 'LEGENDARY') {
-      this.playLegendary();
+      this.playLegendary(x);
       return;
     }
 
     const g = this.ctx.createGain();
     const osc = this.ctx.createOscillator();
+    const baseVol = rarity === 'COMMON' ? 0.05 : 0.07;
 
     if (rarity === 'COMMON') {
       osc.type = 'sine';
@@ -1064,30 +1205,47 @@ export class AudioEngine {
         const gainNode = this.ctx!.createGain();
         o.type = 'sine';
         o.frequency.setValueAtTime(f, t + i * 0.05);
-        gainNode.gain.setValueAtTime(0.05, t + i * 0.05);
+        gainNode.gain.setValueAtTime(0.05 * distVol, t + i * 0.05);
         gainNode.gain.exponentialRampToValueAtTime(0.001, t + i * 0.05 + 0.3);
         o.connect(gainNode);
-        gainNode.connect(this.sfxBus!);
+        gainNode.connect(startNode);
         o.start(t + i * 0.05);
         o.stop(t + i * 0.05 + 0.35);
+
+        o.onended = () => {
+          o.disconnect();
+          gainNode.disconnect();
+          // We don't disconnect panner here as it's shared for this batch
+        };
       });
+      // Safety disconnect panner after longest sound
+      if (startNode !== this.sfxBus) {
+        setTimeout(() => startNode.disconnect(), 600);
+      }
       return;
     }
 
     osc.connect(g);
-    g.connect(this.sfxBus);
+    g.connect(startNode);
+    g.gain.setValueAtTime(baseVol * distVol, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.15);
     osc.start();
     osc.stop(t + 0.2);
 
     osc.onended = () => {
       osc.disconnect();
       g.disconnect();
+      if (startNode !== this.sfxBus) startNode.disconnect();
     };
   }
 
-  playSatelliteCollect() {
+  playSatelliteCollect(x?: number) {
     if (!this.ctx || !this.sfxBus) return;
     const t = this.ctx.currentTime;
+
+    const pan = this.getPanValue(x);
+    const { startNode } = this.routeWithPan(pan, this.sfxBus);
+
     const osc = this.ctx.createOscillator();
     const g = this.ctx.createGain();
 
@@ -1100,13 +1258,14 @@ export class AudioEngine {
     g.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
 
     osc.connect(g);
-    g.connect(this.sfxBus);
+    g.connect(startNode);
     osc.start();
     osc.stop(t + 0.25);
 
     osc.onended = () => {
       osc.disconnect();
       g.disconnect();
+      if (startNode !== this.sfxBus) startNode.disconnect();
     };
   }
 
@@ -1385,7 +1544,7 @@ export class AudioEngine {
     this.playAchievement();
   }
 
-  playBaseBuild() {
+  playBaseBuild(facilityId?: string) {
     if (!this.ctx || !this.sfxBus) return;
     const t = this.ctx.currentTime;
     for (let i = 0; i < 3; i++) {
@@ -1416,6 +1575,197 @@ export class AudioEngine {
     g.connect(this.sfxBus);
     osc.start();
     osc.stop(t + 0.15);
+  }
+
+  playUIPanelClose() {
+    if (!this.ctx || !this.sfxBus) return;
+    const t = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const g = this.ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(900, t);
+    osc.frequency.exponentialRampToValueAtTime(600, t + 0.05);
+    g.gain.setValueAtTime(0.04, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
+    osc.connect(g);
+    g.connect(this.sfxBus);
+    osc.start();
+    osc.stop(t + 0.15);
+  }
+
+  playUIError() {
+    if (!this.ctx || !this.sfxBus || !this.checkCooldown('error', 200)) return;
+    const t = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const g = this.ctx.createGain();
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(120, t);
+    osc.frequency.linearRampToValueAtTime(80, t + 0.15);
+    g.gain.setValueAtTime(0.1, t);
+    g.gain.linearRampToValueAtTime(0, t + 0.2);
+    osc.connect(g);
+    g.connect(this.sfxBus);
+    osc.start();
+    osc.stop(t + 0.25);
+  }
+
+  playMarketTrade() {
+    if (!this.ctx || !this.sfxBus || !this.sfxReverbBus) return;
+    const t = this.ctx.currentTime;
+
+    // "Coin" sounds (High frequencies)
+    [880, 1100, 1320].forEach((f, i) => {
+      const osc = this.ctx!.createOscillator();
+      const g = this.ctx!.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(f, t + i * 0.05);
+
+      g.gain.setValueAtTime(0, t + i * 0.05);
+      g.gain.linearRampToValueAtTime(0.05, t + i * 0.05 + 0.01);
+      g.gain.exponentialRampToValueAtTime(0.001, t + i * 0.05 + 0.2);
+
+      osc.connect(g);
+      g.connect(this.sfxBus!);
+      g.connect(this.sfxReverbBus!);
+
+      osc.start(t + i * 0.05);
+      osc.stop(t + i * 0.05 + 0.3);
+    });
+
+    // "Digital" confirmation (Slightly lower)
+    const osc2 = this.ctx.createOscillator();
+    const g2 = this.ctx.createGain();
+    osc2.type = 'triangle';
+    osc2.frequency.setValueAtTime(440, t + 0.1);
+    osc2.frequency.linearRampToValueAtTime(880, t + 0.15);
+
+    g2.gain.setValueAtTime(0, t + 0.1);
+    g2.gain.linearRampToValueAtTime(0.04, t + 0.12);
+    g2.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
+
+    osc2.connect(g2);
+    g2.connect(this.sfxBus);
+    osc2.start(t + 0.1);
+    osc2.stop(t + 0.35);
+  }
+
+  playCaravanActivity(type: 'send' | 'return') {
+    if (!this.ctx || !this.sfxBus) return;
+    const t = this.ctx.currentTime;
+
+    const osc = this.ctx.createOscillator();
+    const g = this.ctx.createGain();
+
+    if (type === 'send') {
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(50, t);
+      osc.frequency.exponentialRampToValueAtTime(200, t + 1.0);
+      g.gain.setValueAtTime(0, t);
+      g.gain.linearRampToValueAtTime(0.2, t + 0.5);
+      g.gain.linearRampToValueAtTime(0, t + 1.2);
+    } else {
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(200, t);
+      osc.frequency.exponentialRampToValueAtTime(50, t + 1.0);
+      g.gain.setValueAtTime(0, t);
+      g.gain.linearRampToValueAtTime(0.2, t + 0.2);
+      g.gain.linearRampToValueAtTime(0, t + 1.2);
+    }
+
+    osc.connect(g);
+    g.connect(this.sfxBus);
+    osc.start();
+    osc.stop(t + 1.3);
+  }
+
+  playCaravanSend() {
+    this.playCaravanActivity('send');
+  }
+
+  playCaravanReturn(success: boolean) {
+    this.playCaravanActivity('return');
+    if (success) {
+      // Add a small chime for success
+      this.playMarketTrade();
+    } else {
+      // Add a small glitch for loss
+      this.playGlitch();
+    }
+  }
+
+  playRaidAlarm() {
+    if (!this.ctx || !this.sfxBus || !this.sfxDelayBus) return;
+    const t = this.ctx.currentTime;
+
+    // Classic Two-tone Siren
+    for (let i = 0; i < 4; i++) {
+      const osc = this.ctx.createOscillator();
+      const g = this.ctx.createGain();
+      osc.type = 'sawtooth';
+      const startTime = t + i * 0.8;
+
+      osc.frequency.setValueAtTime(600, startTime);
+      osc.frequency.linearRampToValueAtTime(400, startTime + 0.4);
+
+      g.gain.setValueAtTime(0, startTime);
+      g.gain.linearRampToValueAtTime(0.15, startTime + 0.1);
+      g.gain.linearRampToValueAtTime(0, startTime + 0.6);
+
+      osc.connect(g);
+      g.connect(this.sfxBus);
+      g.connect(this.sfxDelayBus);
+
+      osc.start(startTime);
+      osc.stop(startTime + 0.7);
+    }
+  }
+
+  playRaidRepelled() {
+    if (!this.ctx || !this.sfxBus || !this.sfxReverbBus) return;
+    const t = this.ctx.currentTime;
+
+    // Victory flourish
+    [523.25, 659.25, 783.99, 1046.50].forEach((f, i) => {
+      const osc = this.ctx!.createOscillator();
+      const g = this.ctx!.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(f, t + i * 0.1);
+
+      g.gain.setValueAtTime(0, t + i * 0.1);
+      g.gain.linearRampToValueAtTime(0.15, t + i * 0.1 + 0.05);
+      g.gain.exponentialRampToValueAtTime(0.001, t + i * 0.1 + 0.8);
+
+      osc.connect(g);
+      g.connect(this.sfxBus!);
+      g.connect(this.sfxReverbBus!);
+
+      osc.start(t + i * 0.1);
+      osc.stop(t + i * 0.1 + 1.0);
+    });
+  }
+
+  playRaidBreeched() {
+    if (!this.ctx || !this.sfxBus) return;
+    const t = this.ctx.currentTime;
+
+    // Low, ominous impact
+    const osc = this.ctx.createOscillator();
+    const g = this.ctx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(80, t);
+    osc.frequency.linearRampToValueAtTime(40, t + 1.0);
+
+    g.gain.setValueAtTime(0.3, t);
+    g.gain.linearRampToValueAtTime(0, t + 1.2);
+
+    osc.connect(g);
+    g.connect(this.sfxBus);
+
+    osc.start();
+    osc.stop(t + 1.3);
+
+    // Glitchy overlay
+    this.playGlitch();
   }
 
   playUITabSwitch() {

@@ -8,7 +8,7 @@
  * - Обработка новых полей (instantResource, caravanEffect, baseEffect)
  */
 
-import { GameState, VisualEvent, GameEvent, EventTrigger } from '../../types';
+import { GameState, VisualEvent, GameEvent, EventTrigger, Resources } from '../../types';
 import { rollRandomEvent } from '../eventRegistry';
 import { calculateStats } from '../gameMath';
 import { poissonProbability, normalDistribution } from '../mathUtils';
@@ -24,6 +24,7 @@ export interface EventUpdate {
     depth?: number;
     xp?: number;
     heat?: number;
+    resourceChanges?: Partial<Resources>;
 }
 
 /**
@@ -230,7 +231,11 @@ export function processEvents(state: GameState, stats: ReturnType<typeof calcula
                         );
                     }
 
-                    // TODO: добавить ресурс в state.resources через resourceChanges
+                    // Начисление ресурса в state.resources через resourceChanges
+                    const resType = resource.type.toLowerCase() as keyof Resources;
+                    if (!updates.resourceChanges) updates.resourceChanges = {};
+                    updates.resourceChanges[resType] = (updates.resourceChanges[resType] || 0) + Math.floor(amount);
+
                     visualEvents.push({
                         type: 'LOG',
                         msg: `>> ДОБЫЧА: +${Math.floor(amount)} ${resource.type.toUpperCase()}`,

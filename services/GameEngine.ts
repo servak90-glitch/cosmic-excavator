@@ -30,6 +30,8 @@ import { processDrones, processRegeneration } from './systems/DroneSystem';
 import { tunnelAtmosphere } from './systems/TunnelAtmosphere';
 import { abilitySystem } from './systems/AbilitySystem';
 import { expeditionSystem } from './systems/ExpeditionSystem';
+import { raidSystem } from './systems/RaidSystem';
+import { EventTrigger } from '../types';
 
 export class GameEngine {
     tick(state: GameState, dt: number): { partialState: Partial<GameState>, events: VisualEvent[], questUpdates: { target: string, type: 'DEFEAT_BOSS' }[] } {
@@ -88,6 +90,9 @@ export class GameEngine {
         // 3. Случайные события
         const eventsResult = processEvents(state, stats);
         visualEvents.push(...eventsResult.events);
+        if (eventsResult.update.resourceChanges) {
+            Object.assign(resourceChanges, eventsResult.update.resourceChanges);
+        }
 
         // COOLING MANAGER moved to separate high-frequency loop
 
@@ -173,6 +178,23 @@ export class GameEngine {
                 (state as any).checkAllQuestsProgress?.(); // [PHASE 3.1] Quest System check
             } catch (e) {
                 console.error("Side system tick failure:", e);
+            }
+        }
+
+        // [RAID SYSTEM] Check every 600 ticks (~1 min)
+        // Only if player has bases
+        let playerBases = state.playerBases;
+        if (state.eventCheckTick % 600 === 0 && playerBases.length > 0) {
+            const raidResult = raidSystem.processBaseRaids(
+                playerBases,
+                // Calculate aggregated reputation for raids (using REBELS mostly)
+                state.reputation['REBELS'] || 0,
+                state.isDrilling ? EventTrigger.DRILLING : EventTrigger.GLOBAL_MAP_ACTIVE
+            );
+
+            if (raidResult.updatedBases !== playerBases) {
+                playerBases = raidResult.updatedBases;
+                visualEvents.push(...raidResult.events);
             }
         }
 
@@ -274,7 +296,8 @@ export class GameEngine {
             heatResult.update.isOverheated,
             !!combatResult.update.currentBoss,
             state.isBroken,
-            currentBiome.resource as ResourceType
+            currentBiome.resource as ResourceType,
+            state.isDrilling
         );
 
         // NARRATIVE TICK (Time based)
@@ -316,6 +339,7 @@ export class GameEngine {
             partialState: {
                 // ... (existing)
                 activeAbilities, // Add this
+                playerBases, // Updated bases from Raids
 
                 // Тепло
                 heat,

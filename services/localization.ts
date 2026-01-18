@@ -183,6 +183,7 @@ export const TEXT_IDS = {
   // Настройки аудио
   MUSIC_VOLUME: { RU: 'МУЗЫКА', EN: 'MUSIC' },
   SFX_VOLUME: { RU: 'ЗВУКИ', EN: 'SFX' },
+  DRILL_VOLUME: { RU: 'БУР И МОТОР', EN: 'DRILL & MOTOR' },
 
   // Сброс прогресса
   RESET_PROGRESS: { RU: 'СБРОСИТЬ ПРОГРЕСС', EN: 'RESET PROGRESS' },
