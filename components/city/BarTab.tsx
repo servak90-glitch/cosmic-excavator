@@ -12,7 +12,7 @@ type DiceResult = { won: boolean; amount: number } | null;
 
 const BarTab: React.FC<BarTabProps> = ({ resources }) => {
     const [barTab, setBarTab] = useState<'DRINKS' | 'DICE'>('DRINKS');
-    const [diceBetRes, setDiceBetRes] = useState<ResourceType>('stone');
+    const [diceBetRes, setDiceBetRes] = useState<ResourceType>(ResourceType.STONE);
     const [diceBetAmount, setDiceBetAmount] = useState<number>(GAMBLING.MIN_BET);
     const [lastResult, setLastResult] = useState<DiceResult>(null);
     const [isRolling, setIsRolling] = useState(false);
@@ -111,11 +111,11 @@ const BarTab: React.FC<BarTabProps> = ({ resources }) => {
                                     onChange={(e) => setDiceBetRes(e.target.value as ResourceType)}
                                     className="bg-black border border-zinc-600 px-2 py-1 outline-none text-right"
                                 >
-                                    <option value="stone">КАМЕНЬ</option>
-                                    <option value="copper">МЕДЬ</option>
-                                    <option value="iron">ЖЕЛЕЗО</option>
-                                    <option value="gold">ЗОЛОТО</option>
-                                    <option value="rubies">РУБИНЫ</option>
+                                    <option value={ResourceType.STONE}>КАМЕНЬ</option>
+                                    <option value={ResourceType.COPPER}>МЕДЬ</option>
+                                    <option value={ResourceType.IRON}>ЖЕЛЕЗО</option>
+                                    <option value={ResourceType.GOLD}>ЗОЛОТО</option>
+                                    <option value={ResourceType.RUBIES}>РУБИНЫ</option>
                                 </select>
                             </div>
                             <input

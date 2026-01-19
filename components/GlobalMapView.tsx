@@ -126,7 +126,7 @@ export const GlobalMapView = () => {
                 {renderTabs()}
             </div>
 
-            <div className="max-w-6xl w-full mx-auto flex-1 flex flex-col gap-4 relative z-10 overflow-auto scrollbar-hide">
+            <div className="max-w-6xl w-full mx-auto flex-1 flex flex-col gap-4 relative z-10 overflow-y-auto overflow-x-hidden scrollbar-hide">
                 {activeTab === 'map' && (
                     <div className="flex-1 flex flex-col gap-4">
                         <div className="bg-gray-800/50 border-2 border-cyan-500/30 rounded-lg p-3 md:p-4">
@@ -152,7 +152,10 @@ export const GlobalMapView = () => {
                             </div>
                         </div>
 
-                        <div className="w-full flex-1 min-h-[300px] md:min-h-[500px] bg-black/40 border-2 border-gray-700 rounded-lg overflow-hidden relative shadow-inner">
+                        <div
+                            className="w-full flex-1 min-h-[300px] md:min-h-[500px] bg-black/40 border-2 border-gray-700 rounded-lg overflow-hidden relative shadow-inner"
+                            style={{ touchAction: 'none' }}
+                        >
                             <IsometricCanvas
                                 regions={regionIds}
                                 activeRegion={currentRegion}

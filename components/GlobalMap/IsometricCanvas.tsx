@@ -338,5 +338,15 @@ export const IsometricCanvas: React.FC<IsometricCanvasProps> = ({ regions, activ
         };
     }, []);
 
-    return <div ref={containerRef} className="w-full h-full relative" />;
+    return (
+        <div
+            ref={containerRef}
+            className="w-full h-full relative"
+            style={{
+                touchAction: 'none',
+                userSelect: 'none',
+                WebkitUserSelect: 'none'
+            }}
+        />
+    );
 };
