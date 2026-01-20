@@ -11,6 +11,7 @@ import { audioEngine } from '../../services/audioEngine';
  */
 const UpgradeCard: React.FC<UpgradeCardProps> = ({ title, current, next, type, resources, onBuy }) => {
     const lang = useGameStore(s => s.settings.language);
+    const unlockedBlueprints = useGameStore(s => s.unlockedBlueprints);
     if (!next) return (
 
         <div className="bg-zinc-900 p-3 md:p-4 border border-zinc-800 opacity-50 flex flex-col justify-between min-h-[160px] md:min-h-[200px]">
@@ -23,9 +24,11 @@ const UpgradeCard: React.FC<UpgradeCardProps> = ({ title, current, next, type, r
     );
 
     const isFusionLocked = next.tier >= 13;
+    const requiresBlueprint = next.blueprintId;
+    const hasBlueprint = !requiresBlueprint || unlockedBlueprints.includes(requiresBlueprint);
     const cost = (next.cost || {}) as Partial<Resources>;
     const costKeys = Object.keys(cost) as Array<keyof Resources>;
-    const canAfford = !isFusionLocked && costKeys.every(r => resources[r] >= (cost[r] || 0));
+    const canAfford = !isFusionLocked && hasBlueprint && costKeys.every(r => resources[r] >= (cost[r] || 0));
 
     return (
         <div className="bg-zinc-900 p-3 md:p-4 border border-zinc-700 flex flex-col justify-between min-h-[180px] md:min-h-[220px] hover:border-zinc-500 transition-colors group relative">
@@ -50,6 +53,16 @@ const UpgradeCard: React.FC<UpgradeCardProps> = ({ title, current, next, type, r
                         {(next.baseStats as any).energyCost > 0 && <span className="text-red-500 col-span-2">LOAD: -{(next.baseStats as any).energyCost} W</span>}
                     </div>
                 </div>
+
+                {/* Индикатор чертежа */}
+                {requiresBlueprint && (
+                    <div className={`text-[9px] md:text-[10px] font-bold font-mono text-center py-1 px-2 mb-2 border ${hasBlueprint
+                            ? 'bg-purple-900/30 border-purple-500/50 text-purple-300'
+                            : 'bg-red-900/30 border-red-500/50 text-red-400 animate-pulse'
+                        }`}>
+                        {hasBlueprint ? '📜 ЧЕРТЕЖ ПОЛУЧЕН' : '⚠️ ТРЕБУЕТСЯ ЧЕРТЕЖ'}
+                    </div>
+                )}
 
                 <div className="space-y-1 mb-3">
                     {isFusionLocked ? (
@@ -81,7 +94,7 @@ const UpgradeCard: React.FC<UpgradeCardProps> = ({ title, current, next, type, r
                             : 'bg-zinc-950 border-zinc-800 text-zinc-600 cursor-not-allowed'}
          `}
             >
-                {isFusionLocked ? 'ТОЛЬКО СЛИЯНИЕ' : canAfford ? 'УЛУЧШИТЬ' : 'НЕДОСТУПНО'}
+                {isFusionLocked ? 'ТОЛЬКО СЛИЯНИЕ' : !hasBlueprint ? 'НУЖЕН ЧЕРТЕЖ' : canAfford ? 'УЛУЧШИТЬ' : 'НЕДОСТУПНО'}
             </button>
         </div>
     );

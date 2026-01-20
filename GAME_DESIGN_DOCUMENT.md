@@ -5,7 +5,7 @@
 
 <div align="center">
 
-**Версия:** 0.3.1  
+**Версия:** 0.3.5  
 **Жанр:** Sci-Fi Idle Clicker / Incremental  
 **Платформа:** Web (Desktop + Mobile)  
 **Язык:** Русский / English  

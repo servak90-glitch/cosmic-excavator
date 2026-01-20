@@ -1,74 +1,63 @@
+/**
+ * GLOBAL MAP VIEW — Основной экран навигации, рынка и караванов
+ * Содержит Изометрическую карту, вкладки и модальные окна
+ */
+
+import { useState, useMemo } from 'react';
 import { useGameStore } from '../store/gameStore';
+import { IsometricCanvas } from './GlobalMap/IsometricCanvas';
+import { REGIONS, REGION_IDS } from '../constants/regions';
 import { RegionId, ResourceType } from '../types';
-import { calculateStats } from '../services/gameMath';
-import { REGIONS } from '../constants/regions';
-import { calculateDistance } from '../services/regionMath';
-import { calculateFuelCost, FUEL_TYPES, FuelType, getFuelLabel } from '../services/travelMath';
-import { useState, useMemo, useEffect, useRef } from 'react';
-import { audioEngine } from '../services/audioEngine';
-import { MarketView } from './MarketView';
 import { CaravanPanel } from './CaravanPanel';
+import { MarketView } from './MarketView';
 import QuestPanel from './QuestPanel';
 import FactionPanel from './FactionPanel';
-import { IsometricCanvas } from './GlobalMap/IsometricCanvas';
-import { getActivePerkIds } from '../services/factionLogic';
 import { BuildBaseModal } from './BuildBaseModal';
-
+import { BaseView } from './BaseView';
+import { audioEngine } from '../services/audioEngine';
+import { calculateStats } from '../services/gameMath';
+import { calculateDistance } from '../services/regionMath';
+import { FUEL_TYPES, calculateFuelCost, getFuelLabel } from '../services/travelMath';
 import { TL, t } from '../services/localization';
 
-type TabType = 'map' | 'market' | 'caravans' | 'quests' | 'factions';
-
 export const GlobalMapView = () => {
+    // State
+    const [activeTab, setActiveTab] = useState<'map' | 'market' | 'caravans' | 'quests' | 'factions'>('map');
+    const [selectedRegion, setSelectedRegion] = useState<RegionId | null>(null);
+    const [selectedFuel, setSelectedFuel] = useState<ResourceType>(ResourceType.COAL);
+    const [isBuildModalOpen, setIsBuildModalOpen] = useState(false);
+    const [managedBaseId, setManagedBaseId] = useState<string | null>(null);
+
+    // Store data
     const currentRegion = useGameStore(s => s.currentRegion);
     const resources = useGameStore(s => s.resources);
-    const level = useGameStore(s => s.level);
-    const currentCargoWeight = useGameStore(s => s.currentCargoWeight);
-    const drill = useGameStore(s => s.drill);
-    const skillLevels = useGameStore(s => s.skillLevels);
-    const equippedArtifactsRaw = useGameStore(s => s.equippedArtifacts);
-    const inventory = useGameStore(s => s.inventory);
-    const depth = useGameStore(s => s.depth);
     const playerBases = useGameStore(s => s.playerBases);
     const caravans = useGameStore(s => s.caravans);
     const travelToRegion = useGameStore(s => s.travelToRegion);
     const buildBase = useGameStore(s => s.buildBase);
+    const currentCargoWeight = useGameStore(s => s.currentCargoWeight);
+    const level = useGameStore(s => s.level);
     const lang = useGameStore(s => s.settings.language);
-    const reputation = useGameStore(s => s.reputation);
+    const unlockedLicenses = useGameStore(s => s.unlockedLicenses);
 
-    const equippedArtifacts = useMemo(() =>
-        (equippedArtifactsRaw || []).filter((id): id is string => id !== null),
-        [equippedArtifactsRaw]
-    );
+    // Drill data for stats
+    const drill = useGameStore(s => s.drill);
+    const skillLevels = useGameStore(s => s.skillLevels);
+    const equippedArtifacts = useGameStore(s => s.equippedArtifacts);
+    const inventory = useGameStore(s => s.inventory);
+    const depth = useGameStore(s => s.depth);
 
-    const stats = useMemo(() =>
-        calculateStats(drill, skillLevels, equippedArtifacts, inventory, depth),
-        [drill, skillLevels, equippedArtifacts, inventory, depth]
-    );
-
-    const maxCapacity = stats.totalCargoCapacity || 0;
-    const [selectedRegion, setSelectedRegion] = useState<RegionId | null>(null);
-    const [selectedFuel, setSelectedFuel] = useState<FuelType>(ResourceType.COAL);
-    const [activeTab, setActiveTab] = useState<TabType>('map');
-    const [isBuildModalOpen, setIsBuildModalOpen] = useState(false);
-
-    const activePerks = useMemo(() => getActivePerkIds(reputation), [reputation]);
-
-    useEffect(() => {
-        audioEngine.playUIPanelOpen();
-    }, []);
-
-    const firstRender = useRef(true);
-    useEffect(() => {
-        if (firstRender.current) {
-            firstRender.current = false;
-            return;
-        }
-        audioEngine.playUITabSwitch();
-    }, [activeTab]);
-
+    // Derived
+    const stats = calculateStats(drill, skillLevels, equippedArtifacts, inventory, depth);
+    const maxCapacity = stats.totalCargoCapacity || 5000;
     const currentRegionData = REGIONS[currentRegion];
     const cargoRatio = maxCapacity > 0 ? currentCargoWeight / maxCapacity : 0;
     const isOverloaded = currentCargoWeight > maxCapacity;
+
+    const currentBase = playerBases.find(b => b.regionId === currentRegion);
+    const hasStationAccess = currentBase?.type === 'station';
+    const hasCaravanAccess = playerBases.length > 0;
+    const regionIds = useMemo(() => REGION_IDS, []);
 
     const handleTravel = () => {
         if (selectedRegion && selectedRegion !== currentRegion) {
@@ -76,11 +65,6 @@ export const GlobalMapView = () => {
             audioEngine.playTravelStart();
         }
     };
-
-    const currentBase = playerBases.find(b => b.regionId === currentRegion);
-    const hasStationAccess = currentBase?.type === 'station';
-    const hasCaravanAccess = playerBases.length > 0;
-    const regionIds = useMemo(() => Object.keys(REGIONS) as RegionId[], []);
 
     const renderTabs = () => (
         <div className="flex overflow-x-auto scrollbar-hide touch-pan-x gap-1 sm:gap-2 w-full mt-2 md:mt-0 snap-x snap-mandatory pb-1">
@@ -142,30 +126,43 @@ export const GlobalMapView = () => {
                         <div className="flex items-center gap-2 md:gap-4 text-[10px] md:text-sm font-mono text-gray-400">
                             <span>SECTOR: AEGIS-7</span>
                             <span className="text-cyan-500">STATUS: ACTIVE</span>
+                            <div className="flex items-center gap-2 ml-4 bg-gray-900/50 border border-gray-800 rounded px-2 py-0.5">
+                                <span className="text-[9px] text-gray-500 font-bold uppercase">{lang === 'RU' ? 'Лицензии' : 'Licenses'}:</span>
+                                <div className="flex gap-1.5">
+                                    {(['green', 'yellow', 'red'] as const).map(zone => (
+                                        <div key={zone} className={`w-2 h-2 rounded-full ${unlockedLicenses.includes(zone)
+                                            ? zone === 'green' ? 'bg-green-500 shadow-[0_0_4px_#22c55e]'
+                                                : zone === 'yellow' ? 'bg-yellow-400 shadow-[0_0_4px_#facc15]'
+                                                    : 'bg-red-500 shadow-[0_0_4px_#ef4444]'
+                                            : 'bg-gray-800'
+                                            }`} title={`${zone.toUpperCase()} license`} />
+                                    ))}
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
                 {renderTabs()}
             </div>
 
-            <div className="max-w-6xl w-full mx-auto flex-1 flex flex-col gap-4 relative z-10 min-h-0 overflow-y-auto touch-pan-y overscroll-contain -webkit-overflow-scrolling-touch">
+            <div className="max-w-6xl w-full mx-auto flex-1 flex flex-col gap-4 relative z-10 min-h-0 overflow-y-auto touch-pan-y overscroll-contain">
                 {activeTab === 'map' && (
                     <div className="flex-1 flex flex-col gap-4">
                         <div className="bg-gray-800/50 border-2 border-cyan-500/30 rounded-lg p-3 md:p-4">
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4">
                                 <div>
                                     <p className="text-gray-400 text-[10px] md:text-sm">{t(TL.ui.currentRegion, lang)}</p>
-                                    <p className="text-cyan-400 font-bold text-xs md:text-base">{t(TL.regions[currentRegion] || currentRegionData.name, lang)}</p>
+                                    <p className="text-cyan-400 font-bold text-xs md:text-base text-nowrap">{t(TL.regions[currentRegion] || currentRegionData.name, lang)}</p>
                                 </div>
                                 <div>
                                     <p className="text-gray-400 text-[10px] md:text-sm">{t(TL.ui.cargo, lang)}</p>
                                     <p className={`font-bold text-xs md:text-base ${isOverloaded ? 'text-red-500' : 'text-green-400'}`}>
-                                        {currentCargoWeight} / {maxCapacity}
+                                        {Math.floor(currentCargoWeight)} / {Math.floor(maxCapacity)}
                                     </p>
                                 </div>
                                 <div>
                                     <p className="text-gray-400 text-[10px] md:text-sm">{t(TL.ui.fuel, lang)}</p>
-                                    <p className="text-yellow-400 font-bold text-xs md:text-base">{resources.coal}</p>
+                                    <p className="text-yellow-400 font-bold text-xs md:text-base">{resources[ResourceType.COAL]}</p>
                                 </div>
                                 <div>
                                     <p className="text-gray-400 text-[10px] md:text-sm">{t(TL.ui.level, lang)}</p>
@@ -179,7 +176,7 @@ export const GlobalMapView = () => {
                             style={{ touchAction: 'none' }}
                         >
                             <IsometricCanvas
-                                regions={regionIds}
+                                regions={regionIds as any}
                                 activeRegion={currentRegion}
                                 bases={playerBases}
                                 caravans={caravans}
@@ -205,8 +202,12 @@ export const GlobalMapView = () => {
                                                 const cost = calculateFuelCost(calculateDistance(currentRegion, selectedRegion), fuel, cargoRatio);
                                                 const canAfford = available >= cost;
                                                 return (
-                                                    <button key={fuel} onClick={() => setSelectedFuel(fuel)} disabled={!canAfford}
-                                                        className={`p-2 md:p-3 rounded border transition-all text-left ${selectedFuel === fuel ? 'border-cyan-500 bg-cyan-500/20' : 'border-gray-600'} ${!canAfford && 'opacity-50'}`}>
+                                                    <button
+                                                        key={fuel}
+                                                        onClick={() => setSelectedFuel(fuel)}
+                                                        disabled={!canAfford}
+                                                        className={`p-2 md:p-3 rounded border transition-all text-left ${selectedFuel === fuel ? 'border-cyan-500 bg-cyan-500/20' : 'border-gray-600'} ${!canAfford ? 'opacity-50' : ''}`}
+                                                    >
                                                         <div className="font-bold text-xs md:text-sm text-white">{t(TL.resources[fuel] || getFuelLabel(fuel), lang)}</div>
                                                         <div className="text-[10px] md:text-xs text-gray-400">{available} / {cost}</div>
                                                     </button>
@@ -228,9 +229,28 @@ export const GlobalMapView = () => {
                             </div>
                         )}
 
-                        {/* Build Base button */}
+                        {selectedRegion && playerBases.find(b => b.regionId === selectedRegion) && (
+                            <div className="bg-gray-800/80 border-2 border-cyan-500 rounded-lg p-4 md:p-6 shadow-[0_0_20px_rgba(6,182,212,0.1)] mb-4">
+                                <h3 className="text-lg md:text-2xl font-bold text-cyan-400 mb-2">
+                                    🏢 {lang === 'RU' ? 'Ваша база' : 'Your Base'}
+                                </h3>
+                                <div className="flex justify-between items-center mb-4">
+                                    <p className="text-sm text-gray-400">
+                                        {playerBases.find(b => b.regionId === selectedRegion)?.type.toUpperCase()} - {t(TL.regions[selectedRegion], lang)}
+                                    </p>
+                                    <span className="text-[10px] bg-green-900/50 text-green-400 px-2 py-1 rounded border border-green-500/30 uppercase">Active</span>
+                                </div>
+                                <button
+                                    onClick={() => setManagedBaseId(playerBases.find(b => b.regionId === selectedRegion)?.id || null)}
+                                    className="w-full py-3 rounded-lg font-bold text-sm md:text-lg bg-cyan-600 hover:bg-cyan-500 text-white transition-all shadow-lg shadow-cyan-900/40"
+                                >
+                                    ⚙️ {lang === 'RU' ? 'УПРАВЛЯТЬ БАЗОЙ' : 'MANAGE BASE'}
+                                </button>
+                            </div>
+                        )}
+
                         {selectedRegion && !playerBases.find(b => b.regionId === selectedRegion) && (
-                            <div className="bg-gray-800/80 border-2 border-green-500 rounded-lg p-4 md:p-6">
+                            <div className="bg-gray-800/80 border-2 border-green-500 rounded-lg p-4 md:p-6 shadow-[0_0_20px_rgba(34,197,94,0.1)]">
                                 <h3 className="text-lg md:text-2xl font-bold text-green-400 mb-3">
                                     🏗️ {lang === 'RU' ? 'Построить базу' : 'Build Base'}
                                 </h3>
@@ -239,7 +259,7 @@ export const GlobalMapView = () => {
                                 </p>
                                 <button
                                     onClick={() => setIsBuildModalOpen(true)}
-                                    className="w-full py-3 rounded-lg font-bold text-sm md:text-lg bg-green-600 hover:bg-green-500 text-white transition-all"
+                                    className="w-full py-3 rounded-lg font-bold text-sm md:text-lg bg-green-600 hover:bg-green-500 text-white transition-all shadow-lg shadow-green-900/40"
                                 >
                                     🏗️ {lang === 'RU' ? 'ПОСТРОИТЬ БАЗУ' : 'BUILD BASE'}
                                 </button>
@@ -269,6 +289,13 @@ export const GlobalMapView = () => {
                         buildBase(selectedRegion, baseType);
                         setIsBuildModalOpen(false);
                     }}
+                />
+            )}
+            {/* Managed Base View */}
+            {managedBaseId && (
+                <BaseView
+                    base={playerBases.find(b => b.id === managedBaseId)!}
+                    onClose={() => setManagedBaseId(null)}
                 />
             )}
         </div>

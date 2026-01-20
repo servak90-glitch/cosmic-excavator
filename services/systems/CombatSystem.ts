@@ -15,6 +15,7 @@ import { generateBoss } from '../bossRegistry';
 import { audioEngine } from '../audioEngine';
 import { abilitySystem } from './AbilitySystem';
 import { ResourceChanges } from './types';
+import { getBossCodexId } from '../../constants/monsters';
 
 export interface CombatUpdate {
     currentBoss: Boss | null;
@@ -60,6 +61,7 @@ export interface CombatResult {
     newInventoryItems: Record<string, InventoryItem>;
     events: VisualEvent[];
     questUpdates?: { target: string, type: 'DEFEAT_BOSS' }[];
+    defeatedBossCodexId?: string; // ID босса для добавления в Codex
 }
 
 export const checkWeakness = (bossType: BossType, abilityType: AbilityType): boolean => {
@@ -300,6 +302,9 @@ export function processCombat(
                 { target: currentBoss.type, type: 'DEFEAT_BOSS' }
             ];
 
+            // Получаем ID для Codex (только для настоящих боссов, не мобов)
+            const bossCodexId = !currentBoss.isMob ? getBossCodexId(currentBoss.name as string, currentBoss.type) : undefined;
+
             lastBossDepth = currentBoss.isMob ? lastBossDepth : Math.floor(state.depth);
             currentBoss = null;
             combatMinigame = null;
@@ -317,7 +322,8 @@ export function processCombat(
                 resourceChanges,
                 newInventoryItems,
                 events,
-                questUpdates
+                questUpdates,
+                defeatedBossCodexId: bossCodexId
             };
         }
     } else if (state.depth > 200 && (state.depth - lastBossDepth) >= 500 && Math.random() < 0.005) {

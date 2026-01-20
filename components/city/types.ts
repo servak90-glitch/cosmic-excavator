@@ -36,6 +36,10 @@ export interface BarTabProps extends CityTabBaseProps {
     // Bar uses store actions directly
 }
 
+export interface LicenseTabProps extends CityTabBaseProps {
+    // Uses store actions directly
+}
+
 export const getFactionStyle = (issuer: string) => {
     switch (issuer) {
         case 'CORP':

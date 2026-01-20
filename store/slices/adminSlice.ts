@@ -68,31 +68,38 @@ export const createAdminSlice: SliceCreator<AdminActions> = (set, get) => ({
 
     adminUnlockAll: () => {
         const s = get();
-        const hasBaseInRegion = s.playerBases.find(b => b.regionId === s.currentRegion);
-        let newBases = s.playerBases;
-        if (!hasBaseInRegion) {
-            newBases = [...s.playerBases, {
-                id: `dev_base_${Date.now()}`,
-                regionId: s.currentRegion,
-                type: 'station' as const,
-                status: 'active' as const,
-                storageCapacity: 10000,
-                storedResources: {},
-                hasWorkshop: true,
-                workshopTierRange: [1, 10] as [number, number],
-                hasFuelFacilities: true,
-                hasMarket: true,
-                hasFortification: true,
-                hasGuards: true,
-                constructionStartTime: Date.now(),
-                constructionCompletionTime: Date.now(),
-                lastVisitedAt: Date.now(),
-                upgradeLevel: 1,
-                facilities: []
-            }];
-        } else {
-            newBases = s.playerBases.map(b => b.regionId === s.currentRegion ? { ...b, type: 'station' as const, hasMarket: true, status: 'active' as const } : b);
-        }
+        let updatedBases = [...s.playerBases];
+
+        REGION_IDS.forEach(id => {
+            const hasBaseInRegion = updatedBases.find(b => b.regionId === id);
+            if (!hasBaseInRegion) {
+                updatedBases.push({
+                    id: `dev_base_${id}_${Date.now()}`,
+                    regionId: id,
+                    type: 'station' as const,
+                    status: 'active' as const,
+                    storageCapacity: 10000,
+                    storedResources: {},
+                    hasWorkshop: true,
+                    workshopTierRange: [1, 10] as [number, number],
+                    hasFuelFacilities: true,
+                    hasMarket: true,
+                    hasFortification: true,
+                    hasGuards: true,
+                    constructionStartTime: Date.now(),
+                    constructionCompletionTime: Date.now(),
+                    lastVisitedAt: Date.now(),
+                    upgradeLevel: 1,
+                    facilities: []
+                });
+            } else {
+                updatedBases = updatedBases.map(b =>
+                    b.regionId === id
+                        ? { ...b, type: 'station' as const, hasMarket: true, status: 'active' as const }
+                        : b
+                );
+            }
+        });
 
         // Подготовка всех разрешений
         const allPermits: any = {};
@@ -111,7 +118,7 @@ export const createAdminSlice: SliceCreator<AdminActions> = (set, get) => ({
             skillsUnlocked: true,
             debugUnlocked: true,
             storageLevel: 2,
-            playerBases: newBases,
+            playerBases: updatedBases,
             caravanUnlocks: state.caravanUnlocks.map(u => ({ ...u, unlocked: true })),
             unlockedLicenses: ['green', 'yellow', 'red'] as any[],
             activePermits: allPermits,

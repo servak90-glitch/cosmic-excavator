@@ -160,6 +160,7 @@ export const TEXT_IDS = {
   CITY_COOLING_SYSTEM: { RU: 'СИСТЕМА ОХЛАЖДЕНИЯ', EN: 'COOLING SYSTEM' },
   CITY_REPAIR_DOCK: { RU: 'РЕМОНТНЫЙ ДОК', EN: 'REPAIR DOCK' },
   CITY_PREMIUM_SERVICE: { RU: 'ПРЕМИУМ ОБСЛУЖИВАНИЕ', EN: 'PREMIUM SERVICE' },
+  CITY_LICENSES: { RU: 'ЛИЦЕНЗИОННЫЙ ЦЕНТР', EN: 'LICENSE CENTER' },
   CITY_CURRENT_HEAT: { RU: 'ТЕКУЩИЙ НАГРЕВ', EN: 'CURRENT HEAT' },
   CITY_HULL_INTEGRITY: { RU: 'ЦЕЛОСТНОСТЬ ОБШИВКИ', EN: 'HULL INTEGRITY' },
   CITY_COST: { RU: 'СТОИМОСТЬ', EN: 'COST' },
@@ -169,6 +170,12 @@ export const TEXT_IDS = {
   CITY_FREE: { RU: 'БЕСПЛАТНО', EN: 'FREE' },
   CITY_NO_DAMAGE: { RU: 'ПОВРЕЖДЕНИЙ НЕТ', EN: 'NO DAMAGE' },
   CITY_SYSTEM_OK: { RU: 'СИСТЕМА В НОРМЕ', EN: 'SYSTEM OK' },
+  CITY_LICENSE_ZONE: { RU: 'ЛИЦЕНЗИЯ ЗОНЫ', EN: 'ZONE LICENSE' },
+  CITY_PERMIT_REGION: { RU: 'РАЗРЕШЕНИЕ РЕГИОНА', EN: 'REGION PERMIT' },
+  CITY_OWNED: { RU: 'КУПЛЕНО', EN: 'OWNED' },
+  CITY_REQUIREMENT: { RU: 'ТРЕБУЕТСЯ', EN: 'REQUIRED' },
+  CITY_PERMANENT: { RU: 'БЕССРОЧНО', EN: 'PERMANENT' },
+  CITY_TEMPORARY: { RU: 'ВРЕМЕННО (7Д)', EN: 'TEMPORARY (7D)' },
 
   // Системные логи
   LOG_INSUFFICIENT_RESOURCES: { RU: 'НЕДОСТАТОЧНО РЕСУРСОВ', EN: 'INSUFFICIENT RESOURCES' },

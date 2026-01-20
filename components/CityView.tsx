@@ -7,6 +7,7 @@ import JewelerTab from './city/JewelerTab';
 import ServiceTab from './city/ServiceTab';
 import BarTab from './city/BarTab';
 import ExpeditionTab from './city/ExpeditionTab';
+import LicenseTab from './city/LicenseTab';
 
 interface CityViewProps {
   biome: Biome;
@@ -21,7 +22,7 @@ interface CityViewProps {
   onRepair: () => void;
 }
 
-type CityTab = 'TRADE' | 'CONTRACTS' | 'SERVICE' | 'BAR' | 'JEWELER' | 'EXPEDITIONS';
+type CityTab = 'TRADE' | 'CONTRACTS' | 'SERVICE' | 'BAR' | 'JEWELER' | 'EXPEDITIONS' | 'LICENSES';
 
 const TABS: { id: CityTab; label: string; icon: string }[] = [
   { id: 'TRADE', label: 'РЫНОК', icon: '⚖️' },
@@ -29,6 +30,7 @@ const TABS: { id: CityTab; label: string; icon: string }[] = [
   { id: 'JEWELER', label: 'ЮВЕЛИР', icon: '💎' },
   { id: 'SERVICE', label: 'СЕРВИС', icon: '🔧' },
   { id: 'EXPEDITIONS', label: 'ЭКСПЕДИЦИИ', icon: '🚀' },
+  { id: 'LICENSES', label: 'ЛИЦЕНЗИИ', icon: '🎫' },
   { id: 'BAR', label: 'БАР', icon: '🍺' },
 ];
 
@@ -71,6 +73,8 @@ const CityView: React.FC<CityViewProps> = ({
 
       case 'EXPEDITIONS':
         return <ExpeditionTab />;
+      case 'LICENSES':
+        return <LicenseTab resources={resources} depth={depth} />;
       default:
         return null;
     }

@@ -37,6 +37,18 @@ export const createUpgradeSlice: SliceCreator<UpgradeActions> = (set, get) => ({
         if (idx === -1 || idx === list.length - 1) return;
         const nextPart = list[idx + 1];
 
+        // Проверка наличия чертежа
+        if (nextPart.blueprintId && !s.unlockedBlueprints.includes(nextPart.blueprintId)) {
+            const event: VisualEvent = {
+                type: 'LOG',
+                msg: `⚠️ ТРЕБУЕТСЯ ЧЕРТЕЖ: ${nextPart.blueprintId}`,
+                color: 'text-red-400'
+            };
+            set({ actionLogQueue: pushLogs(s, [event]) });
+            audioEngine.playUIError();
+            return;
+        }
+
         const cost = nextPart.cost as Partial<Resources>;
         const canAfford = Object.entries(cost).every(([k, v]) => s.resources[k as ResourceType] >= v);
 
@@ -85,7 +97,21 @@ export const createUpgradeSlice: SliceCreator<UpgradeActions> = (set, get) => ({
             }
         }
 
-        if (resultPart && slot && s.resources[recipe.catalyst.resource] >= recipe.catalyst.amount) {
+        if (!resultPart || !slot) return;
+
+        // Проверка наличия чертежа для fusion
+        if (resultPart.blueprintId && !s.unlockedBlueprints.includes(resultPart.blueprintId)) {
+            const event: VisualEvent = {
+                type: 'LOG',
+                msg: `⚠️ СИНТЕЗ ЗАБЛОКИРОВАН: Нужен ${resultPart.blueprintId}`,
+                color: 'text-red-400'
+            };
+            set({ actionLogQueue: pushLogs(s, [event]) });
+            audioEngine.playUIError();
+            return;
+        }
+
+        if (s.resources[recipe.catalyst.resource] >= recipe.catalyst.amount) {
             const newRes = { ...s.resources };
             newRes[recipe.catalyst.resource] -= recipe.catalyst.amount;
 

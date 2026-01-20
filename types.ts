@@ -351,6 +351,7 @@ export interface BaseDrillPart {
   rarity: ItemRarity;
   description: LocalizedString;
   cost: Partial<Resources>;
+  blueprintId?: string; // Required blueprint to unlock this part
 }
 
 
@@ -935,6 +936,7 @@ export interface GameState {
   activeDrones: DroneType[];
   droneLevels: Record<DroneType, number>;
   activeExpeditions: Expedition[];
+  defeatedBosses: string[]; // IDs побежденных боссов для Codex
 
   storageLevel: 0 | 1 | 2;
   forgeUnlocked: boolean;

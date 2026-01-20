@@ -96,7 +96,7 @@ const StatusStrip: React.FC = () => {
                 </div>
             </div>
 
-            {/* 4. FUEL */}
+            {/* 5. FUEL */}
             <div className="flex-1 flex items-center bg-zinc-950/50 relative overflow-hidden">
                 <div className="w-6 h-full flex items-center justify-center bg-black/50 z-10 shrink-0">
                     <span className={`text-[10px] font-bold ${isLowFuel ? 'text-red-500 animate-pulse' : 'text-amber-400'}`}>⛽</span>
@@ -109,6 +109,21 @@ const StatusStrip: React.FC = () => {
                 </div>
             </div>
 
+            {/* 6. LICENSES (NEW) */}
+            <LicenseDisplay />
+
+        </div>
+    );
+};
+
+const LicenseDisplay: React.FC = () => {
+    const unlockedLicenses = useGameStore(s => s.unlockedLicenses);
+    return (
+        <div className="flex px-2 items-center bg-black/40 border-l border-zinc-900 gap-1.5 shrink-0" title="Active Zone Licenses">
+            <span className="text-[10px] font-bold text-zinc-500 mr-1">LIC:</span>
+            <div className={`w-1.5 h-1.5 rounded-full ${unlockedLicenses.includes('green') ? 'bg-green-500 shadow-[0_0_4px_#22c55e]' : 'bg-zinc-800'}`} />
+            <div className={`w-1.5 h-1.5 rounded-full ${unlockedLicenses.includes('yellow') ? 'bg-yellow-400 shadow-[0_0_4px_#facc15]' : 'bg-zinc-800'}`} />
+            <div className={`w-1.5 h-1.5 rounded-full ${unlockedLicenses.includes('red') ? 'bg-red-500 shadow-[0_0_4px_#ef4444]' : 'bg-zinc-800'}`} />
         </div>
     );
 };

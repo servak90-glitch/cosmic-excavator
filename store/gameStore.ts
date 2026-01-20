@@ -161,6 +161,7 @@ const INITIAL_STATE: GameState = {
     activeAbilities: [],
     unlockedBlueprints: [],
     activeExpeditions: [],
+    defeatedBosses: [], // Список побежденных боссов для Codex
 
     // [DEV_CONTEXT: SHIELD],
     minigameCooldown: 0,

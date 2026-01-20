@@ -3,15 +3,19 @@
  */
 
 import { SliceCreator, pushLog } from './types';
-import type { RegionId, BaseType, PlayerBase, VisualEvent, FacilityId } from '../../types';
+import type { RegionId, BaseType, PlayerBase, VisualEvent, FacilityId, Resources } from '../../types';
 import { BASE_COSTS, BASE_BUILD_TIMES, BASE_STORAGE_CAPACITY, WORKSHOP_TIER_RANGES } from '../../constants/playerBases';
 import { FUEL_FACILITIES, canBuildFacility } from '../../constants/fuelFacilities';
+import { FUEL_RECIPES, canCraftRecipe, getRecipeById } from '../../constants/fuelRecipes';
+import { recalculateCargoWeight } from '../../services/gameMath';
 import { audioEngine } from '../../services/audioEngine';
 
 export interface BaseActions {
     buildBase: (regionId: RegionId, baseType: BaseType) => void;
     checkBaseCompletion: () => void;  // Проверка завершения строительства
     buildFacility: (baseId: string, facilityId: FacilityId) => void;  // Постройка facility
+    transferResources: (baseId: string, resource: keyof Resources, amount: number, direction: 'to_base' | 'to_player') => void;
+    refineResource: (baseId: string, recipeId: string, rounds?: number) => void;
 }
 
 export const createBaseSlice: SliceCreator<BaseActions> = (set, get) => ({
@@ -190,6 +194,99 @@ export const createBaseSlice: SliceCreator<BaseActions> = (set, get) => ({
             resources: { ...s.resources, rubies: s.resources.rubies - facility.cost },
             playerBases: updatedBases,
             actionLogQueue: pushLog(s, successEvent)
+        });
+
+        audioEngine.playBaseBuild();
+    },
+
+    /**
+     * Передача ресурсов между кораблем и базой
+     */
+    transferResources: (baseId, resource, amount, direction) => {
+        const s = get();
+        const base = s.playerBases.find(b => b.id === baseId);
+        if (!base) return;
+
+        if (direction === 'to_base') {
+            // Игрок -> База
+            const playerAmount = s.resources[resource] || 0;
+            const actualAmount = Math.min(amount, playerAmount);
+            if (actualAmount <= 0) return;
+
+            // Проверка места на базе
+            const currentStoredTotal = Object.values(base.storedResources).reduce((sum, a: any) => sum + (a || 0), 0);
+            if (currentStoredTotal + actualAmount > base.storageCapacity) {
+                const event: VisualEvent = { type: 'LOG', msg: '❌ ХРАНИЛИЩЕ БАЗЫ ПЕРЕПОЛНЕНО!', color: 'text-red-500' };
+                set({ actionLogQueue: pushLog(s, event) });
+                return;
+            }
+
+            set(state => ({
+                resources: { ...state.resources, [resource]: (state.resources[resource] || 0) - actualAmount },
+                currentCargoWeight: recalculateCargoWeight({ ...state.resources, [resource]: (state.resources[resource] || 0) - actualAmount }),
+                playerBases: state.playerBases.map(b => b.id === baseId ? {
+                    ...b,
+                    storedResources: { ...b.storedResources, [resource]: (b.storedResources[resource] || 0) + actualAmount }
+                } : b)
+            }));
+        } else {
+            // База -> Игрок
+            const baseAmount = base.storedResources[resource] || 0;
+            const actualAmount = Math.min(amount, baseAmount);
+            if (actualAmount <= 0) return;
+
+            set(state => ({
+                resources: { ...state.resources, [resource]: (state.resources[resource] || 0) + actualAmount },
+                currentCargoWeight: recalculateCargoWeight({ ...state.resources, [resource]: (state.resources[resource] || 0) + actualAmount }),
+                playerBases: state.playerBases.map(b => b.id === baseId ? {
+                    ...b,
+                    storedResources: { ...b.storedResources, [resource]: (b.storedResources[resource] || 0) - actualAmount }
+                } : b)
+            }));
+        }
+    },
+
+    /**
+     * Переработка ресурсов в топливо
+     */
+    refineResource: (baseId, recipeId, rounds = 1) => {
+        const s = get();
+        const base = s.playerBases.find(b => b.id === baseId);
+        const recipe = getRecipeById(recipeId);
+        if (!base || !recipe) return;
+
+        // Проверка facility
+        if (recipe.requiredFacility && !base.facilities.includes(recipe.requiredFacility)) {
+            const event: VisualEvent = { type: 'LOG', msg: '⚠️ ТРЕБУЕТСЯ СПЕЦИАЛЬНЫЙ ЗАВОД!', color: 'text-red-400' };
+            set({ actionLogQueue: pushLog(s, event) });
+            return;
+        }
+
+        // Проверка ресурсов
+        const canCraftOnce = canCraftRecipe(recipe, s.resources, base.facilities);
+        if (!canCraftOnce) {
+            const event: VisualEvent = { type: 'LOG', msg: '❌ НЕДОСТАТОЧНО РЕСУРСОВ!', color: 'text-red-500' };
+            set({ actionLogQueue: pushLog(s, event) });
+            return;
+        }
+
+        const maxRounds = Math.floor((s.resources[recipe.input.resource] || 0) / recipe.input.amount);
+        const actualRounds = Math.min(rounds, maxRounds);
+
+        const totalInput = recipe.input.amount * actualRounds;
+        const totalOutput = recipe.output.amount * actualRounds;
+
+        set(state => {
+            const newRes = {
+                ...state.resources,
+                [recipe.input.resource]: (state.resources[recipe.input.resource] || 0) - totalInput,
+                [recipe.output.resource]: (state.resources[recipe.output.resource] || 0) + totalOutput
+            };
+            return {
+                resources: newRes,
+                currentCargoWeight: recalculateCargoWeight(newRes),
+                actionLogQueue: pushLog(state, { type: 'LOG', msg: `🏭 ПЕРЕРАБОТКА: +${totalOutput} ${recipe.output.resource.toUpperCase()}`, color: 'text-green-400' })
+            };
         });
 
         audioEngine.playBaseBuild();

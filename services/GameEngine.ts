@@ -387,6 +387,11 @@ export class GameEngine {
                 narrativeTick,
                 aiState,
 
+                // Codex: добавляем побежденного босса
+                ...(combatResult.defeatedBossCodexId && !state.defeatedBosses.includes(combatResult.defeatedBossCodexId)
+                    ? { defeatedBosses: [...state.defeatedBosses, combatResult.defeatedBossCodexId] }
+                    : {}),
+
                 // Let's add activeExpeditions if changed
                 ...(state.eventCheckTick % 10 === 0 ? { activeExpeditions } : {})
             },
