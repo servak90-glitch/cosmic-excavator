@@ -17,6 +17,7 @@ import { calculateStats, calculateShieldRechargeCost, formatCompactNumber } from
 import { BIOMES } from './constants';
 import { audioEngine } from './services/audioEngine';
 import { t, TEXT_IDS } from './services/localization';
+import { useResponsive } from './services/hooks/useResponsive';
 
 // Components
 import DrillRenderer from './components/DrillRenderer';
@@ -213,13 +214,8 @@ const App: React.FC = () => {
         }
     };
 
-    // Хук для определения мобильного устройства
-    const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
-    useEffect(() => {
-        const handleResize = () => setIsMobile(window.innerWidth < 1024);
-        window.addEventListener('resize', handleResize);
-        return () => window.removeEventListener('resize', handleResize);
-    }, []);
+    // Используем новый централизованный хук для responsive
+    const { isMobile, isTablet, isTouchDevice } = useResponsive();
 
     // Авто-скрытие адресной панели (старый метод)
     useEffect(() => {

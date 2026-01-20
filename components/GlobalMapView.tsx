@@ -83,26 +83,45 @@ export const GlobalMapView = () => {
     const regionIds = useMemo(() => Object.keys(REGIONS) as RegionId[], []);
 
     const renderTabs = () => (
-        <div className="flex flex-wrap gap-1 md:gap-2 w-full md:w-auto mt-2 md:mt-0">
-            <button onClick={() => setActiveTab('map')} className={`flex-1 md:flex-none px-2 md:px-4 py-2 text-xs md:text-base rounded-t border-2 border-b-0 transition-all ${activeTab === 'map' ? 'bg-cyan-600 text-white border-cyan-500' : 'bg-gray-800 text-gray-400 border-gray-700'}`}>
-                <span className="md:hidden">🗺️</span>
-                <span className="hidden md:inline">🗺️ {t(TL.ui.map, lang)}</span>
+        <div className="flex overflow-x-auto scrollbar-hide touch-pan-x gap-1 sm:gap-2 w-full mt-2 md:mt-0 snap-x snap-mandatory pb-1">
+            <button
+                onClick={() => setActiveTab('map')}
+                className={`flex-shrink-0 snap-start min-w-[60px] sm:min-w-[80px] md:min-w-0 px-3 sm:px-4 py-2.5 sm:py-2 text-xs sm:text-sm md:text-base rounded-t border-2 border-b-0 transition-all flex items-center justify-center gap-1 ${activeTab === 'map' ? 'bg-cyan-600 text-white border-cyan-500' : 'bg-gray-800 text-gray-400 border-gray-700'}`}
+            >
+                <span>🗺️</span>
+                <span className="hidden sm:inline">{t(TL.ui.map, lang)}</span>
             </button>
-            <button onClick={() => setActiveTab('market')} className={`flex-1 md:flex-none px-2 md:px-4 py-2 text-xs md:text-base rounded-t border-2 border-b-0 transition-all ${!hasStationAccess ? 'bg-gray-900 text-gray-600 border-gray-800 cursor-not-allowed' : activeTab === 'market' ? 'bg-cyan-600 text-white border-cyan-500' : 'bg-gray-800 text-gray-400 border-gray-700'}`} disabled={!hasStationAccess}>
-                <span className="md:hidden">💰</span>
-                <span className="hidden md:inline">💰 {t(TL.ui.market, lang)} {!hasStationAccess && t(TL.ui.locked, lang)}</span>
+            <button
+                onClick={() => setActiveTab('market')}
+                className={`flex-shrink-0 snap-start min-w-[60px] sm:min-w-[80px] md:min-w-0 px-3 sm:px-4 py-2.5 sm:py-2 text-xs sm:text-sm md:text-base rounded-t border-2 border-b-0 transition-all flex items-center justify-center gap-1 ${!hasStationAccess ? 'bg-gray-900 text-gray-600 border-gray-800 cursor-not-allowed' : activeTab === 'market' ? 'bg-cyan-600 text-white border-cyan-500' : 'bg-gray-800 text-gray-400 border-gray-700'}`}
+                disabled={!hasStationAccess}
+            >
+                <span>💰</span>
+                <span className="hidden sm:inline">{t(TL.ui.market, lang)}</span>
+                {!hasStationAccess && <span className="hidden md:inline text-[10px] ml-1">{t(TL.ui.locked, lang)}</span>}
             </button>
-            <button onClick={() => setActiveTab('caravans')} className={`flex-1 md:flex-none px-2 md:px-4 py-2 text-xs md:text-base rounded-t border-2 border-b-0 transition-all ${!hasCaravanAccess ? 'bg-gray-900 text-gray-600 border-gray-800 cursor-not-allowed' : activeTab === 'caravans' ? 'bg-purple-600 text-white border-purple-500' : 'bg-gray-800 text-gray-400 border-gray-700'}`} disabled={!hasCaravanAccess}>
-                <span className="md:hidden">🚛</span>
-                <span className="hidden md:inline">🚛 {t(TL.ui.caravans, lang)} {!hasCaravanAccess && t(TL.ui.locked, lang)}</span>
+            <button
+                onClick={() => setActiveTab('caravans')}
+                className={`flex-shrink-0 snap-start min-w-[60px] sm:min-w-[80px] md:min-w-0 px-3 sm:px-4 py-2.5 sm:py-2 text-xs sm:text-sm md:text-base rounded-t border-2 border-b-0 transition-all flex items-center justify-center gap-1 ${!hasCaravanAccess ? 'bg-gray-900 text-gray-600 border-gray-800 cursor-not-allowed' : activeTab === 'caravans' ? 'bg-purple-600 text-white border-purple-500' : 'bg-gray-800 text-gray-400 border-gray-700'}`}
+                disabled={!hasCaravanAccess}
+            >
+                <span>🚛</span>
+                <span className="hidden sm:inline">{t(TL.ui.caravans, lang)}</span>
+                {!hasCaravanAccess && <span className="hidden md:inline text-[10px] ml-1">{t(TL.ui.locked, lang)}</span>}
             </button>
-            <button onClick={() => setActiveTab('quests')} className={`flex-1 md:flex-none px-2 md:px-4 py-2 text-xs md:text-base rounded-t border-2 border-b-0 transition-all ${activeTab === 'quests' ? 'bg-blue-600 text-white border-blue-500' : 'bg-gray-800 text-gray-400 border-gray-700'}`}>
-                <span className="md:hidden">📜</span>
-                <span className="hidden md:inline">📜 {t(TL.ui.quests, lang)}</span>
+            <button
+                onClick={() => setActiveTab('quests')}
+                className={`flex-shrink-0 snap-start min-w-[60px] sm:min-w-[80px] md:min-w-0 px-3 sm:px-4 py-2.5 sm:py-2 text-xs sm:text-sm md:text-base rounded-t border-2 border-b-0 transition-all flex items-center justify-center gap-1 ${activeTab === 'quests' ? 'bg-blue-600 text-white border-blue-500' : 'bg-gray-800 text-gray-400 border-gray-700'}`}
+            >
+                <span>📜</span>
+                <span className="hidden sm:inline">{t(TL.ui.quests, lang)}</span>
             </button>
-            <button onClick={() => setActiveTab('factions')} className={`flex-1 md:flex-none px-2 md:px-4 py-2 text-xs md:text-base rounded-t border-2 border-b-0 transition-all ${activeTab === 'factions' ? 'bg-cyan-600 text-white border-cyan-500' : 'bg-gray-800 text-gray-400 border-gray-700'}`}>
-                <span className="md:hidden">👑</span>
-                <span className="hidden md:inline">👑 {t(TL.ui.factions, lang)}</span>
+            <button
+                onClick={() => setActiveTab('factions')}
+                className={`flex-shrink-0 snap-start min-w-[60px] sm:min-w-[80px] md:min-w-0 px-3 sm:px-4 py-2.5 sm:py-2 text-xs sm:text-sm md:text-base rounded-t border-2 border-b-0 transition-all flex items-center justify-center gap-1 ${activeTab === 'factions' ? 'bg-cyan-600 text-white border-cyan-500' : 'bg-gray-800 text-gray-400 border-gray-700'}`}
+            >
+                <span>👑</span>
+                <span className="hidden sm:inline">{t(TL.ui.factions, lang)}</span>
             </button>
         </div>
     );
