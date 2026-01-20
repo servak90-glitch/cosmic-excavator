@@ -90,7 +90,7 @@ const QuestPanel: React.FC = () => {
     };
 
     return (
-        <div className="h-full flex flex-col bg-slate-900/95 border border-slate-700 rounded-lg overflow-hidden relative shadow-2xl backdrop-blur-md">
+        <div className="flex flex-col bg-slate-900/95 border border-slate-700 rounded-lg relative shadow-2xl backdrop-blur-md">
             {/* Header */}
             <div className="p-4 border-b border-slate-700 bg-slate-800/80 flex justify-between items-center">
                 <h2 className="text-xl font-bold text-slate-100 flex items-center gap-2">
@@ -121,7 +121,7 @@ const QuestPanel: React.FC = () => {
             </div>
 
             {/* Content */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
+            <div className="p-4 space-y-4">
 
                 {activeTab === 'available' && (
                     <div className="space-y-4">

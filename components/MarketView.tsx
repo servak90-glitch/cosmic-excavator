@@ -77,7 +77,7 @@ export const MarketView = () => {
     const availableResource = selectedResource ? (resources[selectedResource] || 0) : 0;
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 p-6">
+        <div className="p-2 md:p-6">
             {/* Header */}
             <div className="max-w-6xl mx-auto mb-6">
                 <h1 className="text-4xl font-bold text-cyan-400 mb-2">💰 {t(TL.ui.market, lang).toUpperCase()}</h1>

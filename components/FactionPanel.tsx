@@ -30,7 +30,7 @@ const FactionPanel: React.FC = () => {
     const progress = Math.min(100, Math.max(0, ((currentRep - prevTierMin) / (nextTierMin - prevTierMin)) * 100));
 
     return (
-        <div className="flex flex-col h-full bg-zinc-900/50 p-2 md:p-4 rounded-lg border border-cyan-900/30">
+        <div className="flex flex-col flex-1 min-h-0 bg-zinc-900/50 p-2 md:p-4 rounded-lg border border-cyan-900/30">
             {/* Faction Tabs */}
             <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
                 {factions.map(fid => (

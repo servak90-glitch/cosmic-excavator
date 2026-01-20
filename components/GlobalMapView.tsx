@@ -45,7 +45,7 @@ export const GlobalMapView = () => {
         [drill, skillLevels, equippedArtifacts, inventory, depth]
     );
 
-    const maxCapacity = stats.totalCargoCapacity;
+    const maxCapacity = stats.totalCargoCapacity || 0;
     const [selectedRegion, setSelectedRegion] = useState<RegionId | null>(null);
     const [selectedFuel, setSelectedFuel] = useState<FuelType>(ResourceType.COAL);
     const [activeTab, setActiveTab] = useState<TabType>('map');
@@ -127,7 +127,7 @@ export const GlobalMapView = () => {
     );
 
     return (
-        <div className="min-h-screen bg-black text-white p-2 md:p-4 pb-20 md:pb-4 relative overflow-hidden flex flex-col">
+        <div className="flex-1 flex flex-col bg-black text-white p-2 md:p-4 pb-20 md:pb-4 relative overflow-hidden h-full">
             <div className="absolute inset-0 pointer-events-none">
                 <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent opacity-50" />
                 <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-purple-500/50 to-transparent opacity-50" />
@@ -148,7 +148,7 @@ export const GlobalMapView = () => {
                 {renderTabs()}
             </div>
 
-            <div className="max-w-6xl w-full mx-auto flex-1 flex flex-col gap-4 relative z-10 overflow-y-auto overflow-x-hidden touch-pan-y">
+            <div className="max-w-6xl w-full mx-auto flex-1 flex flex-col gap-4 relative z-10 min-h-0 overflow-y-auto touch-pan-y overscroll-contain -webkit-overflow-scrolling-touch">
                 {activeTab === 'map' && (
                     <div className="flex-1 flex flex-col gap-4">
                         <div className="bg-gray-800/50 border-2 border-cyan-500/30 rounded-lg p-3 md:p-4">
@@ -248,16 +248,16 @@ export const GlobalMapView = () => {
                     </div>
                 )}
 
-                {activeTab === 'market' && <div className="overflow-y-auto touch-pan-y"><MarketView /></div>}
+                {activeTab === 'market' && <div className="flex-1 overflow-y-auto touch-pan-y overscroll-contain"><MarketView /></div>}
                 {activeTab === 'caravans' && (
-                    <div className="flex-1 flex flex-col p-2 overflow-y-auto touch-pan-y">
+                    <div className="flex-1 flex flex-col p-2 overflow-y-auto touch-pan-y overscroll-contain">
                         <h1 className="text-2xl md:text-4xl font-bold text-purple-400 mb-2">🚛 {t(TL.caravan.title, lang)}</h1>
                         <p className="text-gray-400 text-xs md:text-sm mb-6">{t(TL.caravan.subtitle, lang)}</p>
                         <CaravanPanel />
                     </div>
                 )}
-                {activeTab === 'quests' && <div className="flex-1 overflow-y-auto touch-pan-y"><QuestPanel /></div>}
-                {activeTab === 'factions' && <div className="overflow-y-auto touch-pan-y"><FactionPanel /></div>}
+                {activeTab === 'quests' && <QuestPanel />}
+                {activeTab === 'factions' && <FactionPanel />}
             </div>
 
             {/* Build Base Modal */}
