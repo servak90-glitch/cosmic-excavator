@@ -4,6 +4,7 @@ import { ResourceType, View, Resources } from '../../types';
 import { EVENTS } from '../../services/eventRegistry';
 import { generateBoss } from '../../services/bossRegistry';
 import { audioEngine } from '../../services/audioEngine';
+import { REGION_IDS } from '../../constants/regions';
 
 export interface AdminActions {
     adminAddResources: (common: number, rare: number) => void;
@@ -94,7 +95,6 @@ export const createAdminSlice: SliceCreator<AdminActions> = (set, get) => ({
         }
 
         // Подготовка всех разрешений
-        const { REGION_IDS } = require('../../constants/regions');
         const allPermits: any = {};
         REGION_IDS.forEach((id: string) => {
             allPermits[id] = {
@@ -109,17 +109,23 @@ export const createAdminSlice: SliceCreator<AdminActions> = (set, get) => ({
             forgeUnlocked: true,
             cityUnlocked: true,
             skillsUnlocked: true,
-            storageLevel: 2,
             debugUnlocked: true,
+            storageLevel: 2,
             playerBases: newBases,
             caravanUnlocks: state.caravanUnlocks.map(u => ({ ...u, unlocked: true })),
-            unlockedLicenses: ['green', 'yellow', 'red'],
-            activePermits: allPermits
+            unlockedLicenses: ['green', 'yellow', 'red'] as any[],
+            activePermits: allPermits,
+            resources: {
+                ...state.resources,
+                coal: Math.max(state.resources.coal, 5000),
+                oil: Math.max(state.resources.oil, 2000),
+                gas: Math.max(state.resources.gas, 1000),
+                rubies: Math.max(state.resources.rubies, 10000)
+            }
         }));
     },
 
     adminUnlockAllPermits: () => {
-        const { REGION_IDS } = require('../../constants/regions');
         const allPermits: any = {};
         REGION_IDS.forEach((id: string) => {
             allPermits[id] = {

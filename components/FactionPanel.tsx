@@ -55,7 +55,7 @@ const FactionPanel: React.FC = () => {
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -20 }}
                     transition={{ duration: 0.2 }}
-                    className="flex-1 flex flex-col overflow-y-auto pr-2"
+                    className="flex flex-col pr-2"
                 >
                     {/* Header Info */}
                     <div className="mb-6 border-b border-white/10 pb-4">
@@ -121,7 +121,7 @@ const FactionPanel: React.FC = () => {
                         <div className="space-y-3">
                             {allPerks.map((perk) => {
                                 const isUnlocked = currentLevel >= perk.levelRequired;
-                                const perkInfo = TL.factions.perks[perk.id] || perk;
+                                const perkInfo = (TL.factions.perks as any)[perk.id] || perk;
                                 return (
                                     <div
                                         key={perk.id}

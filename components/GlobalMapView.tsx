@@ -248,9 +248,9 @@ export const GlobalMapView = () => {
                     </div>
                 )}
 
-                {activeTab === 'market' && <div className="flex-1 overflow-y-auto touch-pan-y overscroll-contain"><MarketView /></div>}
+                {activeTab === 'market' && <MarketView />}
                 {activeTab === 'caravans' && (
-                    <div className="flex-1 flex flex-col p-2 overflow-y-auto touch-pan-y overscroll-contain">
+                    <div className="p-2">
                         <h1 className="text-2xl md:text-4xl font-bold text-purple-400 mb-2">🚛 {t(TL.caravan.title, lang)}</h1>
                         <p className="text-gray-400 text-xs md:text-sm mb-6">{t(TL.caravan.subtitle, lang)}</p>
                         <CaravanPanel />
