@@ -252,7 +252,7 @@ export const GlobalMapView = () => {
                                                 const distance = calculateDistance(currentRegion, selectedRegion);
                                                 const cost = Math.ceil(calculateFuelConsumption(
                                                     distance,
-                                                    totalMass,
+                                                    totalMass.grossWeight,
                                                     maxCapacity,
                                                     fuel as FuelType,
                                                     currentRegion as any  // RegionId совместим

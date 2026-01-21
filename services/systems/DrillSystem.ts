@@ -12,6 +12,7 @@
 import { GameState, VisualEvent, Stats, ResourceType, Resources } from '../../types';
 import { BIOMES } from '../../constants';
 import { ResourceChanges } from './types';
+import { processSideTunnel } from './SideTunnelSystem';
 
 // === ТОПЛИВНАЯ СИСТЕМА ===
 
@@ -48,7 +49,6 @@ function selectBestAvailableFuel(resources: Resources): { fuelType: ResourceType
     return null; // Топливо закончилось
 }
 
-
 export interface DrillUpdate {
     depth: number;
     forgeUnlocked: boolean;
@@ -68,15 +68,56 @@ export function processDrilling(
     isOverheated: boolean,
     dt: number,
     activePerks: string[] = []
-): { update: DrillUpdate; resourceChanges: ResourceChanges; events: VisualEvent[] } {
+): { update: DrillUpdate & { sideTunnel?: GameState['sideTunnel'] }; resourceChanges: ResourceChanges; events: VisualEvent[] } {
     const events: VisualEvent[] = [];
-    const resourceChanges: ResourceChanges = {};
+    let resourceChanges: ResourceChanges = {};
 
     let depth = state.depth;
     let { forgeUnlocked, cityUnlocked, skillsUnlocked, storageLevel } = state;
 
+    // Блокировка бурения во время перемещения
+    if (state.travel) {
+        return {
+            update: { depth, forgeUnlocked, cityUnlocked, skillsUnlocked, storageLevel },
+            resourceChanges,
+            events
+        };
+    }
+
+    // === PHASE 3: SIDE TUNNEL EXPLORATION ===
+    if (state.sideTunnel && isDrilling && !isOverheated && !state.isBroken && !state.currentBoss) {
+        // Вычисляем мощность бура (упрощенно, без штрафов породе, но со множителями)
+        let speedMult = 1;
+        activeEffects.forEach(e => {
+            if (e.modifiers.drillSpeedMultiplier) speedMult *= e.modifiers.drillSpeedMultiplier;
+        });
+        const drillPower = stats.totalSpeed * speedMult * (state.isOverdrive ? 10 : 1);
+
+        const result = processSideTunnel(state, drillPower, dt, state.settings.language);
+
+        // Объединяем результаты
+        events.push(...result.events);
+
+        // ВАЖНО: Мы НЕ увеличиваем глубину, пока в туннеле.
+        // Мы возвращаем обновленный sideTunnel.
+        return {
+            update: {
+                ...result.update,
+                depth,
+                forgeUnlocked,
+                cityUnlocked,
+                skillsUnlocked,
+                storageLevel,
+                sideTunnel: result.update.sideTunnel
+            } as any,
+            resourceChanges: (result.update as any).resourceChanges || {},
+            events
+        };
+    }
+
     // Разблокировка контента по глубине
     if (!forgeUnlocked && depth >= 50) forgeUnlocked = true;
+    // ... (rest of the code)
     if (!cityUnlocked && depth >= 200) cityUnlocked = true;
     if (!skillsUnlocked && depth >= 400) skillsUnlocked = true;
     if (storageLevel === 0 && depth >= 600) storageLevel = 1;
@@ -121,9 +162,9 @@ export function processDrilling(
 
         // Расчёт скорости с учётом твёрдости породы
         const hardness = Math.min(1.0, (depth / 10000));
-        const torque = stats.torque / 100;
-        const effHardness = Math.max(0, hardness - torque);
-        const speedPenalty = Math.max(0.1, 1.0 - effHardness);
+        const torqueMult = Math.max(0.1, 1.0 - (stats.torque / 100)); // Игнорирование твердости
+        const effHardness = hardness * torqueMult;
+        const speedPenalty = Math.max(0.05, 1.0 - effHardness);
 
         // Модификаторы от эффектов
         let speedMult = 1;
@@ -162,6 +203,16 @@ export function processDrilling(
 
         const resToAdd = drillPower * 1.0 * resMult * dt; // Увеличено с 0.3 до 1.0
         resourceChanges[currentBiome.resource] = (resourceChanges[currentBiome.resource] || 0) + resToAdd;
+
+        // [POLISHING] Rare Resource Feedback
+        if ((currentBiome.resource === ResourceType.ANCIENT_TECH || currentBiome.resource === ResourceType.NANO_SWARM) && Math.random() < 0.05 * dt * 60) {
+            events.push({
+                type: 'LOG',
+                msg: `💎 ОБНАРУЖЕН РЕДКИЙ МАТЕРИАЛ: ${currentBiome.resource.toUpperCase()}`,
+                color: 'text-purple-400 font-bold',
+                icon: '✨'
+            });
+        }
 
         // [VISUALS] Mining Effects
         if (Math.random() < (0.3 + (drillPower > 10 ? 0.2 : 0)) * dt * 60) {

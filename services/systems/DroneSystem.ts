@@ -29,7 +29,8 @@ export function processDrones(
     // Ремонтный дрон
     if (state.activeDrones.includes(DroneType.REPAIR)) {
         const lvl = state.droneLevels[DroneType.REPAIR] || 0;
-        const repairAmount = 0.05 * lvl;
+        const baseRepair = 0.05 * lvl;
+        const repairAmount = baseRepair * stats.droneEfficiency; // Применяем droneEfficiency
         if (integrity < stats.integrity) {
             integrity = Math.min(stats.integrity, integrity + repairAmount);
             hasChanges = true;
@@ -39,7 +40,8 @@ export function processDrones(
     // Охлаждающий дрон
     if (state.activeDrones.includes(DroneType.COOLER) && heat > stats.ambientHeat) {
         const lvl = state.droneLevels[DroneType.COOLER] || 0;
-        const coolAmount = 0.1 * lvl;
+        const baseCool = 0.1 * lvl;
+        const coolAmount = baseCool * stats.droneEfficiency; // Применяем droneEfficiency
         heat = Math.max(stats.ambientHeat, heat - coolAmount);
         hasChanges = true;
     }
@@ -58,7 +60,7 @@ export function processRegeneration(
     currentIntegrity: number
 ): number {
     if (stats.regen > 0 && currentIntegrity < stats.integrity && !state.isBroken) {
-        return Math.min(stats.integrity, currentIntegrity + (stats.regen * 0.1));
+        return Math.min(stats.integrity, currentIntegrity + (stats.regen * 0.4));
     }
     return currentIntegrity;
 }

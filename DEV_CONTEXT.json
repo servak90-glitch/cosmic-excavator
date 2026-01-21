@@ -1,7 +1,7 @@
 {
   "project_info": {
     "name": "Cosmic Excavator: Void-Piercer",
-    "version": "0.3.1",
+    "version": "0.3.6",
     "stack": [
       "React 19.2.3",
       "TypeScript",
@@ -13,7 +13,7 @@
       "Custom Grammar Engine",
       "Capacitor 6"
     ],
-    "description": "Sci-Fi Idle кликер. ФАЗА 3.3: Фракции (Next). Реализованы Квесты, Туннели и Аудио-полировка."
+    "description": "Sci-Fi Idle кликер. ФАЗА 4.1: Polishing & Balance. Реализована строгая типизация ResourceType и стандартизация Store."
   },
   "architecture_rules": [
     "СТРОГО ЗАПРЕЩЕНО: Предлагать механики Престижа/Time Warp/Сброса прогресса. Игра масштабируется линейно и бесконечно.",
@@ -48,16 +48,16 @@
     "steps": []
   },
   "last_changes": {
-    "date": "2026-01-18",
-    "description": "VERSION 0.3.1: Audio System Polish (Phase 2 & 5) and Raid System integration. 1) Implemented Raid sounds (Alarm, Repelled, Breeched). 2) Integrated Market & Travel sounds. 3) Fixed RaidSystem logic bugs. 4) Enhanced Explosion audio.",
+    "date": "2026-01-22",
+    "description": "VERSION 0.3.6: ResourceType Hardening & Store Standardization. 1) Migrated all resource references to ResourceType enum. 2) Renamed Slices to Actions in Store. 3) Fixed fuel cost calculation bug in GlobalMapView. 4) Updated regional market modifiers and admin cheats.",
     "affected_files": [
-      "services/audioEngine.ts",
-      "services/systems/RaidSystem.ts",
-      "components/MarketView.tsx",
-      "components/GlobalMapView.tsx",
-      "components/forge/UpgradeCard.tsx",
-      "App.tsx",
-      "types.ts"
+      "types.ts",
+      "store/gameStore.ts",
+      "store/slices/index.ts",
+      "constants/marketPrices.ts",
+      "constants/fuelRecipes.ts",
+      "components/CaravanPanel.tsx",
+      "components/GlobalMapView.tsx"
     ]
   }
 }

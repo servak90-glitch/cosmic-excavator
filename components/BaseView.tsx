@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { useGameStore } from '../store/gameStore';
 import { PlayerBase, ResourceType, FacilityId, DefenseUnitType, Resources } from '../types';
 import { FUEL_RECIPES } from '../constants/fuelRecipes';
-import { FUEL_FACILITIES } from '../constants/fuelFacilities';
+import { BASE_FACILITIES } from '../constants/baseFacilities';
+import { CRAFTING_RECIPES } from '../constants/craftingRecipes';
 import { DEFENSE_UNITS, BASE_REPAIR_COST } from '../constants/defenseUnits';
 import { TL } from '../services/localization';
 import { t } from '../services/localization';
@@ -14,9 +15,9 @@ interface BaseViewProps {
 }
 
 export const BaseView: React.FC<BaseViewProps> = ({ base, onClose }) => {
-    const { settings, resources, transferResources, refineResource, buildFacility, startDefenseProduction, repairBase } = useGameStore();
+    const { settings, resources, transferResources, refineResource, craftConsumable, buildFacility, startDefenseProduction, repairBase } = useGameStore();
     const lang = settings.language;
-    const [activeTab, setActiveTab] = useState<'storage' | 'facilities' | 'refinery' | 'garrison'>('storage');
+    const [activeTab, setActiveTab] = useState<'storage' | 'facilities' | 'refinery' | 'workshop' | 'garrison'>('storage');
 
     const totalStored = Object.values(base.storedResources).reduce((sum, a) => sum + (a || 0), 0);
     const storagePercent = (totalStored / base.storageCapacity) * 100;
@@ -58,6 +59,7 @@ export const BaseView: React.FC<BaseViewProps> = ({ base, onClose }) => {
                         { id: 'storage', label: lang === 'RU' ? '📦 Хранилище' : '📦 Storage' },
                         { id: 'facilities', label: lang === 'RU' ? '🏭 Модули' : '🏭 Facilities' },
                         { id: 'refinery', label: lang === 'RU' ? '⚗️ Переработка' : '⚗️ Refinery', hidden: !base.facilities.includes('basic_refinery') },
+                        { id: 'workshop', label: lang === 'RU' ? '🛠️ Мастерская' : '🛠️ Workshop', hidden: !base.facilities.includes('workshop_facility') && !base.facilities.includes('advanced_workshop') },
                         { id: 'garrison', label: lang === 'RU' ? '🛡️ Гарнизон' : '🛡️ Garrison' }
                     ].map(tab => !tab.hidden && (
                         <button
@@ -138,7 +140,7 @@ export const BaseView: React.FC<BaseViewProps> = ({ base, onClose }) => {
 
                     {activeTab === 'facilities' && (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {Object.values(FUEL_FACILITIES).map(facility => {
+                            {Object.values(BASE_FACILITIES).map(facility => {
                                 const isBuilt = base.facilities.includes(facility.id);
                                 return (
                                     <div key={facility.id} className={`p-4 rounded-xl border-2 transition-all ${isBuilt ? 'border-green-500/50 bg-green-500/5' : 'border-gray-700 bg-gray-800/30'}`}>
@@ -211,7 +213,69 @@ export const BaseView: React.FC<BaseViewProps> = ({ base, onClose }) => {
                                             </div>
                                         </div>
                                         {!hasFacility && (
-                                            <p className="text-red-400 text-[10px] mt-2 font-bold uppercase">⚠️ ТРЕБУЕТСЯ: {t(FUEL_FACILITIES[recipe.requiredFacility!].name, lang)}</p>
+                                            <p className="text-red-400 text-[10px] mt-2 font-bold uppercase">⚠️ ТРЕБУЕТСЯ: {t(BASE_FACILITIES[recipe.requiredFacility!].name, lang)}</p>
+                                        )}
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
+
+                    {activeTab === 'workshop' && (
+                        <div className="grid grid-cols-1 gap-4">
+                            {CRAFTING_RECIPES.map(recipe => {
+                                const hasFacility = !recipe.requiredFacility || base.facilities.includes(recipe.requiredFacility);
+                                const canAfford = recipe.input.every(input => (resources[input.resource] || 0) >= input.amount);
+
+                                return (
+                                    <div key={recipe.id} className={`p-4 rounded-xl border-2 transition-all ${!hasFacility ? 'opacity-50 grayscale' : 'border-gray-700 bg-gray-800/30'}`}>
+                                        <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+                                            <div className="flex-1">
+                                                <h4 className="text-lg font-bold text-white uppercase">{t(recipe.name, lang)}</h4>
+                                                <p className="text-gray-400 text-xs">{t(recipe.description, lang)}</p>
+                                            </div>
+
+                                            <div className="flex items-center gap-4 bg-black/40 p-2 rounded-lg border border-gray-700">
+                                                <div className="flex gap-2">
+                                                    {recipe.input.map(input => (
+                                                        <div key={input.resource} className="text-center">
+                                                            <div className="text-[10px] text-gray-500 uppercase">{t(getResourceLabel(input.resource), lang)}</div>
+                                                            <div className={`font-bold ${(resources[input.resource] || 0) >= input.amount ? 'text-white' : 'text-red-500'}`}>{input.amount}</div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                                <div className="text-cyan-500 text-2xl">➜</div>
+                                                <div className="text-center">
+                                                    <div className="text-[10px] text-gray-500 uppercase">{t(getResourceLabel(recipe.output.resource), lang)}</div>
+                                                    <div className="font-bold text-green-400">+{recipe.output.amount}</div>
+                                                </div>
+                                            </div>
+
+                                            <div className="flex gap-2 w-full md:w-auto">
+                                                <button
+                                                    disabled={!hasFacility || !canAfford}
+                                                    onClick={() => craftConsumable(base.id, recipe.id, 1)}
+                                                    className={`flex-1 md:w-24 py-2 rounded-lg font-bold transition-all ${hasFacility && canAfford ? 'bg-cyan-600 hover:bg-cyan-500 text-white' : 'bg-gray-700 text-gray-500'}`}
+                                                >
+                                                    x1
+                                                </button>
+                                                <button
+                                                    disabled={!hasFacility || !canAfford}
+                                                    onClick={() => {
+                                                        let max = 999;
+                                                        recipe.input.forEach(input => {
+                                                            max = Math.min(max, Math.floor((resources[input.resource] || 0) / input.amount));
+                                                        });
+                                                        craftConsumable(base.id, recipe.id, max);
+                                                    }}
+                                                    className={`flex-1 md:w-24 py-2 rounded-lg font-bold transition-all ${hasFacility && canAfford ? 'bg-purple-600 hover:bg-purple-500 text-white shadow-[0_0_15px_rgba(168,85,247,0.3)]' : 'bg-gray-700 text-gray-500'}`}
+                                                >
+                                                    MAX
+                                                </button>
+                                            </div>
+                                        </div>
+                                        {!hasFacility && recipe.requiredFacility && (
+                                            <p className="text-red-400 text-[10px] mt-2 font-bold uppercase">⚠️ ТРЕБУЕТСЯ: {t(BASE_FACILITIES[recipe.requiredFacility].name, lang)}</p>
                                         )}
                                     </div>
                                 );

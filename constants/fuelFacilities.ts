@@ -4,7 +4,7 @@ import type { Facility, FacilityId } from '../types';
  * Fuel Facilities - постройки для крафта топлива в Player Bases
  * Phase 2: basic_refinery + advanced_refinery
  */
-export const FUEL_FACILITIES: Record<FacilityId, Facility> = {
+export const FUEL_FACILITIES: Partial<Record<FacilityId, Facility>> = {
     basic_refinery: {
         id: 'basic_refinery',
         name: 'Базовая Нефтепереработка',

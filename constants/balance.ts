@@ -26,13 +26,13 @@ export const CITY_TRADES = {
 
 /** Reverse trades configuration */
 export const REVERSE_TRADES: { source: ResourceType, target: ResourceType, label: string }[] = [
-    { source: 'stone', target: 'clay', label: 'ДРОБИЛКА ПОРОДЫ' },
-    { source: 'copper', target: 'stone', label: 'УТИЛИЗАЦИЯ ПРОВОДКИ' },
-    { source: 'iron', target: 'copper', label: 'ПЕРЕПЛАВКА ЛОМА' },
-    { source: 'silver', target: 'iron', label: 'ДЕМОНТАЖ ЭЛЕКТРОНИКИ' },
-    { source: 'gold', target: 'silver', label: 'РАЗМЫВ РУДЫ' },
-    { source: 'titanium', target: 'gold', label: 'РАСЩЕПЛЕНИЕ СПЛАВОВ' },
-    { source: 'uranium', target: 'titanium', label: 'ДЕАКТИВАЦИЯ ЯДРА' }
+    { source: ResourceType.STONE, target: ResourceType.CLAY, label: 'ДРОБИЛКА ПОРОДЫ' },
+    { source: ResourceType.COPPER, target: ResourceType.STONE, label: 'УТИЛИЗАЦИЯ ПРОВОДКИ' },
+    { source: ResourceType.IRON, target: ResourceType.COPPER, label: 'ПЕРЕПЛАВКА ЛОМА' },
+    { source: ResourceType.SILVER, target: ResourceType.IRON, label: 'ДЕМОНТАЖ ЭЛЕКТРОНИКИ' },
+    { source: ResourceType.GOLD, target: ResourceType.SILVER, label: 'РАЗМЫВ РУДЫ' },
+    { source: ResourceType.TITANIUM, target: ResourceType.GOLD, label: 'РАСЩЕПЛЕНИЕ СПЛАВОВ' },
+    { source: ResourceType.URANIUM, target: ResourceType.TITANIUM, label: 'ДЕАКТИВАЦИЯ ЯДРА' }
 ];
 
 // =============================================================================

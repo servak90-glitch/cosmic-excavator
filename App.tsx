@@ -45,15 +45,88 @@ import CombatOverlay from './components/CombatOverlay';
 import { GlobalMapView } from './components/GlobalMapView';
 import { EquipmentInventoryView } from './components/EquipmentInventoryView';
 import { ConsumableBar } from './components/ConsumableBar';
+import { PredictionAlert } from './components/PredictionAlert';
 
 const GAME_VERSION = "v4.0.0 (THE GREAT AUDIT)";
+
+const TravelProgressMini = ({ travel, lang }: { travel: any, lang: string }) => {
+    const [progress, setProgress] = useState(0);
+    const [timeLeft, setTimeLeft] = useState(0);
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            const elapsed = Date.now() - travel.startTime;
+            const p = Math.min(100, (elapsed / travel.duration) * 100);
+            const remaining = Math.max(0, travel.duration - elapsed);
+            setProgress(p);
+            setTimeLeft(Math.ceil(remaining / 1000));
+        }, 100);
+        return () => clearInterval(interval);
+    }, [travel]);
+
+    return (
+        <div className="w-48 p-2 bg-gray-900/90 border border-cyan-500 rounded shadow-[0_0_10px_rgba(6,182,212,0.3)] backdrop-blur-sm">
+            <div className="flex justify-between text-[8px] text-cyan-400 font-bold mb-1 uppercase tracking-wider">
+                <span>{lang === 'RU' ? 'В ПУТИ' : 'IN TRANSIT'}</span>
+                <span>{timeLeft}s</span>
+            </div>
+            <div className="w-full h-1.5 bg-gray-800 rounded-full overflow-hidden">
+                <div
+                    className="h-full bg-cyan-500 shadow-[0_0_5px_rgba(6,182,212,1)] transition-all duration-300"
+                    style={{ width: `${progress}%` }}
+                />
+            </div>
+        </div>
+    );
+};
+
+const TunnelAtmosphereOverlay = ({ type }: { type: string }) => {
+    const theme = {
+        SAFE: { color: 'rgba(234, 179, 8, 0.1)', shadow: 'rgba(234, 179, 8, 0.3)' },
+        RISKY: { color: 'rgba(239, 68, 68, 0.15)', shadow: 'rgba(239, 68, 68, 0.4)' },
+        CRYSTAL: { color: 'rgba(168, 85, 247, 0.2)', shadow: 'rgba(168, 85, 247, 0.5)' },
+        MINE: { color: 'rgba(161, 157, 148, 0.15)', shadow: 'rgba(161, 157, 148, 0.3)' },
+        NEST: { color: 'rgba(34, 197, 94, 0.2)', shadow: 'rgba(34, 197, 94, 0.5)' },
+    }[type] || { color: 'transparent', shadow: 'transparent' };
+
+    return (
+        <div
+            className="fixed inset-0 z-[55] pointer-events-none transition-colors duration-1000"
+            style={{
+                boxShadow: `inset 0 0 100px 30px ${theme.shadow}`,
+                backgroundColor: theme.color
+            }}
+        >
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.4)_100%)]" />
+        </div>
+    );
+};
+
+const SideTunnelProgressMini = ({ tunnel, lang }: { tunnel: any, lang: string }) => {
+    const progress = (tunnel.progress / tunnel.maxProgress) * 100;
+
+    return (
+        <div className="w-48 p-2 bg-zinc-900/90 border border-yellow-500 rounded shadow-[0_0_10px_rgba(234,179,8,0.3)] backdrop-blur-sm">
+            <div className="flex justify-between text-[8px] text-yellow-500 font-bold mb-1 uppercase tracking-wider">
+                <span>{tunnel.name}</span>
+                <span>{Math.floor(progress)}%</span>
+            </div>
+            <div className="w-full h-1.5 bg-gray-800 rounded-full overflow-hidden">
+                <div
+                    className="h-full bg-yellow-500 shadow-[0_0_5px_rgba(234,179,8,1)] transition-all duration-300"
+                    style={{ width: `${progress}%` }}
+                />
+            </div>
+        </div>
+    );
+};
 
 const App: React.FC = () => {
     // --- OPTIMIZED STORE ACCESS (Grouped Selectors) ---
     const { isGameActive, activeView, settings, enterGame, manualLoad, tick } = useGameCore();
     const lang = settings.language;
 
-    const { depth, heat, shieldCharge, resources, drill, xp, integrity } = useDrillState();
+    const { depth, heat, shieldCharge, resources, drill, xp, integrity, sideTunnel } = useDrillState();
     const { isDrilling, isOverheated, setDrilling, manualClick, manualRechargeShield } = useDrillActions();
 
     const { currentBoss, combatMinigame, eventQueue, isCoolingGameActive, clickFlyingObject } = useCombatState();
@@ -72,8 +145,15 @@ const App: React.FC = () => {
     const [isHelpOpen, setIsHelpOpen] = useState(false);
     const [isInventoryOpen, setIsInventoryOpen] = useState(false); // NEW: Equipment Inventory
     const [showFirstRunModal, setShowFirstRunModal] = useState(false);
-    const [logs, setLogs] = useState<{ msg: string, color?: string }[]>([
-        { msg: t(TEXT_IDS.AI_INIT, lang), color: 'text-zinc-400' }
+    const [activePredictions, setActivePredictions] = useState<Array<{
+        id: string;
+        eventTitle: string;
+        eventType: string;
+        timeRemaining: number;
+        detailLevel: 'BASIC' | 'MEDIUM' | 'FULL';
+    }>>([]);
+    const [logs, setLogs] = useState<{ msg: string; color?: string; icon?: string; detail?: string; timestamp?: string }[]>([
+        { msg: t(TEXT_IDS.AI_INIT, lang), color: 'text-zinc-400', icon: '🤖', timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) }
     ]);
     const [bossHitEffect, setBossHitEffect] = useState(false);
     const [visualEffect, setVisualEffect] = useState<string>('NONE'); // VisualEffectType
@@ -109,10 +189,13 @@ const App: React.FC = () => {
     const textRef = useRef<FloatingTextHandle>(null);
 
     // Log Handler
-    const addLog = useCallback((msg: string, color?: string) => {
-        setLogs(prev => [...prev.slice(-12), {
-            msg: `[${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}] ${msg}`,
-            color
+    const addLog = useCallback((msg: string, color?: string, icon?: string, detail?: string) => {
+        setLogs(prev => [...prev.slice(-15), {
+            msg,
+            color,
+            icon,
+            detail,
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
         }]);
     }, []);
 
@@ -138,7 +221,7 @@ const App: React.FC = () => {
             const events = tick(safeDt);
             // ... process events ...
             events.forEach(e => {
-                if (e.type === 'LOG') addLog(e.msg, e.color);
+                if (e.type === 'LOG') addLog(e.msg, e.color, e.icon, e.detail);
                 else if (e.type === 'TEXT') {
                     let x = e.x || window.innerWidth / 2;
                     let y = e.y || window.innerHeight / 2;
@@ -169,6 +252,15 @@ const App: React.FC = () => {
                 }
                 else if (e.type === 'SCREEN_SHAKE') {
                     setScreenShake({ intensity: e.intensity, duration: e.duration, startTime: Date.now() });
+                }
+                else if (e.type === 'PREDICTION') {
+                    setActivePredictions(prev => [...prev, {
+                        id: `pred_${Date.now()}_${Math.random()}`,
+                        eventTitle: e.eventTitle,
+                        eventType: e.eventType,
+                        timeRemaining: e.timeRemaining,
+                        detailLevel: e.detailLevel
+                    }]);
                 }
                 else if (e.type === 'SOUND') {
                     if (e.sfx === 'LOG') audioEngine.playLog();
@@ -260,6 +352,20 @@ const App: React.FC = () => {
                 y = (e as React.MouseEvent).clientY;
             }
             textRef.current?.addText(x, y - 50, "ПЕРЕГРЕВ!", "DAMAGE");
+            return;
+        }
+
+        const travel = useGameStore.getState().travel;
+        if (travel) {
+            let x = 0, y = 0;
+            if ('touches' in e) {
+                x = e.touches[0].clientX;
+                y = e.touches[0].clientY;
+            } else {
+                x = (e as React.MouseEvent).clientX;
+                y = (e as React.MouseEvent).clientY;
+            }
+            textRef.current?.addText(x, y - 50, lang === 'RU' ? "В ПУТИ!" : "IN TRANSIT!", "INFO");
             return;
         }
 
@@ -419,7 +525,7 @@ const App: React.FC = () => {
                     )}
 
                     {/* FULL SCREENS */}
-                    <div className={`w-full h-full ${isNavOpen ? 'pointer-events-auto' : 'pointer-events-none'}`}>
+                    <div key={activeView} className={`w-full h-full animate-fadeIn ${isNavOpen ? 'pointer-events-auto' : 'pointer-events-none'}`}>
                         {activeView === View.FORGE && <ForgeView />}
                         {activeView === View.CITY && (
                             <CityView
@@ -493,6 +599,35 @@ const App: React.FC = () => {
                             {t(TEXT_IDS.BTN_ACKNOWLEDGE, lang)}
                         </button>
                     </div>
+                </div>
+            )}
+
+            {/* PREDICTION ALERTS */}
+            {activePredictions.map(pred => (
+                <PredictionAlert
+                    key={pred.id}
+                    eventTitle={pred.eventTitle}
+                    eventType={pred.eventType}
+                    timeRemaining={pred.timeRemaining}
+                    detailLevel={pred.detailLevel}
+                    onDismiss={() => setActivePredictions(prev => prev.filter(p => p.id !== pred.id))}
+                />
+            ))}
+
+            {/* SIDE TUNNEL PROGRESS & ATMOSPHERE */}
+            {sideTunnel && activeView === View.DRILL && (
+                <>
+                    <TunnelAtmosphereOverlay type={sideTunnel.type} />
+                    <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[60] animate-fadeIn">
+                        <SideTunnelProgressMini tunnel={sideTunnel} lang={lang} />
+                    </div>
+                </>
+            )}
+
+            {/* GLOBAL TRAVEL PROGRESS */}
+            {useGameStore(s => s.travel) && activeView !== View.GLOBAL_MAP && (
+                <div className="fixed top-36 left-1/2 -translate-x-1/2 z-[60] animate-fadeIn">
+                    <TravelProgressMini travel={useGameStore(s => s.travel)!} lang={lang} />
                 </div>
             )}
 

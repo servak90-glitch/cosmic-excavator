@@ -10,13 +10,17 @@ const DIFFICULTIES: { id: ExpeditionDifficulty, label: string, color: string, ri
     { id: 'EXTREME', label: 'СМЕРТЕЛЬНО', color: 'text-red-500', risk: 'ЭКСТРЕМАЛЬНЫЙ (70%)' }
 ];
 
-const TARGET_RESOURCES: ResourceType[] = ['iron', 'copper', 'silver', 'gold', 'titanium', 'uranium', 'rubies', 'emeralds', 'diamonds', 'ancientTech'];
+const TARGET_RESOURCES: ResourceType[] = [
+    ResourceType.IRON, ResourceType.COPPER, ResourceType.SILVER, ResourceType.GOLD,
+    ResourceType.TITANIUM, ResourceType.URANIUM, ResourceType.RUBIES, ResourceType.EMERALDS,
+    ResourceType.DIAMONDS, ResourceType.ANCIENT_TECH
+];
 
 const ExpeditionTab: React.FC = () => {
     const { resources, launchExpedition, activeExpeditions, collectRewards, cancelExpedition } = useGameStore();
 
     const [selectedDiff, setSelectedDiff] = useState<ExpeditionDifficulty>('LOW');
-    const [selectedResource, setSelectedResource] = useState<ResourceType>('iron');
+    const [selectedResource, setSelectedResource] = useState<ResourceType>(ResourceType.IRON);
     const [droneCount, setDroneCount] = useState(10);
     const [now, setNow] = useState(Date.now());
 

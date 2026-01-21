@@ -39,10 +39,10 @@ const REBEL_TITLES = [
 ];
 
 // Ресурсы по тирам (глубине)
-const TIER_1_RES: ResourceType[] = ['clay', 'stone'];
-const TIER_2_RES: ResourceType[] = ['copper', 'iron'];
-const TIER_3_RES: ResourceType[] = ['silver', 'gold'];
-const TIER_4_RES: ResourceType[] = ['titanium', 'uranium'];
+const TIER_1_RES: ResourceType[] = [ResourceType.CLAY, ResourceType.STONE];
+const TIER_2_RES: ResourceType[] = [ResourceType.COPPER, ResourceType.IRON, ResourceType.SCRAP];
+const TIER_3_RES: ResourceType[] = [ResourceType.SILVER, ResourceType.GOLD];
+const TIER_4_RES: ResourceType[] = [ResourceType.TITANIUM, ResourceType.URANIUM];
 
 const getResourcesForDepth = (depth: number): ResourceType[] => {
   const pool = [...TIER_1_RES];

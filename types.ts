@@ -188,16 +188,26 @@ export interface DefenseProductionJob {
   completionTime: number;
 }
 
-// === PHASE 2: FUEL FACILITIES ===
+// === PHASE 2: FUEL & CRAFTING FACILITIES ===
 
-export type FacilityId = 'basic_refinery' | 'advanced_refinery';
+export type FacilityId = 'basic_refinery' | 'advanced_refinery' | 'workshop_facility' | 'advanced_workshop' | 'research_lab';
 
 export interface Facility {
   id: FacilityId;
   name: LocalizedString;
   cost: number;
   description: LocalizedString;
-  unlocksRecipes: string[];  // Recipe IDs
+  unlocksRecipes: string[];  // Recipe IDs (Fuel or Crafting)
+}
+
+export interface CraftingRecipe {
+  id: string;
+  name: LocalizedString;
+  description: LocalizedString;
+  requiredFacility?: FacilityId;
+  input: Array<{ resource: ResourceType; amount: number }>;
+  output: { resource: ResourceType; amount: number };
+  craftTime?: number; // В миллисекундах, опционально (пока мгновенно)
 }
 
 
@@ -900,6 +910,15 @@ export interface TunnelPropDef {
   color: string;
 }
 
+export interface SideTunnelState {
+  type: SideTunnelType;
+  progress: number;
+  maxProgress: number;
+  rewards: Record<string, number>;
+  difficulty: number;
+  name: LocalizedString;
+}
+
 // --- ACTIVE COOLING (RHYTHM) ---
 
 
@@ -1000,6 +1019,7 @@ export interface GameState {
   eventQueue: GameEvent[];
   recentEventIds: string[];
   eventCooldowns: Record<string, number>;  // EventID -> timestamp окончания cooldown
+  pendingPredictions: Array<{ event: GameEvent; triggerTime: number; predictionShown: boolean }>;  // [PREDICTION SYSTEM] Отложенные события
   flyingObjects: FlyingObject[];
 
   currentBoss: Boss | null;
@@ -1067,13 +1087,18 @@ export interface GameState {
 
   // === PHASE 2.3: TRAVEL ===
   travel: TravelState | null;           // Текущее состояние путешествия (null если не в пути)
+
+  // === PHASE 3: SIDE TUNNELS ===
+  sideTunnel: SideTunnelState | null;   // Активный боковой туннель
 }
 
 export type VisualEvent =
-  | { type: 'LOG'; msg: string; color?: string }
+  | { type: 'LOG'; msg: string; color?: string; icon?: string; timestamp?: boolean; detail?: string }
   | { type: 'TEXT'; x?: number; y?: number; position?: 'CENTER' | 'TOP_CENTER'; text: string; style?: 'DAMAGE' | 'RESOURCE' | 'CRIT' | 'HEAL' | 'INFO' | 'EVADE' | 'BLOCKED' }
   | { type: 'PARTICLE'; x?: number; y?: number; position?: 'CENTER' | 'DRILL_TIP'; color: string; kind: 'DEBRIS' | 'SPARK' | 'SMOKE'; count: number }
   | { type: 'BOSS_HIT' }
   | { type: 'SOUND'; sfx: 'LOG' | 'GLITCH' | 'ACHIEVEMENT' | 'RAID_ALARM' | 'RAID_SUCCESS' | 'RAID_FAILURE' | 'MARKET_TRADE' }
   | { type: 'SCREEN_SHAKE'; intensity: number; duration: number }
-  | { type: 'VISUAL_EFFECT'; option: VisualEffectType };
+  | { type: 'VISUAL_EFFECT'; option: VisualEffectType }
+  | { type: 'PREDICTION'; eventTitle: string; eventType: string; timeRemaining: number; detailLevel: 'BASIC' | 'MEDIUM' | 'FULL' };
+

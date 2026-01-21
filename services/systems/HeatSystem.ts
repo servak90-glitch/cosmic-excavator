@@ -62,7 +62,8 @@ export function processHeat(
             events.push({
                 type: 'LOG',
                 msg: "!!! АВАРИЙНАЯ БЛОКИРОВКА ТЕПЛА !!!",
-                color: "text-red-500 font-bold animate-pulse"
+                color: "text-red-500 font-bold animate-pulse",
+                icon: '⚠️'
             });
             audioEngine.playAlarm();
         } else if (!state.currentBoss) {
@@ -86,7 +87,7 @@ export function processHeat(
                 const dmg = Math.ceil(stats.integrity * 0.1);
                 integrity = Math.max(0, integrity - dmg);
 
-                events.push({ type: 'LOG', msg: "!!! КРИТИЧЕСКИЙ ПЕРЕГРЕВ !!!", color: "text-red-500 font-bold" });
+                events.push({ type: 'LOG', msg: "!!! КРИТИЧЕСКИЙ ПЕРЕГРЕВ !!!", color: "text-red-500 font-bold", icon: '🔥' });
                 events.push({
                     type: 'TEXT',
                     x: typeof window !== 'undefined' ? window.innerWidth / 2 : 400,
@@ -104,17 +105,17 @@ export function processHeat(
         if (!coolingDisabled) { // Убрано !isCoolingGameActive, чтобы охлаждение шло всегда
             // stats.totalCooling — это базовое значение охлаждения
             // Базовое охлаждение ~20% в секунду при totalCooling=50 (ускорено в 2 раза)
-            const coolingAmount = (stats.totalCooling * 0.4 + 0.2) * stats.ventSpeed * dt;
+            const coolingAmount = (stats.totalCooling * 0.5 + 0.5) * stats.ventSpeed * dt;
             heat = Math.max(stats.ambientHeat, heat - coolingAmount);
 
             if (heat <= stats.ambientHeat + 1) {
                 if (isOverheated) {
                     isOverheated = false;
-                    events.push({ type: 'LOG', msg: "СИСТЕМЫ ОХЛАЖДЕНЫ.", color: "text-green-500" });
+                    events.push({ type: 'LOG', msg: "СИСТЕМЫ ОХЛАЖДЕНЫ.", color: "text-green-500", icon: '✅' });
                 }
                 if (isCoolingGameActive) {
                     isCoolingGameActive = false;
-                    events.push({ type: 'LOG', msg: "АВАРИЙНАЯ БЛОКИРОВКА СНЯТА.", color: "text-cyan-400" });
+                    events.push({ type: 'LOG', msg: "АВАРИЙНАЯ БЛОКИРОВКА СНЯТА.", color: "text-cyan-400", icon: '🔓' });
                 }
             } else if (heat > stats.ambientHeat + 10 && coolingAmount < 0.01 && Math.random() < 0.02 * dt * 60) {
                 events.push({ type: 'LOG', msg: "ПРЕДУПРЕЖДЕНИЕ: ВНЕШНЯЯ СРЕДА СЛИШКОМ ГОРЯЧАЯ.", color: "text-orange-400" });

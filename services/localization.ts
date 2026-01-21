@@ -249,7 +249,44 @@ export const TEXT_IDS = {
   MSG_NO_DATA: { RU: 'НЕТ ДАННЫХ ДЛЯ ЗАГРУЗКИ', EN: 'NO DATA TO LOAD' },
   LABEL_EFFECT: { RU: 'ЭФФЕКТ:', EN: 'EFFECT:' },
   AI_ERROR: { RU: '[ ОШИБКА ]', EN: '[ ERROR ]' },
-  AI_CORE_LABEL: { RU: 'ИИ-ЯДРО', EN: 'AI-CORE' }
+  AI_CORE_LABEL: { RU: 'ИИ-ЯДРО', EN: 'AI-CORE' },
+
+  // Fusion System
+  FORGE_FUSION: { RU: 'СЛИЯНИЕ', EN: 'FUSION' },
+  FUSION_TITLE: { RU: 'СИНТЕЗ ДЕТАЛЕЙ', EN: 'PART FUSION' },
+  FUSION_DESCRIPTION: { RU: 'Объедините две детали одного типа для создания улучшенной версии', EN: 'Combine two parts of the same type to create an improved version' },
+  FUSION_CONDITION_ZERO_HEAT: { RU: 'Нулевой нагрев', EN: 'Zero Heat' },
+  FUSION_CONDITION_MAX_HEAT: { RU: 'Максимальный нагрев', EN: 'Max Heat' },
+  FUSION_CONDITION_DEPTH: { RU: 'Глубина', EN: 'Depth' },
+  FUSION_CONDITION_NO_DAMAGE: { RU: 'Без повреждений', EN: 'No Damage' },
+  FUSION_CATALYST: { RU: 'Катализатор', EN: 'Catalyst' },
+  FUSION_COMPONENTS: { RU: 'Компоненты', EN: 'Components' },
+  FUSION_RESULT: { RU: 'Результат', EN: 'Result' },
+  FUSION_BUTTON: { RU: 'СЛИТЬ', EN: 'FUSE' },
+  FUSION_REQUIREMENTS: { RU: 'Требования', EN: 'Requirements' },
+  FUSION_CONDITION_MET: { RU: 'Выполнено', EN: 'Met' },
+  FUSION_CONDITION_NOT_MET: { RU: 'Не выполнено', EN: 'Not Met' },
+  FUSION_NO_RECIPES: { RU: 'Нет доступных рецептов слияния', EN: 'No fusion recipes available' },
+  FUSION_SUCCESS: { RU: 'Слияние успешно!', EN: 'Fusion successful!' },
+  FUSION_FAILED: { RU: 'Слияние не удалось', EN: 'Fusion failed' },
+
+  // Transmutation
+  TRANSMUTATION_TITLE: { RU: 'ТРАНСМУТАЦИЯ', EN: 'TRANSMUTATION' },
+  TRANSMUTATION_DESC: { RU: 'Выберите 3 артефакта одной редкости, чтобы получить 1 более редкий.', EN: 'Select 3 artifacts of the same rarity to get 1 rarer artifact.' },
+  TRANSMUTATION_BUTTON: { RU: 'ЗАПУСК СИНТЕЗА', EN: 'START SYNTHESIS' },
+  TRANSMUTATION_NO_ARTIFACTS: { RU: 'НЕТ ДОСТУПНЫХ АРТЕФАКТОВ', EN: 'NO AVAILABLE ARTIFACTS' },
+
+  // Fusion Tab
+  FUSION_ATOMIC_RECONSTRUCTOR: { RU: 'АТОМНЫЙ РЕКОНСТРУКТОР', EN: 'ATOMIC RECONSTRUCTOR' },
+  FUSION_REQUIRED: { RU: 'ТРЕБУЕТСЯ:', EN: 'REQUIRED:' },
+  FUSION_STATUS: { RU: 'СТАТУС:', EN: 'STATUS:' },
+  FUSION_COMPLETED: { RU: 'ВЫПОЛНЕНО', EN: 'COMPLETED' },
+  FUSION_HULL_DAMAGED: { RU: 'ОБШИВКА ПОВРЕЖДЕНА', EN: 'HULL DAMAGED' },
+  FUSION_PREVIOUS_TIER_REQUIRED: { RU: 'ПРЕДЫДУЩИЙ ТИР', EN: 'PREVIOUS TIER' },
+  FUSION_ALREADY_UPGRADED: { RU: 'УЖЕ УЛУЧШЕНО', EN: 'ALREADY UPGRADED' },
+  FUSION_INSTALLED: { RU: 'УСТАНОВЛЕНО', EN: 'INSTALLED' },
+  FUSION_SYNTHESIZE: { RU: 'СИНТЕЗИРОВАТЬ', EN: 'SYNTHESIZE' },
+  FUSION_UNAVAILABLE: { RU: 'НЕДОСТУПНО', EN: 'UNAVAILABLE' }
 } as const;
 
 

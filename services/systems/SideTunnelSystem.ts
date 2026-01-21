@@ -4,11 +4,11 @@
  */
 
 import {
-    GameState, EventActionId, SideTunnelType, GameEvent, EventTrigger, VisualEffectType, InventoryItem
+    GameState, EventActionId, SideTunnelType, GameEvent, EventTrigger, VisualEffectType, InventoryItem, SideTunnelState, VisualEvent
 } from '../../types';
 import { rollArtifact } from '../artifactRegistry';
 import { calculateStats } from '../gameMath';
-import { tunnelAtmosphere } from './TunnelAtmosphere';
+import { t } from '../localization';
 
 interface TunnelDef {
     type: SideTunnelType;
@@ -26,11 +26,11 @@ interface TunnelDef {
     atmosphereEffect: VisualEffectType;
 }
 
-export const TUNNEL_DEFINITIONS: Record<SideTunnelType, TunnelDef> = {
+export const TUNNEL_DEFINITIONS: Record<SideTunnelType, Omit<TunnelDef, 'name' | 'description'> & { name: { RU: string, EN: string }, description: { RU: string, EN: string } }> = {
     SAFE: {
         type: 'SAFE',
-        name: 'Стабильный Туннель',
-        description: 'Сейсмически стабильный проход. Видны жилы ресурсов.',
+        name: { RU: 'Стабильный Туннель', EN: 'Stable Tunnel' },
+        description: { RU: 'Сейсмически стабильный проход. Видны жилы ресурсов.', EN: 'Seismically stable passage. Resource veins are visible.' },
         actionId: EventActionId.TUNNEL_SAFE,
         minDepth: 0,
         baseRisk: 0,
@@ -47,8 +47,8 @@ export const TUNNEL_DEFINITIONS: Record<SideTunnelType, TunnelDef> = {
     },
     RISKY: {
         type: 'RISKY',
-        name: 'Нестабильный Проход',
-        description: 'Стены вибрируют. Возможен обвал, но сканеры фиксируют аномалии.',
+        name: { RU: 'Нестабильный Проход', EN: 'Unstable Passage' },
+        description: { RU: 'Стены вибрируют. Возможен обвал, но сканеры фиксируют аномалии.', EN: 'Walls are vibrating. Cave-in is possible, but scanners detect anomalies.' },
         actionId: EventActionId.TUNNEL_RISKY,
         minDepth: 0,
         baseRisk: 0.4,
@@ -61,11 +61,11 @@ export const TUNNEL_DEFINITIONS: Record<SideTunnelType, TunnelDef> = {
     },
     CRYSTAL: {
         type: 'CRYSTAL',
-        name: 'Кристальная Пещера',
-        description: 'Стены покрыты резонирующими кристаллами. Высокая ценность.',
+        name: { RU: 'Кристальная Пещера', EN: 'Crystal Cave' },
+        description: { RU: 'Стены покрыты резонирующими кристаллами. Высокая ценность.', EN: 'Walls are covered with resonating crystals. High value.' },
         actionId: EventActionId.TUNNEL_CRYSTAL,
         minDepth: 2000,
-        baseRisk: 0.2, // Риск пореза/повреждения бура
+        baseRisk: 0.2,
         rewards: {
             resources: [
                 { type: 'rubies', min: 5, max: 15 },
@@ -80,8 +80,8 @@ export const TUNNEL_DEFINITIONS: Record<SideTunnelType, TunnelDef> = {
     },
     MINE: {
         type: 'MINE',
-        name: 'Заброшенная Шахта',
-        description: 'Остатки древней добычи. Высокий риск обвала техники.',
+        name: { RU: 'Заброшенная Шахта', EN: 'Abandoned Mine' },
+        description: { RU: 'Остатки древней добычи. Высокий риск обвала техники.', EN: 'Remains of ancient mining. High risk of equipment collapse.' },
         actionId: EventActionId.TUNNEL_MINE,
         minDepth: 1000,
         baseRisk: 0.6,
@@ -92,35 +92,47 @@ export const TUNNEL_DEFINITIONS: Record<SideTunnelType, TunnelDef> = {
                 { type: 'gold', min: 10, max: 30 }
             ],
             artifactChance: 0.2,
-            techChance: 0.8, // Много теха
+            techChance: 0.8,
             techAmount: 40
         },
         atmosphereEffect: 'NONE'
     },
     NEST: {
         type: 'NEST',
-        name: 'Гнездо Чужих',
-        description: 'Биосканеры зашкаливают. Чрезвычайная опасность.',
+        name: { RU: 'Гнездо Чужих', EN: 'Alien Nest' },
+        description: { RU: 'Биосканеры зашкаливают. Чрезвычайная опасность.', EN: 'Bioscaners are off the charts. Extreme danger.' },
         actionId: EventActionId.TUNNEL_NEST,
         minDepth: 3000,
-        baseRisk: 0.8, // Бой или урон
+        baseRisk: 0.8,
         rewards: {
             resources: [
                 { type: 'nanoSwarm', min: 50, max: 200 }
             ],
-            artifactChance: 0.6, // Высокий шанс артефакта
+            artifactChance: 0.6,
             techChance: 0.4,
             techAmount: 30
         },
-        atmosphereEffect: 'GLOW_GOLD' // Или зелёный?
+        atmosphereEffect: 'GLOW_GOLD'
     }
 };
+
+export const AVAILABLE_BLUEPRINTS = [
+    'blueprint_advanced_drilling',
+    'blueprint_quantum_drilling',
+    'blueprint_high_power_engines',
+    'blueprint_quantum_engines',
+    'blueprint_quantum_cooling',
+    'blueprint_cryogenic_tech',
+    'blueprint_titanium_hull',
+    'blueprint_adaptive_armor',
+    'blueprint_fusion_core'
+];
 
 class SideTunnelSystem {
     /**
      * Сгенерировать событие Side Tunnel
      */
-    generateEvent(depth: number, biomeId: string, hasScanner: boolean): GameEvent | null {
+    generateEvent(depth: number, biomeId: string, hasScanner: boolean, lang: 'RU' | 'EN'): GameEvent | null {
         // Шанс появления спец. туннелей растёт с глубиной
         const specialChance = Math.min(0.5, depth / 10000);
 
@@ -142,20 +154,17 @@ class SideTunnelSystem {
 
         const def = TUNNEL_DEFINITIONS[type];
 
-        // Если нет сканера и туннель опасный, игрок может не узнать точный тип
-        // Но пока что упростим: сканер просто дает больше инфо в описании или предупреждение
-
-        let title = 'Обнаружен Боковой Туннель';
-        let desc = def.description;
+        let title = lang === 'RU' ? 'Обнаружен Боковой Туннель' : 'Side Tunnel Detected';
+        let desc = t(def.description, lang);
 
         if (!hasScanner && type !== 'SAFE') {
             // Без сканера описание более туманное
-            if (type === 'CRYSTAL') desc = 'Странное свечение из бокового прохода.';
-            if (type === 'MINE') desc = 'Видны следы искусственного происхождения.';
-            if (type === 'NEST') desc = 'Слышны странные звуки из глубины.';
+            if (type === 'CRYSTAL') desc = lang === 'RU' ? 'Странное свечение из бокового прохода.' : 'Strange glow from a side passage.';
+            if (type === 'MINE') desc = lang === 'RU' ? 'Видны следы искусственного происхождения.' : 'Traces of artificial origin are visible.';
+            if (type === 'NEST') desc = lang === 'RU' ? 'Слышны странные звуки из глубины.' : 'Strange sounds heard from the depths.';
         } else if (hasScanner) {
-            title = `[SCAN] ${def.name}`;
-            desc = `${def.description} (Риск: ${Math.round(def.baseRisk * 100)}%)`;
+            title = `[SCAN] ${t(def.name, lang)}`;
+            desc = `${t(def.description, lang)} (${lang === 'RU' ? 'Риск' : 'Risk'}: ${Math.round(def.baseRisk * 100)}%)`;
         }
 
         return {
@@ -166,131 +175,160 @@ class SideTunnelSystem {
             weight: 100,
             options: [
                 {
-                    label: `Войти в ${def.name.toLowerCase()}`,
+                    label: `${lang === 'RU' ? 'Войти в' : 'Enter'} ${t(def.name, lang).toLowerCase()}`,
                     actionId: def.actionId,
                     risk: def.baseRisk > 0.3 ? 'HIGH' : (def.baseRisk > 0 ? 'MEDIUM' : 'LOW')
                 },
                 {
-                    label: 'Игнорировать',
+                    label: lang === 'RU' ? 'Игнорировать' : 'Ignore',
                     actionId: 'encounter_ignore'
                 }
             ],
             triggers: [EventTrigger.DRILLING]
-        } as any; // Cast for now due to legacy event structure
+        } as any;
     }
 
     /**
-     * Обработать результат входа в туннель
-     * Возвращает обновления стейта и логи
+     * Создать начальное состояние для исследования туннеля
      */
-    resolveTunnel(actionId: EventActionId, state: GameState, activePerks: string[] = []): { updates: Partial<GameState>, logs: any[] } {
-        const updates: Partial<GameState> = {};
-        const logs: any[] = [];
-        const r = { ...state.resources };
-
-        // Determine type based on actionId
-        let type: SideTunnelType | null = null;
-        if (actionId === EventActionId.TUNNEL_SAFE) type = 'SAFE';
-        if (actionId === EventActionId.TUNNEL_RISKY) type = 'RISKY';
-        if (actionId === EventActionId.TUNNEL_CRYSTAL) type = 'CRYSTAL';
-        if (actionId === EventActionId.TUNNEL_MINE) type = 'MINE';
-        if (actionId === EventActionId.TUNNEL_NEST) type = 'NEST';
-
-        if (!type) return { updates, logs };
-
+    startTunnel(type: SideTunnelType, depth: number): SideTunnelState {
         const def = TUNNEL_DEFINITIONS[type];
-        const stats = calculateStats(state.drill, state.skillLevels, state.equippedArtifacts, state.inventory, state.depth);
 
-        // Success Roll
-        // Luck affects success chance
-        // Base risk is failure chance. So Success = 1 - Risk.
-        // Luck bonus: each point reduces risk by 1%?
-        const riskReduction = stats.luck * 0.01;
-        let actualRisk = Math.max(0, def.baseRisk - riskReduction);
-
-        // Perk: Sabotage Expertise (Rebels Level 7) - +10% risky tunnel success (reduces risk by 0.1)
-        if (activePerks.includes('SABOTAGE')) {
-            actualRisk = Math.max(0, actualRisk - 0.1);
+        // Генерация наград
+        const rewards: Record<string, number> = {};
+        if (def.rewards.resources) {
+            def.rewards.resources.forEach(res => {
+                const amount = Math.floor(res.min + Math.random() * (res.max - res.min));
+                const scaling = 1 + (depth / 5000);
+                rewards[res.type] = Math.floor(amount * scaling);
+            });
         }
 
-        const roll = Math.random();
-
-        const isSuccess = roll >= actualRisk;
-
-        if (isSuccess) {
-            logs.push({ type: 'SOUND', sfx: 'ACHIEVEMENT' });
-            // Rewards
-            if (def.rewards.resources) {
-                def.rewards.resources.forEach(resDef => {
-                    const amount = Math.floor(resDef.min + Math.random() * (resDef.max - resDef.min));
-                    const mult = 1 + (state.depth / 5000); // Depth Scaling
-                    // Fixed: resourceMultPct is not on stats, assuming 1.0 default if not present or check types
-                    const total = Math.floor(amount * mult);
-
-                    if (total > 0) {
-                        r[resDef.type as keyof typeof r] = (r[resDef.type as keyof typeof r] || 0) + total;
-                        logs.push({ type: 'LOG', msg: `>> ${resDef.type.toUpperCase()}: +${total}`, color: 'text-green-400' });
-                    }
-                });
-            }
-
-            if (Math.random() < def.rewards.techChance) {
-                const amount = Math.floor(def.rewards.techAmount * (1 + Math.random()));
-                r.ancientTech += amount;
-                logs.push({ type: 'LOG', msg: `>> ANCIENT TECH: +${amount}`, color: 'text-blue-400' });
-            }
-
-            if (Math.random() < def.rewards.artifactChance) {
-                const artDef = rollArtifact(state.depth, stats.luck, state.selectedBiome || undefined);
-                const id = Math.random().toString(36).substr(2, 9);
-                const newItem: InventoryItem = { instanceId: id, defId: artDef.id, acquiredAt: Date.now(), isIdentified: false, isEquipped: false };
-                const newInv = { ...state.inventory, [id]: newItem };
-                updates.inventory = newInv;
-                if (state.storageLevel === 0) updates.storageLevel = 1;
-                logs.push({ type: 'LOG', msg: '>> НАЙДЕН АРТЕФАКТ!', color: 'text-purple-400 font-bold' });
-            }
-
-            // Fixed: use valid hazard type or handle NONE logic differently
-            // tunnelAtmosphere.triggerHazard('NONE', 0); // Invalid call
-            // Instead we just don't trigger anything or reset if API supports it.
-            // visualEffect 'NONE' handles the look.
-
-        } else {
-            // Failure
-            logs.push({ type: 'SOUND', sfx: 'GLITCH' });
-
-            // Damage / Loss depending on type
-            let damage = 0;
-            const maxIntegrity = state.drill.hull.baseStats.maxIntegrity; // Fixed property access
-
-            switch (type) {
-                case 'RISKY':
-                case 'MINE':
-                    damage = Math.floor(maxIntegrity * 0.3);
-                    logs.push({ type: 'LOG', msg: `>> ОБВАЛ! КОРПУС ПОВРЕЖДЕН: -${damage}`, color: 'text-red-500 font-bold' });
-                    tunnelAtmosphere.triggerHazard('CAVE_IN', 1.0);
-                    break;
-                case 'CRYSTAL':
-                    damage = Math.floor(maxIntegrity * 0.15);
-                    logs.push({ type: 'LOG', msg: `>> РЕЗОНАНС! ПОВРЕЖДЕНИЕ СИСТЕМ: -${damage}`, color: 'text-purple-500 font-bold' });
-                    break;
-                case 'NEST':
-                    damage = Math.floor(maxIntegrity * 0.5);
-                    logs.push({ type: 'LOG', msg: `>> АТАКА РОЯ! КРИТИЧЕСКИЕ ПОВРЕЖДЕНИЯ: -${damage}`, color: 'text-red-600 font-bold' });
-                    // TODO: Trigger Combat?
-                    break;
-                default:
-                    logs.push({ type: 'LOG', msg: '>> ПУСТО... ТОЛЬКО ПОТЕРЯ ВРЕМЕНИ', color: 'text-gray-500' });
-            }
-
-            // Apply defense
-            const damageTaken = Math.max(0, damage - stats.defense);
-            updates.integrity = Math.max(0, state.integrity - damageTaken);
+        // Ancient Tech
+        if (Math.random() < def.rewards.techChance) {
+            rewards.ancientTech = Math.floor(def.rewards.techAmount * (1 + Math.random()));
         }
 
-        updates.resources = r;
-        return { updates, logs };
+        return {
+            type,
+            name: def.name,
+            progress: 0,
+            maxProgress: 100 + (depth / 100), // Сложность растет с глубиной
+            rewards,
+            difficulty: 1 + (def.baseRisk * 5),
+        };
     }
 }
 
 export const sideTunnelSystem = new SideTunnelSystem();
+
+/**
+ * Обработка продвижения в боковом туннеле
+ */
+export function processSideTunnel(
+    state: GameState,
+    drillPower: number,
+    dt: number,
+    lang: 'RU' | 'EN'
+): { update: Partial<GameState>; events: VisualEvent[] } {
+    const events: VisualEvent[] = [];
+    const resourceChanges: Record<string, number> = {};
+
+    if (!state.sideTunnel) {
+        return { update: {}, events };
+    }
+
+    const tunnel = { ...state.sideTunnel };
+
+    // Продвижение зависит от мощности бура и сложности туннеля
+    const progressGain = (drillPower * dt) / (tunnel.difficulty || 1);
+    tunnel.progress += progressGain;
+
+    // Шанс найти ресурс во время раскопок в туннеле
+    if (Math.random() < 0.05 * dt * 60) {
+        const resourceTypes = Object.keys(tunnel.rewards).filter(k => k !== 'ancientTech');
+        if (resourceTypes.length > 0) {
+            const resType = resourceTypes[Math.floor(Math.random() * resourceTypes.length)];
+            const amount = Math.max(1, Math.floor((tunnel.rewards[resType] / 20) * Math.random()));
+            resourceChanges[resType] = (resourceChanges[resType] || 0) + amount;
+
+            events.push({
+                type: 'TEXT',
+                position: 'CENTER',
+                text: `+${amount} ${resType.toUpperCase()}`,
+                style: 'RESOURCE'
+            });
+        }
+    }
+
+    // Завершение туннеля
+    if (tunnel.progress >= tunnel.maxProgress) {
+        events.push({
+            type: 'LOG',
+            msg: lang === 'RU' ? `🎉 ТУННЕЛЬ "${t(tunnel.name, lang).toUpperCase()}" ПОЛНОСТЬЮ ИССЛЕДОВАН!` : `🎉 TUNNEL "${t(tunnel.name, lang).toUpperCase()}" FULLY EXPLORED!`,
+            color: 'text-yellow-400 font-bold'
+        });
+
+        // Финальные награды
+        Object.entries(tunnel.rewards).forEach(([res, amount]) => {
+            resourceChanges[res] = (resourceChanges[res] || 0) + amount;
+            events.push({
+                type: 'LOG',
+                msg: `>> ${lang === 'RU' ? 'ПОЛУЧЕНО' : 'RECEIVED'}: ${Math.floor(amount)} ${res.toUpperCase()}`,
+                color: 'text-green-400'
+            });
+        });
+
+        // Шанс найти чертеж (Blueprint) - Phase 3
+        if (Math.random() < 0.25) {
+            const potentialBlueprints = AVAILABLE_BLUEPRINTS.filter(bp => !state.unlockedBlueprints.includes(bp));
+
+            if (potentialBlueprints.length > 0) {
+                const newBp = potentialBlueprints[Math.floor(Math.random() * potentialBlueprints.length)];
+
+                events.push({
+                    type: 'LOG',
+                    msg: lang === 'RU'
+                        ? `🛠️ ОБНАРУЖЕН СЕКРЕТНЫЙ ЧЕРТЕЖ: ${newBp.replace('blueprint_', '').replace(/_/g, ' ').toUpperCase()}!`
+                        : `🛠️ SECRET BLUEPRINT DISCOVERED: ${newBp.replace('blueprint_', '').replace(/_/g, ' ').toUpperCase()}!`,
+                    color: 'text-purple-400 font-bold'
+                });
+                events.push({ type: 'SOUND', sfx: 'ACHIEVEMENT' });
+
+                return {
+                    update: {
+                        sideTunnel: null,
+                        unlockedBlueprints: [...state.unlockedBlueprints, newBp],
+                        resources: Object.keys(resourceChanges).reduce((acc, key) => {
+                            acc[key as keyof typeof acc] = (state.resources[key as keyof typeof acc] || 0) + resourceChanges[key];
+                            return acc;
+                        }, { ...state.resources })
+                    },
+                    events
+                };
+            }
+        }
+
+        return {
+            update: {
+                sideTunnel: null,
+                resources: Object.keys(resourceChanges).reduce((acc, key) => {
+                    acc[key as keyof typeof acc] = (state.resources[key as keyof typeof acc] || 0) + resourceChanges[key];
+                    return acc;
+                }, { ...state.resources })
+            },
+            events
+        };
+    }
+
+    return {
+        update: {
+            sideTunnel: tunnel,
+            resources: Object.keys(resourceChanges).reduce((acc, key) => {
+                acc[key as keyof typeof acc] = (state.resources[key as keyof typeof acc] || 0) + resourceChanges[key];
+                return acc;
+            }, { ...state.resources })
+        },
+        events
+    };
+}

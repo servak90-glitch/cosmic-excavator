@@ -106,8 +106,8 @@ export const COOLERS: CoolerPart[] = [
   { id: 'cool_8', tier: 8, mass: 129, rarity: 'Epic', name: { RU: 'Крио-капсула', EN: 'Cryo-Capsule' }, description: { RU: 'Замораживает даже звук трения.', EN: 'Freezes even the sound of friction.' }, cost: { ancientTech: 15, diamonds: 10 }, blueprintId: 'blueprint_quantum_cooling', baseStats: { cooling: 35, energyCost: 30 } },
   { id: 'cool_9', tier: 9, mass: 140, rarity: 'Epic', name: { RU: 'Тепловой насос "Бездна"', EN: 'Heat Pump "Abyss"' }, description: { RU: 'Сбрасывает жар в почву.', EN: 'Dumps heat into the ground.' }, cost: { ancientTech: 40, rubies: 20, nanoSwarm: 50 }, blueprintId: 'blueprint_quantum_cooling', baseStats: { cooling: 50, energyCost: 45 } },
   { id: 'cool_10', tier: 10, mass: 150, rarity: 'Legendary', name: { RU: 'Эндотермический реактор', EN: 'Endothermic Reactor' }, description: { RU: 'Превращает тепло в энергию.', EN: 'Turns heat into energy.' }, cost: { ancientTech: 100, emeralds: 50, nanoSwarm: 100 }, blueprintId: 'blueprint_cryogenic_tech', baseStats: { cooling: 70, energyCost: 0 } },
-  { id: 'cool_11', tier: 11, mass: 161, rarity: 'Legendary', name: { RU: 'Абсолютный ноль', EN: 'Absolute Zero' }, description: { RU: 'Движение атомов почти замирает.', EN: 'Atomic movement almost stops.' }, cost: { ancientTech: 300, diamonds: 50, nanoSwarm: 200 }, blueprintId: 'blueprint_cryogenic_tech', baseStats: { cooling: 100, energyCost: 80 } },
-  { id: 'cool_12', tier: 12, mass: 171, rarity: 'Legendary', name: { RU: 'Стрингер Пустоты', EN: 'Void Stringer' }, description: { RU: 'Тепло уходит в параллельный мир.', EN: 'Heat goes to a parallel world.' }, cost: { ancientTech: 800, nanoSwarm: 1000, rubies: 50 }, blueprintId: 'blueprint_cryogenic_tech', baseStats: { cooling: 150, energyCost: 120 } },
+  { id: 'cool_11', tier: 11, mass: 161, rarity: 'Legendary', name: { RU: 'Абсолютный ноль', EN: 'Absolute Zero' }, description: { RU: 'Движение атомов почти замирает.', EN: 'Atomic movement almost stops.' }, cost: { ancientTech: 300, diamonds: 50, nanoSwarm: 200, ice: 500 }, blueprintId: 'blueprint_cryogenic_tech', baseStats: { cooling: 100, energyCost: 80 } },
+  { id: 'cool_12', tier: 12, mass: 171, rarity: 'Legendary', name: { RU: 'Стрингер Пустоты', EN: 'Void Stringer' }, description: { RU: 'Тепло уходит в параллельный мир.', EN: 'Heat goes to a parallel world.' }, cost: { ancientTech: 800, nanoSwarm: 1000, rubies: 50, ice: 2000 }, blueprintId: 'blueprint_cryogenic_tech', baseStats: { cooling: 150, energyCost: 120 } },
   { id: 'cool_13', tier: 13, mass: 181, rarity: 'Godly', name: { RU: 'Энтропийный якорь', EN: 'Entropy Anchor' }, description: { RU: 'Запрещает металлу нагреваться.', EN: 'Forbids metal from heating up.' }, cost: { ancientTech: 2000, rubies: 500, nanoSwarm: 1500 }, blueprintId: 'blueprint_fusion_core', baseStats: { cooling: 250, energyCost: 200 } },
   { id: 'cool_14', tier: 14, mass: 190, rarity: 'Godly', name: { RU: 'Ледяное сердце звезды', EN: 'Ice Heart of a Star' }, description: { RU: 'Холод межгалактического пространства.', EN: 'Cold of intergalactic space.' }, cost: { ancientTech: 5000, emeralds: 500, diamonds: 200 }, blueprintId: 'blueprint_fusion_core', baseStats: { cooling: 400, energyCost: 300 } },
   { id: 'cool_15', tier: 15, mass: 200, rarity: 'Godly', name: { RU: 'Смерть Вселенной', EN: 'Death of the Universe' }, description: { RU: 'Нагрев невозможен. Абсолютная тишина.', EN: 'Heating is impossible. Absolute silence.' }, cost: { ancientTech: 10000, nanoSwarm: 5000 }, blueprintId: 'blueprint_fusion_core', baseStats: { cooling: 999, energyCost: 500 } }
@@ -125,8 +125,8 @@ export const HULLS: HullPart[] = [
   { id: 'hull_8', tier: 8, mass: 3084, rarity: 'Epic', name: { RU: 'Оболочка "Стелс"', EN: 'Hull "Stealth"' }, description: { RU: '4 слота. Гасит вибрации.', EN: '4 slots. Dampens vibrations.' }, cost: { uranium: 1500, nanoSwarm: 50 }, blueprintId: 'blueprint_titanium_hull', baseStats: { maxIntegrity: 600, slots: 4, heatCap: 500, regen: 3, cargoCapacity: 70000 } },
   { id: 'hull_9', tier: 9, mass: 3419, rarity: 'Epic', name: { RU: 'Титановый Монолит', EN: 'Titanium Monolith' }, description: { RU: '5 слотов. Несокрушимый.', EN: '5 slots. Indestructible.' }, cost: { ancientTech: 50, rubies: 10, diamonds: 20 }, blueprintId: 'blueprint_titanium_hull', baseStats: { maxIntegrity: 1500, slots: 5, heatCap: 600, regen: 5, cargoCapacity: 120000 } },
   { id: 'hull_10', tier: 10, mass: 3749, rarity: 'Legendary', name: { RU: 'Экзо-скелет "Атлант"', EN: 'Exo-skeleton "Atlas"' }, description: { RU: '5 слотов. Поднимает горы.', EN: '5 slots. Lifts mountains.' }, cost: { ancientTech: 150, emeralds: 50, nanoSwarm: 200 }, blueprintId: 'blueprint_adaptive_armor', baseStats: { maxIntegrity: 2500, slots: 5, heatCap: 700, regen: 10, cargoCapacity: 250000 } },
-  { id: 'hull_11', tier: 11, mass: 4076, rarity: 'Legendary', name: { RU: 'Живая броня', EN: 'Living Armor' }, description: { RU: '6 слотов. Регенерация структуры.', EN: '6 slots. Structural regeneration.' }, cost: { ancientTech: 400, diamonds: 30, nanoSwarm: 500 }, blueprintId: 'blueprint_adaptive_armor', baseStats: { maxIntegrity: 3000, slots: 6, heatCap: 800, regen: 25, cargoCapacity: 500000 } },
-  { id: 'hull_12', tier: 12, mass: 4398, rarity: 'Legendary', name: { RU: 'Композит "Зеркало"', EN: 'Composite "Mirror"' }, description: { RU: '6 слотов. Отражает реальность.', EN: '6 slots. Reflects reality.' }, cost: { ancientTech: 1000, nanoSwarm: 1500, rubies: 100 }, blueprintId: 'blueprint_adaptive_armor', baseStats: { maxIntegrity: 3500, slots: 6, heatCap: 900, regen: 50, cargoCapacity: 1000000 } },
+  { id: 'hull_11', tier: 11, mass: 4076, rarity: 'Legendary', name: { RU: 'Живая броня', EN: 'Living Armor' }, description: { RU: '6 слотов. Регенерация структуры.', EN: '6 slots. Structural regeneration.' }, cost: { ancientTech: 400, diamonds: 30, nanoSwarm: 500, scrap: 1000 }, blueprintId: 'blueprint_adaptive_armor', baseStats: { maxIntegrity: 3000, slots: 6, heatCap: 800, regen: 25, cargoCapacity: 500000 } },
+  { id: 'hull_12', tier: 12, mass: 4398, rarity: 'Legendary', name: { RU: 'Композит "Зеркало"', EN: 'Composite "Mirror"' }, description: { RU: '6 слотов. Отражает реальность.', EN: '6 slots. Reflects reality.' }, cost: { ancientTech: 1000, nanoSwarm: 1500, rubies: 100, scrap: 4000 }, blueprintId: 'blueprint_adaptive_armor', baseStats: { maxIntegrity: 3500, slots: 6, heatCap: 900, regen: 50, cargoCapacity: 1000000 } },
   { id: 'hull_13', tier: 13, mass: 4717, rarity: 'Godly', name: { RU: 'Ковчег Предтеч', EN: 'Ark of the Precursors' }, description: { RU: '7 слотов. Дом в пустоте.', EN: '7 slots. Home in the void.' }, cost: { ancientTech: 3000, rubies: 1000, diamonds: 500 }, blueprintId: 'blueprint_fusion_core', baseStats: { maxIntegrity: 5000, slots: 7, heatCap: 1200, regen: 100, cargoCapacity: 2500000 } },
   { id: 'hull_14', tier: 14, mass: 5033, rarity: 'Godly', name: { RU: 'Сингулярная оболочка', EN: 'Singular Shell' }, description: { RU: '8 слотов. Поглощает урон в энергию.', EN: '8 slots. Absorbs damage into energy.' }, cost: { ancientTech: 8000, emeralds: 1000, nanoSwarm: 3000 }, blueprintId: 'blueprint_fusion_core', baseStats: { maxIntegrity: 8000, slots: 8, heatCap: 2000, regen: 250, cargoCapacity: 6000000 } },
   { id: 'hull_15', tier: 15, mass: 5346, rarity: 'Godly', name: { RU: 'Несокрушимый', EN: 'Indestructible' }, description: { RU: '10 слотов. Вечность.', EN: '10 slots. Eternity.' }, cost: { ancientTech: 20000, diamonds: 1000, nanoSwarm: 8000 }, blueprintId: 'blueprint_fusion_core', baseStats: { maxIntegrity: 20000, slots: 10, heatCap: 5000, regen: 1000, cargoCapacity: 15000000 } }
@@ -182,8 +182,8 @@ export const GEARBOXES: GearboxPart[] = [
   { id: 'gear_8', tier: 8, mass: 264, rarity: 'Epic', name: { RU: 'Алмазные зубья', EN: 'Diamond Teeth' }, description: { RU: 'Игнор 40%', EN: 'Ignore 40%' }, cost: { ancientTech: 20, diamonds: 30 }, baseStats: { torque: 40, energyCost: 35 } },
   { id: 'gear_9', tier: 9, mass: 290, rarity: 'Epic', name: { RU: 'Герметичный привод', EN: 'Hermetic Drive' }, description: { RU: 'Игнор 50%', EN: 'Ignore 50%' }, cost: { ancientTech: 60, nanoSwarm: 50 }, baseStats: { torque: 50, energyCost: 50 } },
   { id: 'gear_10', tier: 10, mass: 315, rarity: 'Legendary', name: { RU: 'Грави-стабилизатор', EN: 'Gravi-stabilizer' }, description: { RU: 'Игнор 60%', EN: 'Ignore 60%' }, cost: { ancientTech: 150, emeralds: 50 }, baseStats: { torque: 60, energyCost: 70 } },
-  { id: 'gear_11', tier: 11, mass: 340, rarity: 'Legendary', name: { RU: 'Модуль "Прорыв"', EN: 'Module "Breakthrough"' }, description: { RU: 'Игнор 70%', EN: 'Ignore 70%' }, cost: { ancientTech: 400, diamonds: 100 }, baseStats: { torque: 70, energyCost: 100 } },
-  { id: 'gear_12', tier: 12, mass: 365, rarity: 'Legendary', name: { RU: 'Вариатор "Тьма"', EN: 'Variator "Darkness"' }, description: { RU: 'Игнор 80%', EN: 'Ignore 80%' }, cost: { ancientTech: 1000, nanoSwarm: 500, rubies: 50 }, baseStats: { torque: 80, energyCost: 150 } },
+  { id: 'gear_11', tier: 11, mass: 340, rarity: 'Legendary', name: { RU: 'Модуль "Прорыв"', EN: 'Module "Breakthrough"' }, description: { RU: 'Игнор 70%', EN: 'Ignore 70%' }, cost: { ancientTech: 400, diamonds: 100, scrap: 800 }, baseStats: { torque: 70, energyCost: 100 } },
+  { id: 'gear_12', tier: 12, mass: 365, rarity: 'Legendary', name: { RU: 'Вариатор "Тьма"', EN: 'Variator "Darkness"' }, description: { RU: 'Игнор 80%', EN: 'Ignore 80%' }, cost: { ancientTech: 1000, nanoSwarm: 500, rubies: 50, scrap: 2500 }, baseStats: { torque: 80, energyCost: 150 } },
   { id: 'gear_13', tier: 13, mass: 389, rarity: 'Godly', name: { RU: 'Разрушитель связей', EN: 'Bond Breaker' }, description: { RU: 'Игнор 90%', EN: 'Ignore 90%' }, cost: { ancientTech: 3000, diamonds: 300, nanoSwarm: 1000 }, baseStats: { torque: 90, energyCost: 200 } },
   { id: 'gear_14', tier: 14, mass: 413, rarity: 'Godly', name: { RU: 'Нулевое сопротивление', EN: 'Zero Resistance' }, description: { RU: 'Игнор 95%', EN: 'Ignore 95%' }, cost: { ancientTech: 8000, nanoSwarm: 3000 }, baseStats: { torque: 95, energyCost: 300 } },
   { id: 'gear_15', tier: 15, mass: 436, rarity: 'Godly', name: { RU: 'Абсолютная тяга', EN: 'Absolute Traction' }, description: { RU: 'Игнор 100%', EN: 'Ignore 100%' }, cost: { ancientTech: 20000, diamonds: 1000 }, baseStats: { torque: 100, energyCost: 500 } }
@@ -249,51 +249,281 @@ export const CARGO_BAYS: CargoBayPart[] = [
 
 
 export const FUSION_RECIPES: MergeRecipe[] = [
-  // BITS
-  { id: 'fus_bit_13', resultId: 'bit_13', componentAId: 'bit_12', componentBId: 'NONE', catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 500 }, description: 'Разрыв реальности требует жертв.' },
-  { id: 'fus_bit_14', resultId: 'bit_14', componentAId: 'bit_13', componentBId: 'NONE', catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 1000 }, description: 'Спираль судьбы закручивается.', condition: { type: 'DEPTH_REACHED', target: 20000, description: 'Глубина > 20,000м' } },
-  { id: 'fus_bit_15', resultId: 'bit_15', componentAId: 'bit_14', componentBId: 'NONE', catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 5000 }, description: 'Последний рубеж материи.', condition: { type: 'DEPTH_REACHED', target: 50000, description: 'Глубина > 50,000м' } },
-  // ENGINES
-  { id: 'fus_eng_13', resultId: 'eng_13', componentAId: 'eng_12', componentBId: 'NONE', catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 500 }, description: 'Движение без инерции.' },
-  { id: 'fus_eng_14', resultId: 'eng_14', componentAId: 'eng_13', componentBId: 'NONE', catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 1000 }, description: 'Вращение в 4-х измерениях.' },
-  { id: 'fus_eng_15', resultId: 'eng_15', componentAId: 'eng_14', componentBId: 'NONE', catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 5000 }, description: 'Чистая воля как топливо.', condition: { type: 'ZERO_HEAT', target: 30, description: 'Температура 0% (30 сек)' } },
-  { id: 'fuse_eng_13', componentAId: 'eng_11', componentBId: 'eng_12', resultId: 'fus_eng_13', catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 500 }, description: { RU: 'Стабилизация нулевой точки.', EN: 'Zero point stabilization.' } },
-  { id: 'fuse_eng_14', componentAId: 'fus_eng_13', componentBId: 'eng_12', resultId: 'fus_eng_14', catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 1500 }, description: { RU: 'Суперпозиция вращения.', EN: 'Rotation superposition.' } },
-  { id: 'fuse_eng_15', componentAId: 'fus_eng_14', componentBId: 'fus_eng_13', resultId: 'fus_eng_15', catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 5000 }, description: { RU: 'ПЕРВОДВИГАТЕЛЬ.', EN: 'PRIME MOVER.' } },
+  // === DRILL BITS ===
+  {
+    id: 'fusion_bit_13',
+    resultId: 'bit_13',
+    componentAId: 'bit_12',
+    componentBId: 'bit_12',
+    catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 1000 },
+    condition: { type: 'DEPTH_REACHED', target: 100000, description: 'Достигните глубины 100,000м' },
+    description: { RU: 'Два Антиматериевых пера создают Разлом Реальности', EN: 'Two Antimatter Nibs create Reality Breach' }
+  },
+  {
+    id: 'fusion_bit_14',
+    resultId: 'bit_14',
+    componentAId: 'bit_13',
+    componentBId: 'bit_13',
+    catalyst: { resource: ResourceType.NANO_SWARM, amount: 2000 },
+    condition: { type: 'ZERO_HEAT', target: 0, description: 'Слияние при нулевом нагреве' },
+    description: { RU: 'Два Разлома создают Спираль Судьбы', EN: 'Two Breaches create Spiral of Fate' }
+  },
+  {
+    id: 'fusion_bit_15',
+    resultId: 'bit_15',
+    componentAId: 'bit_14',
+    componentBId: 'bit_14',
+    catalyst: { resource: ResourceType.DIAMONDS, amount: 500 },
+    condition: { type: 'NO_DAMAGE', target: 100, description: 'Слияние при 100% HP' },
+    description: { RU: 'Две Спирали создают Пронзающий Пустоту', EN: 'Two Spirals create Void Piercer' }
+  },
 
-  // COOLERS
-  { id: 'fuse_cool_13', componentAId: 'cool_11', componentBId: 'cool_12', resultId: 'cool_13', catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 500 }, description: { RU: 'Остановка энтропии.', EN: 'Stopping entropy.' } },
-  { id: 'fuse_cool_14', componentAId: 'cool_13', componentBId: 'cool_12', resultId: 'cool_14', catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 1500 }, description: { RU: 'Сердце замерзшей звезды.', EN: 'Heart of a frozen star.' } },
-  { id: 'fuse_cool_15', componentAId: 'cool_14', componentBId: 'cool_13', resultId: 'cool_15', catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 5000 }, description: { RU: 'ХЛАД ВСЕЛЕННОЙ.', EN: 'COLD OF THE UNIVERSE.' } },
+  // === ENGINES ===
+  {
+    id: 'fusion_engine_13',
+    resultId: 'fus_eng_13',
+    componentAId: 'eng_12',
+    componentBId: 'eng_12',
+    catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 1500 },
+    condition: { type: 'MAX_HEAT', target: 100, description: 'Слияние при максимальном нагреве' },
+    description: { RU: 'Две Темные материи создают Нулевую точку', EN: 'Two Dark Matters create Zero Point' }
+  },
+  {
+    id: 'fusion_engine_14',
+    resultId: 'fus_eng_14',
+    componentAId: 'fus_eng_13',
+    componentBId: 'fus_eng_13',
+    catalyst: { resource: ResourceType.NANO_SWARM, amount: 3000 },
+    condition: { type: 'DEPTH_REACHED', target: 150000, description: 'Достигните глубины 150,000м' },
+    description: { RU: 'Две Нулевые точки создают Квантовый суперпозитор', EN: 'Two Zero Points create Quantum Superpositor' }
+  },
+  {
+    id: 'fusion_engine_15',
+    resultId: 'fus_eng_15',
+    componentAId: 'fus_eng_14',
+    componentBId: 'fus_eng_14',
+    catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 5000 },
+    description: { RU: 'Два Суперпозитора создают Двигатель Воли', EN: 'Two Superpositors create Engine of Will' }
+  },
 
-  // HULLS
-  { id: 'fuse_hull_13', componentAId: 'hull_11', componentBId: 'hull_12', resultId: 'hull_13', catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 1000 }, description: { RU: 'Создание Ковчега.', EN: 'Creating the Ark.' } },
-  { id: 'fuse_hull_14', componentAId: 'hull_13', componentBId: 'hull_12', resultId: 'hull_14', catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 2500 }, description: { RU: 'Формирование оболочки.', EN: 'Shell formation.' } },
-  { id: 'fuse_hull_15', componentAId: 'hull_14', componentBId: 'hull_13', resultId: 'hull_15', catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 10000 }, description: { RU: 'НЕУЯЗВИМОСТЬ.', EN: 'INVULNERABILITY.' } },
-  // LOGIC
-  { id: 'fus_cpu_13', resultId: 'cpu_13', componentAId: 'cpu_12', componentBId: 'NONE', catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 500 }, description: { RU: 'Доминация над вероятностями.', EN: 'Domination over probabilities.' } },
-  { id: 'fus_cpu_14', resultId: 'cpu_14', componentAId: 'cpu_13', componentBId: 'NONE', catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 1000 }, description: { RU: 'Братский код вселенной.', EN: 'Brotherly code of the universe.' } },
-  { id: 'fus_cpu_15', resultId: 'cpu_15', componentAId: 'cpu_14', componentBId: 'NONE', catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 5000 }, description: { RU: 'Архитектура бога.', EN: 'Architecture of God.' }, condition: { type: 'ZERO_HEAT', target: 60, description: 'Температура 0% (60 сек)' } },
-  // CONTROL
-  { id: 'fus_ctrl_13', resultId: 'ctrl_13', componentAId: 'ctrl_12', componentBId: 'NONE', catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 500 }, description: { RU: 'Полный симбиоз с машиной.', EN: 'Full symbiosis with the machine.' } },
-  { id: 'fus_ctrl_14', resultId: 'ctrl_14', componentAId: 'ctrl_13', componentBId: 'NONE', catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 1000 }, description: { RU: 'Душа стала кодом.', EN: 'The soul became code.' } },
-  { id: 'fus_ctrl_15', resultId: 'ctrl_15', componentAId: 'ctrl_14', componentBId: 'NONE', catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 5000 }, description: { RU: 'Мысль материальна.', EN: 'Thought is material.' } },
-  // GEARBOXES
-  { id: 'fus_gear_13', resultId: 'gear_13', componentAId: 'gear_12', componentBId: 'NONE', catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 500 }, description: { RU: 'Разрыв межатомных связей.', EN: 'Breaking interatomic bonds.' } },
-  { id: 'fus_gear_14', resultId: 'gear_14', componentAId: 'gear_13', componentBId: 'NONE', catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 1000 }, description: { RU: 'Сопротивление бесполезно.', EN: 'Resistance is useless.' }, condition: { type: 'DEPTH_REACHED', target: 10000, description: 'Глубина > 10,000м' } },
-  { id: 'fus_gear_15', resultId: 'gear_15', componentAId: 'gear_14', componentBId: 'NONE', catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 5000 }, description: { RU: 'Тяга черной дыры.', EN: 'Black hole thrust.' }, condition: { type: 'DEPTH_REACHED', target: 40000, description: 'Глубина > 40,000м' } },
-  // POWER
-  { id: 'fus_pwr_13', resultId: 'pwr_13', componentAId: 'pwr_12', componentBId: 'NONE', catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 500 }, description: { RU: 'Энергия самой Пустоты.', EN: 'Energy of the Void itself.' } },
-  { id: 'fus_pwr_14', resultId: 'pwr_14', componentAId: 'pwr_13', componentBId: 'NONE', catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 1000 }, description: { RU: 'Дыхание рождающейся вселенной.', EN: 'Breath of the nascent universe.' } },
-  { id: 'fus_pwr_15', resultId: 'pwr_15', componentAId: 'pwr_14', componentBId: 'NONE', catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 5000 }, description: { RU: 'Вечный двигатель первого рода.', EN: 'Perpetual motion machine of the first kind.' } },
-  // ARMOR
-  { id: 'fus_arm_13', resultId: 'arm_13', componentAId: 'arm_12', componentBId: 'NONE', catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 500 }, description: { RU: 'Абсолютная защита.', EN: 'Absolute defense.' } },
-  { id: 'fus_arm_14', resultId: 'arm_14', componentAId: 'arm_13', componentBId: 'NONE', catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 1000 }, description: { RU: 'Фрактальное поглощение урона.', EN: 'Fractal damage absorption.' }, condition: { type: 'NO_DAMAGE', target: 100, description: 'Целостность 100%' } },
-  { id: 'fus_arm_15', resultId: 'arm_15', componentAId: 'arm_14', componentBId: 'NONE', catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 5000 }, description: { RU: 'Божественная неуязвимость.', EN: 'Divine invulnerability.' }, condition: { type: 'NO_DAMAGE', target: 100, description: 'Целостность 100%' } },
-  // CARGO BAYS
-  { id: 'fus_cargo_13', resultId: 'cargo_13', componentAId: 'cargo_12', componentBId: 'NONE', catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 1000 }, description: { RU: 'Сжатие пространства до атома.', EN: 'Compression of space to an atom.' } },
-  { id: 'fus_cargo_14', resultId: 'cargo_14', componentAId: 'cargo_13', componentBId: 'NONE', catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 3000 }, description: { RU: 'Черная дыра для ваших ресурсов.', EN: 'A black hole for your resources.' } },
-  { id: 'fus_cargo_15', resultId: 'cargo_15', componentAId: 'cargo_14', componentBId: 'NONE', catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 8000 }, description: { RU: 'Вечность внутри маленькой коробки.', EN: 'Eternity inside a small box.' } }
+  // === COOLING ===
+  {
+    id: 'fusion_cooling_13',
+    resultId: 'cool_13',
+    componentAId: 'cool_12',
+    componentBId: 'cool_12',
+    catalyst: { resource: ResourceType.ICE, amount: 5000 },
+    condition: { type: 'ZERO_HEAT', target: 0, description: 'Слияние при нулевом нагреве' },
+    description: { RU: 'Два Стрингера Пустоты создают Энтропийный якорь', EN: 'Two Void Stringers create Entropy Anchor' }
+  },
+  {
+    id: 'fusion_cooling_14',
+    resultId: 'cool_14',
+    componentAId: 'cool_13',
+    componentBId: 'cool_13',
+    catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 3000 },
+    description: { RU: 'Два Энтропийных якоря создают Ледяное сердце звезды', EN: 'Two Entropy Anchors create Ice Heart of a Star' }
+  },
+  {
+    id: 'fusion_cooling_15',
+    resultId: 'cool_15',
+    componentAId: 'cool_14',
+    componentBId: 'cool_14',
+    catalyst: { resource: ResourceType.DIAMONDS, amount: 1000 },
+    description: { RU: 'Два Ледяных сердца создают Смерть Вселенной', EN: 'Two Ice Hearts create Death of the Universe' }
+  },
+
+  // === HULL ===
+  {
+    id: 'fusion_hull_13',
+    resultId: 'hull_13',
+    componentAId: 'hull_12',
+    componentBId: 'hull_12',
+    catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 2000 },
+    condition: { type: 'NO_DAMAGE', target: 100, description: 'Слияние при 100% HP' },
+    description: { RU: 'Два Зеркала создают Ковчег Предтеч', EN: 'Two Mirrors create Ark of the Precursors' }
+  },
+  {
+    id: 'fusion_hull_14',
+    resultId: 'hull_14',
+    componentAId: 'hull_13',
+    componentBId: 'hull_13',
+    catalyst: { resource: ResourceType.NANO_SWARM, amount: 4000 },
+    condition: { type: 'DEPTH_REACHED', target: 200000, description: 'Достигните глубины 200,000м' },
+    description: { RU: 'Два Ковчега создают Сингулярную оболочку', EN: 'Two Arks create Singular Shell' }
+  },
+  {
+    id: 'fusion_hull_15',
+    resultId: 'hull_15',
+    componentAId: 'hull_14',
+    componentBId: 'hull_14',
+    catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 10000 },
+    description: { RU: 'Две Оболочки создают Несокрушимый', EN: 'Two Shells create Indestructible' }
+  },
+
+  // === LOGIC ===
+  {
+    id: 'fusion_logic_13',
+    resultId: 'cpu_13',
+    componentAId: 'cpu_12',
+    componentBId: 'cpu_12',
+    catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 1200 },
+    condition: { type: 'DEPTH_REACHED', target: 120000, description: 'Достигните глубины 120,000м' },
+    description: { RU: 'Два Предсказателя создают Систему "Доминация"', EN: 'Two Forecasters create System "Domination"' }
+  },
+  {
+    id: 'fusion_logic_14',
+    resultId: 'cpu_14',
+    componentAId: 'cpu_13',
+    componentBId: 'cpu_13',
+    catalyst: { resource: ResourceType.NANO_SWARM, amount: 2500 },
+    condition: { type: 'ZERO_HEAT', target: 0, description: 'Слияние при нулевом нагреве' },
+    description: { RU: 'Две Системы создают Матрицу Братана', EN: 'Two Systems create Brotan Matrix' }
+  },
+  {
+    id: 'fusion_logic_15',
+    resultId: 'cpu_15',
+    componentAId: 'cpu_14',
+    componentBId: 'cpu_14',
+    catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 8000 },
+    description: { RU: 'Две Матрицы создают Божественного Архитектора', EN: 'Two Matrices create Divine Architect' }
+  },
+
+  // === CONTROL ===
+  {
+    id: 'fusion_control_13',
+    resultId: 'ctrl_13',
+    componentAId: 'ctrl_12',
+    componentBId: 'ctrl_12',
+    catalyst: { resource: ResourceType.NANO_SWARM, amount: 1500 },
+    condition: { type: 'ZERO_HEAT', target: 0, description: 'Слияние при нулевом нагреве' },
+    description: { RU: 'Два Волевых интерфейса создают Симбиоз', EN: 'Two Will Interfaces create Symbiosis' }
+  },
+  {
+    id: 'fusion_control_14',
+    resultId: 'ctrl_14',
+    componentAId: 'ctrl_13',
+    componentBId: 'ctrl_13',
+    catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 4000 },
+    description: { RU: 'Два Симбиоза создают Единство души', EN: 'Two Symbioses create Unity of Soul' }
+  },
+  {
+    id: 'fusion_control_15',
+    resultId: 'ctrl_15',
+    componentAId: 'ctrl_14',
+    componentBId: 'ctrl_14',
+    catalyst: { resource: ResourceType.NANO_SWARM, amount: 8000 },
+    description: { RU: 'Два Единства создают Творца', EN: 'Two Unities create Creator' }
+  },
+
+  // === GEARBOX ===
+  {
+    id: 'fusion_gearbox_13',
+    resultId: 'gear_13',
+    componentAId: 'gear_12',
+    componentBId: 'gear_12',
+    catalyst: { resource: ResourceType.DIAMONDS, amount: 300 },
+    condition: { type: 'MAX_HEAT', target: 100, description: 'Слияние при максимальном нагреве' },
+    description: { RU: 'Два Вариатора "Тьма" создают Разрушитель связей', EN: 'Two Variators "Darkness" create Bond Breaker' }
+  },
+  {
+    id: 'fusion_gearbox_14',
+    resultId: 'gear_14',
+    componentAId: 'gear_13',
+    componentBId: 'gear_13',
+    catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 6000 },
+    description: { RU: 'Два Разрушителя создают Нулевое сопротивление', EN: 'Two Breakers create Zero Resistance' }
+  },
+  {
+    id: 'fusion_gearbox_15',
+    resultId: 'gear_15',
+    componentAId: 'gear_14',
+    componentBId: 'gear_14',
+    catalyst: { resource: ResourceType.DIAMONDS, amount: 800 },
+    description: { RU: 'Два Нулевых создают Абсолютную тягу', EN: 'Two Zeros create Absolute Traction' }
+  },
+
+  // === POWER CORE ===
+  {
+    id: 'fusion_power_13',
+    resultId: 'pwr_13',
+    componentAId: 'pwr_12',
+    componentBId: 'pwr_12',
+    catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 1800 },
+    condition: { type: 'NO_DAMAGE', target: 100, description: 'Слияние при 100% HP' },
+    description: { RU: 'Две Сингулярности создают Энергию Пустоты', EN: 'Two Singularities create Void Energy' }
+  },
+  {
+    id: 'fusion_power_14',
+    resultId: 'pwr_14',
+    componentAId: 'pwr_13',
+    componentBId: 'pwr_13',
+    catalyst: { resource: ResourceType.NANO_SWARM, amount: 3500 },
+    description: { RU: 'Две Энергии создают Дыхание Вселенной', EN: 'Two Energies create Breath of the Universe' }
+  },
+  {
+    id: 'fusion_power_15',
+    resultId: 'pwr_15',
+    componentAId: 'pwr_14',
+    componentBId: 'pwr_14',
+    catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 12000 },
+    description: { RU: 'Два Дыхания создают Вечный Двигатель', EN: 'Two Breaths create Perpetual Motion' }
+  },
+
+  // === ARMOR ===
+  {
+    id: 'fusion_armor_13',
+    resultId: 'arm_13',
+    componentAId: 'arm_12',
+    componentBId: 'arm_12',
+    catalyst: { resource: ResourceType.EMERALDS, amount: 300 },
+    condition: { type: 'DEPTH_REACHED', target: 180000, description: 'Достигните глубины 180,000м' },
+    description: { RU: 'Два Пространственных сдвига создают Щит "Абсолют"', EN: 'Two Spatial Shifts create Shield "Absolute"' }
+  },
+  {
+    id: 'fusion_armor_14',
+    resultId: 'arm_14',
+    componentAId: 'arm_13',
+    componentBId: 'arm_13',
+    catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 2500 },
+    condition: { type: 'NO_DAMAGE', target: 100, description: 'Слияние при 100% HP' },
+    description: { RU: 'Два Щита создают Фрактальную броню', EN: 'Two Shields create Fractal Armor' }
+  },
+  {
+    id: 'fusion_armor_15',
+    resultId: 'arm_15',
+    componentAId: 'arm_14',
+    componentBId: 'arm_14',
+    catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 8000 },
+    description: { RU: 'Две Брони создают Божественную длань', EN: 'Two Armors create Divine Hand' }
+  },
+
+  // === CARGO BAY ===
+  {
+    id: 'fusion_cargo_13',
+    resultId: 'cargo_13',
+    componentAId: 'cargo_12',
+    componentBId: 'cargo_12',
+    catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 2500 },
+    condition: { type: 'ZERO_HEAT', target: 0, description: 'Слияние при нулевом нагреве' },
+    description: { RU: 'Два Подпространственных склада создают Квантовый накопитель', EN: 'Two Subspace Warehouses create Quantum Accumulator' }
+  },
+  {
+    id: 'fusion_cargo_14',
+    resultId: 'cargo_14',
+    componentAId: 'cargo_13',
+    componentBId: 'cargo_13',
+    catalyst: { resource: ResourceType.NANO_SWARM, amount: 4000 },
+    description: { RU: 'Два Накопителя создают Сингулярное хранилище', EN: 'Two Accumulators create Singular Storage' }
+  },
+  {
+    id: 'fusion_cargo_15',
+    resultId: 'cargo_15',
+    componentAId: 'cargo_14',
+    componentBId: 'cargo_14',
+    catalyst: { resource: ResourceType.ANCIENT_TECH, amount: 15000 },
+    description: { RU: 'Два Хранилища создают Бесконечный Горизонт', EN: 'Two Storages create Infinite Horizon' }
+  }
 ];
 
 export const DRONES: DroneDefinition[] = [

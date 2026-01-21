@@ -10,7 +10,7 @@ import { recalculateCargoWeight } from '../../services/gameMath';
 import { audioEngine } from '../../services/audioEngine';
 import { BLACK_MARKET_ITEMS } from '../../constants/blackMarket';
 
-export interface MarketSlice {
+export interface MarketActions {
     marketTransactionHistory: MarketTransaction[];
 
     buyFromMarket: (resource: keyof Resources, amount: number) => void;
@@ -20,7 +20,7 @@ export interface MarketSlice {
 
 import { getActivePerkIds } from '../../services/factionLogic';
 
-export const createMarketSlice: SliceCreator<MarketSlice> = (set, get) => ({
+export const createMarketSlice: SliceCreator<MarketActions> = (set, get) => ({
     marketTransactionHistory: [],
 
     buyFromMarket: (resource, amount) => {

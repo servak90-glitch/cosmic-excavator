@@ -9,6 +9,7 @@ import { CARAVAN_SPECS } from '../constants/caravans';
 import { getCaravanETA } from '../services/caravanManager';
 import { getActivePerkIds } from '../services/factionLogic';
 import { TL, t } from '../services/localization';
+import { ResourceType } from '../types';
 import type { Resources } from '../types';
 
 export const CaravanPanel = () => {
@@ -24,7 +25,7 @@ export const CaravanPanel = () => {
     const [fromBaseId, setFromBaseId] = useState<string>('');
     const [toBaseId, setToBaseId] = useState<string>('');
     const [cargoAmount, setCargoAmount] = useState<number>(100);
-    const [cargoResource, setCargoResource] = useState<keyof Resources>('stone');
+    const [cargoResource, setCargoResource] = useState<ResourceType>(ResourceType.STONE);
 
     const isUnlocked = caravanUnlocks.find(u => u.tier === '1star')?.unlocked || false;
     const spec = CARAVAN_SPECS['1star'];
@@ -143,7 +144,10 @@ export const CaravanPanel = () => {
                                     onChange={(e) => setCargoResource(e.target.value as keyof Resources)}
                                     className="w-full bg-gray-700 border-2 border-gray-600 rounded px-3 py-2 text-white focus:border-cyan-500 focus:outline-none"
                                 >
-                                    {(['stone', 'clay', 'iron', 'coal', 'oil', 'gas'] as (keyof Resources)[]).map(res => (
+                                    {([
+                                        ResourceType.STONE, ResourceType.CLAY, ResourceType.IRON, ResourceType.COPPER,
+                                        ResourceType.COAL, ResourceType.OIL, ResourceType.GAS, ResourceType.ICE, ResourceType.SCRAP
+                                    ] as ResourceType[]).map(res => (
                                         <option key={res} value={res}>{t(TL.resources[res], lang) || res}</option>
                                     ))}
                                 </select>

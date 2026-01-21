@@ -3,9 +3,10 @@ import { calculateStats } from '../../services/gameMath';
 import { audioEngine } from '../../services/audioEngine';
 import { rollArtifact } from '../../services/artifactRegistry';
 import { createEffect, EVENTS } from '../../services/eventRegistry';
-import { InventoryItem, VisualEvent, GameState, GameEvent, EventTrigger, EventActionId } from '../../types';
+import { InventoryItem, VisualEvent, GameState, GameEvent, EventTrigger, EventActionId, SideTunnelType } from '../../types';
 import { calculateRaidOutcome } from '../../services/raidService';
 import { sideTunnelSystem } from '../../services/systems/SideTunnelSystem';
+import { t } from '../../services/localization';
 
 export interface EventActions {
     handleEventOption: (optionId?: string | EventActionId) => void;
@@ -111,13 +112,24 @@ export const createEventSlice: SliceCreator<EventActions> = (set, get) => ({
                 case EventActionId.TUNNEL_CRYSTAL:
                 case EventActionId.TUNNEL_MINE:
                 case EventActionId.TUNNEL_NEST: {
-                    const result = sideTunnelSystem.resolveTunnel(optionId, s, activePerks);
-                    updates.resources = result.updates.resources;
-                    if (result.updates.inventory) updates.inventory = result.updates.inventory;
-                    if (result.updates.integrity !== undefined) updates.integrity = result.updates.integrity;
-                    if (result.updates.storageLevel) updates.storageLevel = result.updates.storageLevel;
-
-                    logs.push(...result.logs);
+                    const typeMap: Record<string, SideTunnelType> = {
+                        [EventActionId.TUNNEL_SAFE]: 'SAFE',
+                        [EventActionId.TUNNEL_RISKY]: 'RISKY',
+                        [EventActionId.TUNNEL_CRYSTAL]: 'CRYSTAL',
+                        [EventActionId.TUNNEL_MINE]: 'MINE',
+                        [EventActionId.TUNNEL_NEST]: 'NEST'
+                    };
+                    const type = typeMap[optionId];
+                    if (type) {
+                        const tunnelState = sideTunnelSystem.startTunnel(type, s.depth);
+                        updates.sideTunnel = tunnelState;
+                        logs.push({
+                            type: 'LOG',
+                            msg: `🔍 ${s.settings.language === 'RU' ? 'ВХОД В ТУННЕЛЬ' : 'ENTERING TUNNEL'}: ${t(tunnelState.name, s.settings.language).toUpperCase()}`,
+                            color: 'text-cyan-400 font-bold'
+                        });
+                        logs.push({ type: 'SOUND', sfx: 'LOG' });
+                    }
                     break;
                 }
                 case EventActionId.BASE_DEFEND: {

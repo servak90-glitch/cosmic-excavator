@@ -6,7 +6,7 @@
  * Включает кулдауны для предотвращения спама событий.
  */
 
-import { GameState, VisualEvent } from '../../types';
+import { GameState, VisualEvent, Stats } from '../../types';
 import { audioEngine } from '../audioEngine';
 
 export interface HazardUpdate {
@@ -18,7 +18,7 @@ export interface HazardUpdate {
 const HAZARD_COOLDOWN = 15 * 60; // 15 секунд (при 60 FPS)
 const MIN_DEPTH_FOR_HAZARDS = 2000; // Начинаются с 2км
 
-export function processHazards(state: GameState, dt: number, activePerks: string[] = []): { update: HazardUpdate; events: VisualEvent[] } {
+export function processHazards(state: GameState, stats: Stats, dt: number, activePerks: string[] = []): { update: HazardUpdate; events: VisualEvent[] } {
     const events: VisualEvent[] = [];
     const update: HazardUpdate = {};
 
@@ -52,9 +52,24 @@ export function processHazards(state: GameState, dt: number, activePerks: string
             // CAVE_IN (40%)
             // Небольшой урон, работает только если прочность > 20%
             if (state.integrity > 20) {
-                const dmg = Math.floor(Math.random() * 10) + 5;
-                update.integrity = Math.max(0, state.integrity - dmg);
-                events.push({ type: 'LOG', msg: `⚠️ ОБВАЛ ПОРОДЫ! -${dmg}% КОРПУС`, color: 'text-yellow-500' });
+                const baseDmg = Math.floor(Math.random() * 10) + 5;
+
+                // Применяем hazardResist
+                const resistMultiplier = 1 - (stats.hazardResist / 100);
+                const finalDmg = Math.floor(baseDmg * resistMultiplier);
+
+                update.integrity = Math.max(0, state.integrity - finalDmg);
+
+                // Визуальный индикатор resist
+                if (stats.hazardResist > 0) {
+                    events.push({
+                        type: 'LOG',
+                        msg: `⚠️ ОБВАЛ ПОРОДЫ! -${finalDmg}% КОРПУС (🛡️ RESIST: -${Math.round(stats.hazardResist)}%)`,
+                        color: 'text-yellow-500'
+                    });
+                } else {
+                    events.push({ type: 'LOG', msg: `⚠️ ОБВАЛ ПОРОДЫ! -${finalDmg}% КОРПУС`, color: 'text-yellow-500' });
+                }
 
                 audioEngine.playHazardTrigger('CAVE_IN');
                 audioEngine.playHazardDamage();

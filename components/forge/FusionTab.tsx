@@ -5,7 +5,7 @@ import { useGameStore } from '../../store/gameStore';
 import { FUSION_RECIPES } from '../../constants';
 import { ARTIFACTS } from '../../services/artifactRegistry';
 import { BITS, ENGINES, COOLERS, HULLS, LOGIC_CORES, CONTROL_UNITS, GEARBOXES, POWER_CORES, ARMORS } from '../../constants';
-import { t } from '../../services/localization';
+import { t, TEXT_IDS } from '../../services/localization';
 
 
 const ALL_PARTS = [...BITS, ...ENGINES, ...COOLERS, ...HULLS, ...LOGIC_CORES, ...CONTROL_UNITS, ...GEARBOXES, ...POWER_CORES, ...ARMORS];
@@ -48,9 +48,9 @@ const FusionTab: React.FC<FusionTabProps> = ({
         <div className="flex flex-col gap-6">
             {/* TRANSMUTATION */}
             <div className="bg-zinc-900 border border-amber-900/50 p-4">
-                <h3 className="text-xl pixel-text text-amber-500 mb-2">ТРАНСМУТАЦИЯ</h3>
+                <h3 className="text-xl pixel-text text-amber-500 mb-2">{t(TEXT_IDS.TRANSMUTATION_TITLE, lang)}</h3>
                 <div className="flex flex-col md:flex-row gap-4 md:items-center">
-                    <div className="text-zinc-500 text-xs">Выберите 3 артефакта одной редкости, чтобы получить 1 более редкий.</div>
+                    <div className="text-zinc-500 text-xs">{t(TEXT_IDS.TRANSMUTATION_DESC, lang)}</div>
                     <button
                         onClick={() => {
                             transmuteArtifacts(selectedArtifactsForFusion);
@@ -59,7 +59,7 @@ const FusionTab: React.FC<FusionTabProps> = ({
                         disabled={selectedArtifactsForFusion.length !== 3}
                         className={`px-4 py-2 font-bold transition-all ${selectedArtifactsForFusion.length === 3 ? 'bg-amber-600 text-black hover:bg-amber-500' : 'bg-zinc-800 text-zinc-600'}`}
                     >
-                        ЗАПУСК СИНТЕЗА
+                        {t(TEXT_IDS.TRANSMUTATION_BUTTON, lang)}
                     </button>
                 </div>
                 <div className="grid grid-cols-6 md:grid-cols-8 gap-2 mt-4 bg-black/50 p-2 border border-zinc-800">
@@ -80,21 +80,21 @@ const FusionTab: React.FC<FusionTabProps> = ({
                         );
                     })}
                     {inventoryList.filter(i => i.isIdentified && !i.isEquipped).length === 0 && (
-                        <div className="col-span-full text-center text-xs text-zinc-600 py-4">НЕТ ДОСТУПНЫХ АРТЕФАКТОВ</div>
+                        <div className="col-span-full text-center text-xs text-zinc-600 py-4">{t(TEXT_IDS.TRANSMUTATION_NO_ARTIFACTS, lang)}</div>
                     )}
                 </div>
             </div>
 
             {/* FUSION RECIPES */}
             <div className="bg-zinc-900 border border-purple-900/50 p-4">
-                <h3 className="text-xl pixel-text text-purple-400 mb-4 border-b border-purple-900 pb-2">АТОМНЫЙ РЕКОНСТРУКТОР</h3>
+                <h3 className="text-xl pixel-text text-purple-400 mb-4 border-b border-purple-900 pb-2">{t(TEXT_IDS.FUSION_ATOMIC_RECONSTRUCTOR, lang)}</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {FUSION_RECIPES.map(recipe => {
                         const targetPart = ALL_PARTS.find(p => p.id === recipe.resultId);
                         const hasCatalyst = resources[recipe.catalyst.resource] >= recipe.catalyst.amount;
 
                         let conditionMet = true;
-                        let conditionStatus = "ВЫПОЛНЕНО";
+                        let conditionStatus = t(TEXT_IDS.FUSION_COMPLETED, lang);
                         let statusColor = "text-green-500";
 
                         if (recipe.condition) {
@@ -113,7 +113,7 @@ const FusionTab: React.FC<FusionTabProps> = ({
                             } else if (recipe.condition.type === 'NO_DAMAGE') {
                                 if (integrity < recipe.condition.target) {
                                     conditionMet = false;
-                                    conditionStatus = "ОБШИВКА ПОВРЕЖДЕНА";
+                                    conditionStatus = t(TEXT_IDS.FUSION_HULL_DAMAGED, lang);
                                     statusColor = "text-red-500";
                                 }
                             }
@@ -178,7 +178,7 @@ const FusionTab: React.FC<FusionTabProps> = ({
 
                                     <div className="space-y-1 mb-4 bg-zinc-900/50 p-2">
                                         <div className="flex justify-between text-[9px] font-mono">
-                                            <span className="text-zinc-500">ТРЕБУЕТСЯ:</span>
+                                            <span className="text-zinc-500">{t(TEXT_IDS.FUSION_REQUIRED, lang)}</span>
                                             <span className={hasCatalyst ? "text-white" : "text-red-500"}>
                                                 {recipe.catalyst.amount} {recipe.catalyst.resource}
                                             </span>
@@ -196,15 +196,15 @@ const FusionTab: React.FC<FusionTabProps> = ({
 
                                         {!isCorrectTierEquipped && !isAlreadyUpgraded && (
                                             <div className="flex justify-between text-[9px] font-mono border-t border-zinc-800 pt-1 mt-1 text-red-500">
-                                                <span>ТРЕБУЕТСЯ:</span>
-                                                <span>ПРЕДЫДУЩИЙ ТИР</span>
+                                                <span>{t(TEXT_IDS.FUSION_REQUIRED, lang)}</span>
+                                                <span>{t(TEXT_IDS.FUSION_PREVIOUS_TIER_REQUIRED, lang)}</span>
                                             </div>
                                         )}
 
                                         {isAlreadyUpgraded && (
                                             <div className="flex justify-between text-[9px] font-mono border-t border-zinc-800 pt-1 mt-1 text-green-500">
-                                                <span>СТАТУС:</span>
-                                                <span>УЖЕ УЛУЧШЕНО</span>
+                                                <span>{t(TEXT_IDS.FUSION_STATUS, lang)}</span>
+                                                <span>{t(TEXT_IDS.FUSION_ALREADY_UPGRADED, lang)}</span>
                                             </div>
                                         )}
                                     </div>
@@ -221,7 +221,7 @@ const FusionTab: React.FC<FusionTabProps> = ({
                                                 : 'bg-zinc-800 text-zinc-600 cursor-not-allowed'}
                   `}
                                 >
-                                    {isAlreadyUpgraded ? 'УСТАНОВЛЕНО' : canCraft ? 'СИНТЕЗИРОВАТЬ' : 'НЕДОСТУПНО'}
+                                    {isAlreadyUpgraded ? t(TEXT_IDS.FUSION_INSTALLED, lang) : canCraft ? t(TEXT_IDS.FUSION_SYNTHESIZE, lang) : t(TEXT_IDS.FUSION_UNAVAILABLE, lang)}
                                 </button>
                             </div>
                         );

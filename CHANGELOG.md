@@ -1,5 +1,32 @@
 # Changelog
 
+## [0.3.6] - 2026-01-22
+
+### 🏗️ Архитектура и Рефакторинг
+- **Стандартизация Zustand Store**:
+  - Все интерфейсы действий переименованы в формат `*Actions` (напр. `MarketActions`, `CaravanActions`, `QuestActions`).
+  - Введен единый barrel export в `store/slices/index.ts` для упрощения импортов.
+  - Очищен `gameStore.ts` от циклических зависимостей и избыточных импортов.
+- **Строгая типизация ресурсов**:
+  - Полный переход со строковых литералов на перечисление `ResourceType`.
+  - Обновлены: `marketPrices.ts`, `fuelRecipes.ts`, `questRegistry.ts`, `ExpeditionTab.tsx`, `CaravanPanel.tsx`.
+  - Это устраняет ошибки "Type 'string' is not assignable to type 'ResourceType'".
+
+### 🛠️ Исправления и Баланс
+- **Глобальная Карта & Логистика**:
+  - Исправлена критическая ошибка в `GlobalMapView.tsx`: теперь `calculateFuelConsumption` получает `grossWeight` (число), а не объект массы.
+  - Обновлен `adminSlice.ts`: функции сброса и разблокировки теперь учитывают все новые ресурсы (`ice`, `scrap`, `credits`) и корректно инициализируют базы (`PlayerBase`).
+  - Исправлены региональные модификаторы цен в `marketPrices.ts` (добавлены `ice`, `scrap`, `repairKit` и др.).
+- **Караваны**:
+  - В `CaravanPanel.tsx` расширен список доступных для отправки ресурсов.
+  - Исправлена типизация `cargoResource` стейта.
+
+### 📚 Документация
+- Обновлено `OPERATOR_MANUAL.md`: добавлен раздел по логистике караванов и новым ресурсам.
+- Обновлен `DEV_CONTEXT.json`: зафиксированы новые правила типизации (Type Hardening).
+
+---
+
 ## [0.3.5] - 2026-01-20
 
 ### ✨ Основные обновления
@@ -29,15 +56,19 @@
   - 📜 ЧЕРТЕЖ ПОЛУЧЕН (зеленый бейдж)
   - ⚠️ ТРЕБУЕТСЯ ЧЕРТЕЖ (красный пульсирующий бейдж)
   - Блокировка кнопки "UPGRADE" при отсутствии чертежа
-- **Чертежи**:
-  - Базовые (Tier 7-9): advanced_drilling, high_power_engines, quantum_cooling, titanium_hull
-  - Квантовые (Tier 10-12): quantum_drilling, quantum_engines, cryogenic_tech, adaptive_armor
-  - Fusion (Tier 13-15): fusion_core
-- **Файлы**:
-  - `constants/blackMarket.ts` - 9 новых чертежей
-  - `store/slices/upgradeSlice.ts` - проверка blueprintId
-  - `components/forge/UpgradeCard.tsx` - UI индикаторы
-
+-  "last_changes": {
+    "date": "2026-01-22",
+    "description": "VERSION 0.3.6: ResourceType Hardening & Store Standardization. 1) Migrated all resource references to ResourceType enum. 2) Renamed Slices to Actions in Store. 3) Fixed fuel cost calculation bug in GlobalMapView. 4) Updated regional market modifiers and admin cheats.",
+    "affected_files": [
+      "types.ts",
+      "store/gameStore.ts",
+      "store/slices/index.ts",
+      "constants/marketPrices.ts",
+      "constants/fuelRecipes.ts",
+      "components/CaravanPanel.tsx",
+      "components/GlobalMapView.tsx"
+    ]
+  }
 ### 📚 Документация
 - Создан `GDD_additions_v3.5.md` - дополнения к Game Design Document
 - Создан `OPERATOR_MANUAL_additions_v1.1.md` - обновление руководства оператора

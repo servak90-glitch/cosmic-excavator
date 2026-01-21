@@ -41,7 +41,7 @@ const StatusStrip: React.FC = () => {
         <div className="w-full h-6 bg-black/80 border-b border-zinc-800 flex items-stretch z-40 relative pointer-events-none">
 
             {/* 1. INTEGRITY (HP) */}
-            <div className="flex-1 flex items-center border-r border-zinc-900 bg-zinc-950/50 relative overflow-hidden group">
+            <div className="flex-1 flex items-center border-r border-zinc-900 bg-zinc-950/50 relative overflow-hidden group pointer-events-auto" title={`Прочность корпуса: ${Math.round(integrity)} / ${maxIntegrity} HP. Если упадет до 0 — бур сломается.`}>
                 <div className="w-6 h-full flex items-center justify-center bg-black/50 z-10 shrink-0">
                     <span className={`text-[10px] font-bold ${integrity < maxIntegrity * 0.3 ? 'text-red-500 animate-pulse' : 'text-green-500'}`}>✚</span>
                 </div>
@@ -54,7 +54,7 @@ const StatusStrip: React.FC = () => {
             </div>
 
             {/* 2. HEAT */}
-            <div className="flex-1 flex items-center border-r border-zinc-900 bg-zinc-950/50 relative overflow-hidden">
+            <div className="flex-1 flex items-center border-r border-zinc-900 bg-zinc-950/50 relative overflow-hidden pointer-events-auto" title={`Температура бура: ${Math.round(heat)}%. При 95%+ — аварийный стоп. При 100% — урон корпусу.`}>
                 <div className="w-6 h-full flex items-center justify-center bg-black/50 z-10 shrink-0">
                     <span className={`text-[10px] font-bold ${heat > 80 ? 'text-orange-500 animate-pulse' : 'text-cyan-500'}`}>🔥</span>
                 </div>
@@ -74,7 +74,7 @@ const StatusStrip: React.FC = () => {
             </div>
 
             {/* 3. POWER */}
-            <div className="flex-1 flex items-center border-r border-zinc-900 bg-zinc-950/50 relative overflow-hidden">
+            <div className="flex-1 flex items-center border-r border-zinc-900 bg-zinc-950/50 relative overflow-hidden pointer-events-auto" title={`Нагрузка энергосети: ${Math.round(energyLoad)}%. Потребление: ${Math.round(stats.energyCons)}W / Генерация: ${Math.round(stats.energyProd)}W. Перегрузка снижает скорость.`}>
                 <div className="w-6 h-full flex items-center justify-center bg-black/50 z-10 shrink-0">
                     <span className={`text-[10px] font-bold ${isOverloaded ? 'text-red-500 animate-pulse' : 'text-yellow-400'}`}>⚡</span>
                 </div>
@@ -87,7 +87,7 @@ const StatusStrip: React.FC = () => {
             </div>
 
             {/* 4. CARGO */}
-            <div className="flex-1 flex items-center border-r border-zinc-900 bg-zinc-950/50 relative overflow-hidden" title={`Груз (Payload): ${Math.round(payload)}кг / ${cargoCapacity}кг`}>
+            <div className="flex-1 flex items-center border-r border-zinc-900 bg-zinc-950/50 relative overflow-hidden pointer-events-auto" title={`Грузовой отсек: ${Math.round(payload)}кг / ${cargoCapacity}кг. Перегруз замедляет бур и увеличивает расход топлива.`}>
                 <div className="w-6 h-full flex items-center justify-center bg-black/50 z-10 shrink-0">
                     <span className={`text-[10px] font-bold ${isCargoOverloaded ? 'text-red-500 animate-pulse' : 'text-blue-400'}`}>📦</span>
                 </div>
@@ -100,7 +100,7 @@ const StatusStrip: React.FC = () => {
             </div>
 
             {/* 5. FUEL */}
-            <div className="flex-1 flex items-center border-r border-zinc-900 bg-zinc-950/50 relative overflow-hidden" title={`Топливо: ${Math.round(fuelWeightVal)}кг (Уг:${resources.coal}, Неф:${resources.oil}, Газ:${resources.gas})`}>
+            <div className="flex-1 flex items-center border-r border-zinc-900 bg-zinc-950/50 relative overflow-hidden pointer-events-auto" title={`Запас топлива: ${Math.round(fuelPercent)}%. Влияет на длительность бурения без дозаправки.`}>
                 <div className="w-6 h-full flex items-center justify-center bg-black/50 z-10 shrink-0">
                     <span className={`text-[10px] font-bold ${isLowFuel ? 'text-red-500 animate-pulse' : 'text-amber-400'}`}>⛽</span>
                 </div>
@@ -113,7 +113,7 @@ const StatusStrip: React.FC = () => {
             </div>
 
             {/* 6. SUPPLIES (Ice, Scrap, Kits) */}
-            <div className="flex-[0.5] flex items-center bg-zinc-950/50 px-2 gap-2 border-r border-zinc-900" title={`Расходники: Лёд:${resources.ice}, Лом:${resources.scrap}, Рем:${resources.repairKit}`}>
+            <div className="flex-[0.5] flex items-center bg-zinc-950/50 px-2 gap-2 border-r border-zinc-900 pointer-events-auto" title={`Расходники: Лёд:${resources.ice || 0}, Лом:${resources.scrap || 0}, Ремкомплекты:${resources.repairKit || 0}. Используются для крафта и ремонта.`}>
                 <div className="flex items-center gap-1">
                     <span className="text-[10px] opacity-70">❄️</span>
                     <span className="text-[10px] font-mono text-cyan-200">{resources.ice || 0}</span>
@@ -133,8 +133,11 @@ const StatusStrip: React.FC = () => {
 
 const LicenseDisplay: React.FC = () => {
     const unlockedLicenses = useGameStore(s => s.unlockedLicenses);
+    const lang = useGameStore(s => s.settings.language);
+
     return (
-        <div className="flex px-2 items-center bg-black/40 border-l border-zinc-900 gap-1.5 shrink-0" title="Active Zone Licenses">
+        <div className="flex px-2 items-center bg-black/40 border-l border-zinc-900 gap-1.5 shrink-0 pointer-events-auto"
+            title={`Лицензии зон: ${unlockedLicenses.length > 0 ? unlockedLicenses.join(', ') : 'Нет активных'}. Необходимы для доступа в опасные регионы.`}>
             <span className="text-[10px] font-bold text-zinc-500 mr-1">LIC:</span>
             <div className={`w-1.5 h-1.5 rounded-full ${unlockedLicenses.includes('green') ? 'bg-green-500 shadow-[0_0_4px_#22c55e]' : 'bg-zinc-800'}`} />
             <div className={`w-1.5 h-1.5 rounded-full ${unlockedLicenses.includes('yellow') ? 'bg-yellow-400 shadow-[0_0_4px_#facc15]' : 'bg-zinc-800'}`} />

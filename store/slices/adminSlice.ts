@@ -50,7 +50,14 @@ export const createAdminSlice: SliceCreator<AdminActions> = (set, get) => ({
     }),
 
     adminResetResources: () => set(() => ({
-        resources: { clay: 0, stone: 0, copper: 0, iron: 0, silver: 0, gold: 0, titanium: 0, uranium: 0, nanoSwarm: 0, ancientTech: 0, rubies: 0, emeralds: 0, diamonds: 0, coal: 0, oil: 0, gas: 0 }
+        resources: {
+            clay: 0, stone: 0, copper: 0, iron: 0, silver: 0, gold: 0,
+            titanium: 0, uranium: 0, nanoSwarm: 0, ancientTech: 0,
+            rubies: 0, emeralds: 0, diamonds: 0,
+            coal: 0, oil: 0, gas: 0,
+            ice: 0, scrap: 0, credits: 0,
+            repairKit: 0, coolantPaste: 0, advancedCoolant: 0
+        }
     })),
 
     adminAddArtifact: (defId) => {
@@ -90,7 +97,15 @@ export const createAdminSlice: SliceCreator<AdminActions> = (set, get) => ({
                     constructionCompletionTime: Date.now(),
                     lastVisitedAt: Date.now(),
                     upgradeLevel: 1,
-                    facilities: []
+                    facilities: [],
+                    defense: {
+                        integrity: 100,
+                        shields: 0,
+                        infantry: 10,
+                        drones: 10,
+                        turrets: 5
+                    },
+                    productionQueue: []
                 });
             } else {
                 updatedBases = updatedBases.map(b =>
@@ -127,7 +142,8 @@ export const createAdminSlice: SliceCreator<AdminActions> = (set, get) => ({
                 coal: Math.max(state.resources.coal, 5000),
                 oil: Math.max(state.resources.oil, 2000),
                 gas: Math.max(state.resources.gas, 1000),
-                rubies: Math.max(state.resources.rubies, 10000)
+                rubies: Math.max(state.resources.rubies, 10000),
+                credits: Math.max(state.resources.credits, 50000)
             }
         }));
     },

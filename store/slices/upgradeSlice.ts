@@ -17,6 +17,7 @@ export interface UpgradeActions {
     fusionUpgrade: (recipeId: string) => void;
     buyDrone: (droneId: DroneType) => void;
     upgradeSkill: (skillId: string) => void;
+    unlockBlueprint: (id: string) => void;
 }
 
 export const createUpgradeSlice: SliceCreator<UpgradeActions> = (set, get) => ({
@@ -197,4 +198,20 @@ export const createUpgradeSlice: SliceCreator<UpgradeActions> = (set, get) => ({
             audioEngine.playClick();
         }
     },
+
+    unlockBlueprint: (id) => {
+        const s = get();
+        if (s.unlockedBlueprints.includes(id)) return;
+
+        const event: VisualEvent = {
+            type: 'LOG',
+            msg: `🎉 ПОЛУЧЕН НОВЫЙ ЧЕРТЕЖ: ${id.replace('blueprint_', '').replace(/_/g, ' ').toUpperCase()}`,
+            color: 'text-purple-400 font-bold'
+        };
+
+        set({
+            unlockedBlueprints: [...s.unlockedBlueprints, id],
+            actionLogQueue: pushLogs(s, [event, { type: 'SOUND', sfx: 'ACHIEVEMENT' }])
+        });
+    }
 });

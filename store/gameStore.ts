@@ -39,11 +39,11 @@ import {
     createTravelSlice, TravelActions,
     createLicenseSlice, LicenseActions,
     createBaseSlice, BaseActions,
+    createMarketSlice, MarketActions,
+    createCaravanSlice, CaravanActions,
+    createQuestSlice, QuestActions,
     createCraftSlice, CraftActions  // NEW: Phase 2.1
 } from './slices';
-import { createMarketSlice, MarketSlice } from './slices/marketSlice';
-import { createCaravanSlice, CaravanSlice } from './slices/caravanSlice';
-import { createQuestSlice, QuestSlice } from './slices/questSlice';
 import { GAME_VERSION } from '../constants';
 
 // === ИНТЕРФЕЙСЫ ===
@@ -68,7 +68,7 @@ export interface GameStore extends GameState,
     CoreActions, EventActions, AdminActions,
     DrillActions, CityActions, InventoryActions,  // InventoryActions включает equipment actions
     UpgradeActions, EntityActions, SettingsActions, ExpeditionActions, FactionActions, TravelActions, LicenseActions, BaseActions,
-    MarketSlice, CaravanSlice, QuestSlice, CraftActions {  // NEW: Phase 2.1
+    MarketActions, CaravanActions, QuestActions, CraftActions {  // NEW: Phase 2.1
     isGameActive: boolean;
     activeView: View;
     actionLogQueue: VisualEvent[];
@@ -128,7 +128,10 @@ const INITIAL_STATE: GameState = {
     eventQueue: [],
     recentEventIds: [],
     eventCooldowns: {},  // [EVENT SYSTEM v4.0] Кулдауны событий
+    pendingPredictions: [],  // [PREDICTION SYSTEM] Отложенные предсказанные события
     flyingObjects: [],
+    unlockedBlueprints: [],
+    sideTunnel: null,
     currentBoss: null,
     lastBossDepth: 0,
     activeDrones: [],
@@ -174,7 +177,6 @@ const INITIAL_STATE: GameState = {
     eventCheckTick: 0,
     combatMinigame: null,
     activeAbilities: [],
-    unlockedBlueprints: [],
     activeExpeditions: [],
     defeatedBosses: [], // Список побежденных боссов для Codex
 
@@ -226,7 +228,8 @@ const PERSISTENT_KEYS: (keyof GameState)[] = [
     'marketTransactionHistory', 'caravans', 'caravanUnlocks',  // Phase 2
     'craftingQueue',  // Phase 2.1
     'equipmentInventory',  // Phase 2.2
-    'consumables' // NEW: Phase 3
+    'consumables', // NEW: Phase 3
+    'unlockedBlueprints'
 ];
 
 const createSnapshot = (state: GameState): Partial<GameState> => {

@@ -29,7 +29,7 @@ export const ConsumableBar: React.FC = () => {
     ];
 
     return (
-        <div className="flex gap-2 p-1 bg-black/40 backdrop-blur-sm border border-zinc-800 rounded-lg pointer-events-auto">
+        <div className="flex md:flex-row flex-col gap-2 p-1 bg-black/40 backdrop-blur-sm border border-zinc-800 rounded-lg pointer-events-auto">
             {items.map(item => {
                 const count = (consumables as any)[item.id] || 0;
                 return (

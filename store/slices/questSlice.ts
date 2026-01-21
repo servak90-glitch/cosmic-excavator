@@ -14,7 +14,7 @@ import {
     isQuestExpired,
 } from '../../services/questEngine';
 
-export interface QuestSlice {
+export interface QuestActions {
     // Активные квесты игрока
     activeQuests: Quest[];
 
@@ -45,7 +45,7 @@ export interface QuestSlice {
     checkAllQuestsProgress: () => void;
 }
 
-export const createQuestSlice: SliceCreator<QuestSlice> = (set, get) => ({
+export const createQuestSlice: SliceCreator<QuestActions> = (set, get) => ({
     activeQuests: [],
     completedQuestIds: [],
     failedQuestIds: [],

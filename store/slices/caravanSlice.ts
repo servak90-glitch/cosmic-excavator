@@ -9,7 +9,7 @@ import { createCaravan, checkCaravanCompletion, canSendCaravan } from '../../ser
 import { BASIC_LOGISTICS_UNLOCK_COST, CARAVAN_SPECS } from '../../constants/caravans';
 import { audioEngine } from '../../services/audioEngine';
 
-export interface CaravanSlice {
+export interface CaravanActions {
     caravans: Caravan[];
     caravanUnlocks: CaravanUnlock[];
 
@@ -20,7 +20,7 @@ export interface CaravanSlice {
 
 import { getActivePerkIds } from '../../services/factionLogic';
 
-export const createCaravanSlice: SliceCreator<CaravanSlice> = (set, get) => ({
+export const createCaravanSlice: SliceCreator<CaravanActions> = (set, get) => ({
     caravans: [],
     caravanUnlocks: [
         { tier: '1star', unlocked: false },

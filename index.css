@@ -7,25 +7,40 @@
 /* ===== CSS ПЕРЕМЕННЫЕ ===== */
 :root {
     /* Spacing (базовые отступы) */
-    --spacing-xxs: 0.125rem;  /* 2px */
-    --spacing-xs: 0.25rem;    /* 4px */
-    --spacing-sm: 0.5rem;     /* 8px */
-    --spacing-md: 1rem;       /* 16px */
-    --spacing-lg: 1.5rem;     /* 24px */
-    --spacing-xl: 2rem;       /* 32px */
-    --spacing-2xl: 3rem;      /* 48px */
+    --spacing-xxs: 0.125rem;
+    /* 2px */
+    --spacing-xs: 0.25rem;
+    /* 4px */
+    --spacing-sm: 0.5rem;
+    /* 8px */
+    --spacing-md: 1rem;
+    /* 16px */
+    --spacing-lg: 1.5rem;
+    /* 24px */
+    --spacing-xl: 2rem;
+    /* 32px */
+    --spacing-2xl: 3rem;
+    /* 48px */
 
     /* Font sizes (fluid typography) */
-    --font-xxs: clamp(0.5rem, 0.45rem + 0.25vw, 0.625rem);     /* 8-10px */
-    --font-xs: clamp(0.625rem, 0.55rem + 0.375vw, 0.75rem);    /* 10-12px */
-    --font-sm: clamp(0.75rem, 0.675rem + 0.375vw, 0.875rem);   /* 12-14px */
-    --font-base: clamp(0.875rem, 0.8rem + 0.375vw, 1rem);      /* 14-16px */
-    --font-lg: clamp(1rem, 0.9rem + 0.5vw, 1.25rem);           /* 16-20px */
-    --font-xl: clamp(1.25rem, 1.1rem + 0.75vw, 1.5rem);        /* 20-24px */
-    --font-2xl: clamp(1.5rem, 1.25rem + 1.25vw, 2rem);         /* 24-32px */
+    --font-xxs: clamp(0.5rem, 0.45rem + 0.25vw, 0.625rem);
+    /* 8-10px */
+    --font-xs: clamp(0.625rem, 0.55rem + 0.375vw, 0.75rem);
+    /* 10-12px */
+    --font-sm: clamp(0.75rem, 0.675rem + 0.375vw, 0.875rem);
+    /* 12-14px */
+    --font-base: clamp(0.875rem, 0.8rem + 0.375vw, 1rem);
+    /* 14-16px */
+    --font-lg: clamp(1rem, 0.9rem + 0.5vw, 1.25rem);
+    /* 16-20px */
+    --font-xl: clamp(1.25rem, 1.1rem + 0.75vw, 1.5rem);
+    /* 20-24px */
+    --font-2xl: clamp(1.5rem, 1.25rem + 1.25vw, 2rem);
+    /* 24-32px */
 
     /* Touch target sizes */
-    --touch-target-min: 44px;  /* Минимальный размер touch-элемента (Apple HIG) */
+    --touch-target-min: 44px;
+    /* Минимальный размер touch-элемента (Apple HIG) */
     --touch-target-comfortable: 48px;
 
     /* Safe area insets (fallback) */
@@ -47,39 +62,104 @@
 /* ===== MOBILE-FIRST MEDIA QUERIES ===== */
 
 /* XS (< 480px) - Маленькие телефоны - базовые стили */
-.responsive-text-xxs { font-size: var(--font-xxs); }
-.responsive-text-xs { font-size: var(--font-xs); }
-.responsive-text-sm { font-size: var(--font-sm); }
-.responsive-text-base { font-size: var(--font-base); }
-.responsive-text-lg { font-size: var(--font-lg); }
-.responsive-text-xl { font-size: var(--font-xl); }
-.responsive-text-2xl { font-size: var(--font-2xl); }
+.responsive-text-xxs {
+    font-size: var(--font-xxs);
+}
 
-.responsive-padding { padding: var(--spacing-sm); }
-.responsive-padding-x { padding-left: var(--spacing-sm); padding-right: var(--spacing-sm); }
-.responsive-padding-y { padding-top: var(--spacing-sm); padding-bottom: var(--spacing-sm); }
-.responsive-gap { gap: var(--spacing-sm); }
+.responsive-text-xs {
+    font-size: var(--font-xs);
+}
+
+.responsive-text-sm {
+    font-size: var(--font-sm);
+}
+
+.responsive-text-base {
+    font-size: var(--font-base);
+}
+
+.responsive-text-lg {
+    font-size: var(--font-lg);
+}
+
+.responsive-text-xl {
+    font-size: var(--font-xl);
+}
+
+.responsive-text-2xl {
+    font-size: var(--font-2xl);
+}
+
+.responsive-padding {
+    padding: var(--spacing-sm);
+}
+
+.responsive-padding-x {
+    padding-left: var(--spacing-sm);
+    padding-right: var(--spacing-sm);
+}
+
+.responsive-padding-y {
+    padding-top: var(--spacing-sm);
+    padding-bottom: var(--spacing-sm);
+}
+
+.responsive-gap {
+    gap: var(--spacing-sm);
+}
 
 /* SM (480px+) - Телефоны */
 @media (min-width: 480px) {
-    .responsive-padding { padding: var(--spacing-md); }
-    .responsive-padding-x { padding-left: var(--spacing-md); padding-right: var(--spacing-md); }
-    .responsive-padding-y { padding-top: var(--spacing-md); padding-bottom: var(--spacing-md); }
-    .responsive-gap { gap: var(--spacing-md); }
+    .responsive-padding {
+        padding: var(--spacing-md);
+    }
+
+    .responsive-padding-x {
+        padding-left: var(--spacing-md);
+        padding-right: var(--spacing-md);
+    }
+
+    .responsive-padding-y {
+        padding-top: var(--spacing-md);
+        padding-bottom: var(--spacing-md);
+    }
+
+    .responsive-gap {
+        gap: var(--spacing-md);
+    }
 }
 
 /* MD (768px+) - Планшеты */
 @media (min-width: 768px) {
-    .responsive-padding { padding: var(--spacing-lg); }
-    .responsive-padding-x { padding-left: var(--spacing-lg); padding-right: var(--spacing-lg); }
-    .responsive-padding-y { padding-top: var(--spacing-lg); padding-bottom: var(--spacing-lg); }
-    .responsive-gap { gap: var(--spacing-lg); }
+    .responsive-padding {
+        padding: var(--spacing-lg);
+    }
+
+    .responsive-padding-x {
+        padding-left: var(--spacing-lg);
+        padding-right: var(--spacing-lg);
+    }
+
+    .responsive-padding-y {
+        padding-top: var(--spacing-lg);
+        padding-bottom: var(--spacing-lg);
+    }
+
+    .responsive-gap {
+        gap: var(--spacing-lg);
+    }
 }
 
 /* LG (1024px+) - Десктоп */
 @media (min-width: 1024px) {
-    .responsive-padding { padding: var(--spacing-xl); }
-    .responsive-padding-x { padding-left: var(--spacing-xl); padding-right: var(--spacing-xl); }
+    .responsive-padding {
+        padding: var(--spacing-xl);
+    }
+
+    .responsive-padding-x {
+        padding-left: var(--spacing-xl);
+        padding-right: var(--spacing-xl);
+    }
 }
 
 /* ===== УТИЛИТАРНЫЕ КЛАССЫ ===== */
@@ -104,6 +184,7 @@
     .hide-mobile {
         display: block;
     }
+
     .hide-desktop {
         display: none;
     }
@@ -144,16 +225,28 @@
     display: none;
 }
 
-.tabs-scroll > * {
+.tabs-scroll>* {
     scroll-snap-align: start;
     flex-shrink: 0;
 }
 
 /* Safe area padding */
-.safe-top { padding-top: var(--sat); }
-.safe-bottom { padding-bottom: var(--sab); }
-.safe-left { padding-left: var(--sal); }
-.safe-right { padding-right: var(--sar); }
+.safe-top {
+    padding-top: var(--sat);
+}
+
+.safe-bottom {
+    padding-bottom: var(--sab);
+}
+
+.safe-left {
+    padding-left: var(--sal);
+}
+
+.safe-right {
+    padding-right: var(--sar);
+}
+
 .safe-all {
     padding-top: var(--sat);
     padding-right: var(--sar);
@@ -194,6 +287,7 @@
 
 /* Уменьшаем анимации на мобильных для производительности */
 @media (prefers-reduced-motion: reduce) {
+
     *,
     *::before,
     *::after {
@@ -239,4 +333,53 @@
     .grid-responsive {
         grid-template-columns: repeat(4, 1fr);
     }
+}
+
+/* ===== NEW ANIMATIONS ===== */
+@keyframes slideInRight {
+    from {
+        transform: translateX(10px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.animate-slideInRight {
+    animation: slideInRight 0.3s ease-out forwards;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+.animate-fadeIn {
+    animation: fadeIn 0.5s ease-out forwards;
+}
+
+/* Custom Scrollbar for Logs */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 2px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #444;
+    border-radius: 1px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #666;
 }

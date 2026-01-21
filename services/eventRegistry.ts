@@ -209,6 +209,46 @@ export const EVENTS: GameEvent[] = [
                 label: { RU: '🛠️ Отразить помехи', EN: '🛠️ Deflect interference' }
             }
         ]
+    },
+    {
+        id: 'TUNNEL_CRYSTAL_FIND',
+        type: 'NOTIFICATION',
+        title: 'Резонанс Кристаллов',
+        description: 'Сканеры фиксируют необычную частоту в боковом ответвлении.',
+        triggers: [EventTrigger.DRILLING],
+        weight: 15,
+        cooldown: 300,
+        options: [
+            {
+                actionId: 'TUNNEL_CRYSTAL',
+                label: '💎 Исследовать кристальный туннель',
+                risk: 'MEDIUM'
+            },
+            {
+                actionId: 'encounter_ignore',
+                label: 'Проигнорировать'
+            }
+        ]
+    },
+    {
+        id: 'TUNNEL_MINE_FIND',
+        type: 'NOTIFICATION',
+        title: 'Древний Шахтный Ствол',
+        description: 'Вы наткнулись на заброшенную систему вентиляции.',
+        triggers: [EventTrigger.DRILLING],
+        weight: 15,
+        cooldown: 300,
+        options: [
+            {
+                actionId: 'TUNNEL_MINE',
+                label: '🔦 Спуститься в шахту',
+                risk: 'HIGH'
+            },
+            {
+                actionId: 'encounter_ignore',
+                label: 'Игнорировать'
+            }
+        ]
     }
 ];
 
@@ -222,11 +262,12 @@ export function rollRandomEvent(
     depth: number,
     heat: number,
     hasScanner: boolean = false,
-    biomeId: string = 'rust_valley'  // Добавлен параметр с дефолтным значением
+    biomeId: string = 'rust_valley',
+    lang: 'RU' | 'EN' = 'RU'
 ): GameEvent | null {
     // 1. Шанс на Side Tunnel (повышается с глубиной)
     if (Math.random() < 0.25) { // 25% шанс вместо обычного события
-        const event = sideTunnelSystem.generateEvent(depth, biomeId, hasScanner);
+        const event = sideTunnelSystem.generateEvent(depth, biomeId, hasScanner, lang);
         if (event) return event;
     }
 

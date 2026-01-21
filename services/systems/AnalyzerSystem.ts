@@ -31,7 +31,14 @@ export function processAnalyzer(state: GameState): AnalyzerResult {
 
     // Уменьшение таймера
     if (nextAnalyzer.activeItemInstanceId && nextAnalyzer.timeLeft > 0) {
-        nextAnalyzer.timeLeft--;
+        // Проверяем, есть ли Research Lab в текущем регионе
+        const currentRegion = state.currentRegion;
+        const regionBase = state.playerBases.find(b => b.regionId === currentRegion && b.status === 'active');
+        const hasLab = regionBase?.facilities.includes('research_lab');
+
+        // Если есть Лаборатория - прогресс идет в 2 раза быстрее
+        const decrement = hasLab ? 2 : 1;
+        nextAnalyzer.timeLeft = Math.max(0, nextAnalyzer.timeLeft - decrement);
     }
 
     // Завершение анализа

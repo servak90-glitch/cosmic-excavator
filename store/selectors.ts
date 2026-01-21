@@ -34,6 +34,7 @@ export const useDrillState = () => useGameStore(
         drill: s.drill,
         xp: s.xp,
         integrity: s.integrity,
+        sideTunnel: s.sideTunnel,
     }))
 );
 

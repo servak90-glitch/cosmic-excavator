@@ -19,6 +19,7 @@ export interface EventUpdate {
     eventQueue: GameEvent[];
     recentEventIds: string[];
     eventCooldowns?: Record<string, number>;  // ID события -> время последнего срабатывания
+    pendingPredictions?: Array<{ event: GameEvent; triggerTime: number; predictionShown: boolean }>;  // Отложенные предсказанные события
 
     integrity?: number;
     depth?: number;
@@ -110,9 +111,30 @@ export function processEvents(state: GameState, stats: ReturnType<typeof calcula
     let eventQueue = state.eventQueue;
     let recentEventIds = state.recentEventIds;
     let eventCooldowns = state.eventCooldowns || {};
+    let pendingPredictions = state.pendingPredictions || [];
 
     const updates: Partial<EventUpdate> = {};
     const currentTime = Date.now();
+
+    // === ОБРАБОТКА ОТЛОЖЕННЫХ ПРЕДСКАЗАНИЙ ===
+    const triggeredPredictions = pendingPredictions.filter(p => currentTime >= p.triggerTime);
+
+    if (triggeredPredictions.length > 0) {
+        // Активируем отложенные события
+        triggeredPredictions.forEach(p => {
+            eventQueue = [...eventQueue, p.event];
+            recentEventIds = [...recentEventIds, p.event.id];
+            visualEvents.push({
+                type: 'LOG',
+                msg: `>> СОБЫТИЕ: ${p.event.title}`,
+                color: 'text-cyan-400'
+            });
+            visualEvents.push({ type: 'SOUND', sfx: 'LOG' });
+        });
+
+        // Удаляем сработавшие предсказания
+        pendingPredictions = pendingPredictions.filter(p => currentTime < p.triggerTime);
+    }
 
     // === ВЕРОЯТНОСТНАЯ ПРОВЕРКА СОБЫТИЙ (POISSON Distribution) ===
     // Проверяем каждые 10 тиков (1 секунда)
@@ -157,7 +179,8 @@ export function processEvents(state: GameState, stats: ReturnType<typeof calcula
                 state.depth,
                 state.heat,
                 hasScanner,
-                state.selectedBiome || 'rust_valley'  // Передаем текущий биом
+                state.selectedBiome || 'rust_valley',
+                state.settings.language
             );
 
             if (candidateEvent) {
@@ -172,7 +195,41 @@ export function processEvents(state: GameState, stats: ReturnType<typeof calcula
                 // Проверяем cooldown
                 if (candidateEvent.cooldown && isOnCooldown(candidateEvent.id, eventCooldowns, currentTime, candidateEvent.cooldown)) {
                     return {
-                        update: { eventCheckTick, eventQueue, recentEventIds, eventCooldowns },
+                        update: { eventCheckTick, eventQueue, recentEventIds, eventCooldowns, pendingPredictions },
+                        events: visualEvents
+                    };
+                }
+
+                // === PREDICTION SYSTEM ===
+                // Если есть predictionTime, создаем предупреждение и откладываем событие
+                if (stats.predictionTime > 0) {
+                    const detailLevel =
+                        stats.predictionTime >= 20 ? 'FULL' :
+                            stats.predictionTime >= 10 ? 'MEDIUM' : 'BASIC';
+
+                    visualEvents.push({
+                        type: 'PREDICTION',
+                        eventTitle: typeof candidateEvent.title === 'string' ? candidateEvent.title : candidateEvent.title.RU,
+                        eventType: candidateEvent.id,
+                        timeRemaining: stats.predictionTime,
+                        detailLevel
+                    });
+
+                    // Сохраняем pending event
+                    pendingPredictions = [...pendingPredictions, {
+                        event: candidateEvent,
+                        triggerTime: currentTime + (stats.predictionTime * 1000),
+                        predictionShown: true
+                    }];
+
+                    // Ограничиваем максимум 3 активных предсказания
+                    if (pendingPredictions.length > 3) {
+                        pendingPredictions = pendingPredictions.slice(-3);
+                    }
+
+                    // НЕ добавляем в eventQueue сразу, возвращаем обновления
+                    return {
+                        update: { eventCheckTick, eventQueue, recentEventIds, eventCooldowns, pendingPredictions },
                         events: visualEvents
                     };
                 }
@@ -253,7 +310,7 @@ export function processEvents(state: GameState, stats: ReturnType<typeof calcula
     }
 
     return {
-        update: { eventCheckTick, eventQueue, recentEventIds, eventCooldowns, ...updates },
+        update: { eventCheckTick, eventQueue, recentEventIds, eventCooldowns, pendingPredictions, ...updates },
         events: visualEvents
     };
 }

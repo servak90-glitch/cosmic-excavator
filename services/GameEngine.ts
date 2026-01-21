@@ -23,6 +23,7 @@ import {
     processCombat,
     processEntities,
     processHazards,
+    processTravel,
     applyResourceChanges,
     ResourceChanges
 } from './systems';
@@ -270,10 +271,14 @@ export class GameEngine {
             heat, // Use current accumulated heat
             integrity, // Use current accumulated integrity
             depth
-        }, dt, activePerks);
+        }, stats, dt, activePerks);
         if (hazardResult.update.integrity !== undefined) integrity = hazardResult.update.integrity;
         if (hazardResult.update.heat !== undefined) heat = hazardResult.update.heat;
         visualEvents.push(...hazardResult.events);
+
+        // 11. Перемещение (Travel)
+        const travelResult = processTravel(state);
+        visualEvents.push(...travelResult.events);
 
         // === HAZARD TRIGGERS (Visual Effects) ===
         // Detect hazards from logs for visual triggers (Temporary coupling until VisualEvent supports explicit hazards)
@@ -433,7 +438,10 @@ export class GameEngine {
                     : {}),
 
                 // Let's add activeExpeditions if changed
-                ...(state.eventCheckTick % 10 === 0 ? { activeExpeditions } : {})
+                ...(state.eventCheckTick % 10 === 0 ? { activeExpeditions } : {}),
+
+                // Перемещение
+                ...travelResult.update
             },
             events: visualEvents,
             questUpdates

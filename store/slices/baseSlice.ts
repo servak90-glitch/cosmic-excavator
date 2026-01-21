@@ -5,8 +5,10 @@
 import { SliceCreator, pushLog } from './types';
 import type { RegionId, BaseType, PlayerBase, VisualEvent, FacilityId, Resources, DefenseUnitType } from '../../types';
 import { BASE_COSTS, BASE_BUILD_TIMES, BASE_STORAGE_CAPACITY, WORKSHOP_TIER_RANGES } from '../../constants/playerBases';
-import { FUEL_FACILITIES, canBuildFacility } from '../../constants/fuelFacilities';
+import { BASE_FACILITIES } from '../../constants/baseFacilities';
+import { canBuildFacility } from '../../constants/fuelFacilities';
 import { FUEL_RECIPES, canCraftRecipe, getRecipeById } from '../../constants/fuelRecipes';
+import { CRAFTING_RECIPES, getCraftingRecipeById, canCraftRecipe as canCraftItem } from '../../constants/craftingRecipes';
 import { DEFENSE_UNITS, BASE_REPAIR_COST } from '../../constants/defenseUnits';
 import { recalculateCargoWeight } from '../../services/gameMath';
 import { audioEngine } from '../../services/audioEngine';
@@ -16,6 +18,7 @@ export interface BaseActions {
     buildFacility: (baseId: string, facilityId: FacilityId) => void;  // Постройка facility
     transferResources: (baseId: string, resource: keyof Resources, amount: number, direction: 'to_base' | 'to_player') => void;
     refineResource: (baseId: string, recipeId: string, rounds?: number) => void;
+    craftConsumable: (baseId: string, recipeId: string, rounds?: number) => void; // Крафт в Workshop
 
     // === PHASE 4: DEFENSE ACTIONS ===
     startDefenseProduction: (baseId: string, unitType: DefenseUnitType) => void;
@@ -145,6 +148,7 @@ export const createBaseSlice: SliceCreator<BaseActions> = (set, get) => ({
         }
 
         // Проверка возможности постройки
+        // Используем старую функцию-валидатор, но она работает с FacilityId
         const validation = canBuildFacility(base.facilities || [], facilityId, s.resources.rubies);
         if (!validation.canBuild) {
             const event: VisualEvent = {
@@ -156,7 +160,7 @@ export const createBaseSlice: SliceCreator<BaseActions> = (set, get) => ({
             return;
         }
 
-        const facility = FUEL_FACILITIES[facilityId];
+        const facility = BASE_FACILITIES[facilityId];
 
         // Списать credits и добавить facility
         const updatedBases = s.playerBases.map(b =>
@@ -167,7 +171,7 @@ export const createBaseSlice: SliceCreator<BaseActions> = (set, get) => ({
 
         const successEvent: VisualEvent = {
             type: 'LOG',
-            msg: `🏭 ${facility.name} ПОСТРОЕНА!`,
+            msg: `🏗️ ${facility.name} ПОСТРОЕНО!`,
             color: 'text-green-400 font-bold'
         };
 
@@ -349,5 +353,73 @@ export const createBaseSlice: SliceCreator<BaseActions> = (set, get) => ({
             } : b),
             actionLogQueue: pushLog(state, { type: 'LOG', msg: '🛠️ БАЗА ОТРЕМОНТИРОВАНА!', color: 'text-green-400' })
         }));
+    },
+
+    /**
+     * Крафт расходников в Workshop
+     */
+    craftConsumable: (baseId, recipeId, rounds = 1) => {
+        const s = get();
+        const base = s.playerBases.find(b => b.id === baseId);
+        const recipe = getCraftingRecipeById(recipeId);
+        if (!base || !recipe) return;
+
+        // Проверка facility
+        if (recipe.requiredFacility && !base.facilities.includes(recipe.requiredFacility)) {
+            const event: VisualEvent = { type: 'LOG', msg: '⚠️ ТРЕБУЕТСЯ МАСТЕРСКАЯ!', color: 'text-red-400' };
+            set({ actionLogQueue: pushLog(s, event) });
+            return;
+        }
+
+        // Проверка ресурсов
+        const canCraftOnce = canCraftItem(recipe, s.resources);
+        if (!canCraftOnce) {
+            const event: VisualEvent = { type: 'LOG', msg: '❌ НЕДОСТАТОЧНО РЕСУРСОВ!', color: 'text-red-500' };
+            set({ actionLogQueue: pushLog(s, event) });
+            return;
+        }
+
+        // Рассчитать макс. количество раундов
+        let maxPossibleRounds = rounds;
+        for (const item of recipe.input) {
+            const available = s.resources[item.resource] || 0;
+            const possible = Math.floor(available / item.amount);
+            maxPossibleRounds = Math.min(maxPossibleRounds, possible);
+        }
+
+        const actualRounds = Math.max(0, maxPossibleRounds);
+        if (actualRounds === 0) return;
+
+        set(state => {
+            const newRes = { ...state.resources };
+
+            // Списать ресурсы
+            for (const item of recipe.input) {
+                newRes[item.resource] -= item.amount * actualRounds;
+            }
+
+            // Добавить результат (consumable в resources)
+            const outputRes = recipe.output.resource;
+            newRes[outputRes] = (newRes[outputRes] || 0) + (recipe.output.amount * actualRounds);
+
+            // Обработка consumables для UI (если нужно дублировать в state.consumables)
+            const updatedConsumables = { ...state.consumables };
+            if (outputRes === 'repairKit') updatedConsumables.repairKit += (recipe.output.amount * actualRounds);
+            if (outputRes === 'coolantPaste') updatedConsumables.coolantPaste += (recipe.output.amount * actualRounds);
+            if (outputRes === 'advancedCoolant') updatedConsumables.advancedCoolant += (recipe.output.amount * actualRounds);
+
+            return {
+                resources: newRes,
+                consumables: updatedConsumables,
+                currentCargoWeight: recalculateCargoWeight(newRes),
+                actionLogQueue: pushLog(state, {
+                    type: 'LOG',
+                    msg: `🛠️ СКРАФЧЕНО: ${typeof recipe.name === 'string' ? recipe.name : (recipe.name as any).RU} x${actualRounds * recipe.output.amount}`,
+                    color: 'text-cyan-400'
+                })
+            };
+        });
+
+        audioEngine.playBaseBuild();
     }
 });

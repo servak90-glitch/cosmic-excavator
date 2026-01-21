@@ -1,8 +1,5 @@
-/**
- * FUEL RECIPES — рецепты переработки ресурсов в топливо
- */
-
-import type { ResourceType, FacilityId } from '../types';
+import { ResourceType } from '../types';
+import type { FacilityId, Resources } from '../types';
 
 export interface FuelRecipe {
     id: string;
@@ -18,24 +15,24 @@ export const FUEL_RECIPES: FuelRecipe[] = [
     {
         id: 'clay_to_oil',
         name: 'Глина → Нефть',
-        input: { resource: 'clay', amount: 100 },
-        output: { resource: 'oil', amount: 10 },
+        input: { resource: ResourceType.CLAY, amount: 100 },
+        output: { resource: ResourceType.OIL, amount: 10 },
         description: 'Переработка глины в сырую нефть (10:1)',
         requiredFacility: 'basic_refinery'
     },
     {
         id: 'stone_to_gas',
         name: 'Камень → Газ',
-        input: { resource: 'stone', amount: 50 },
-        output: { resource: 'gas', amount: 10 },
+        input: { resource: ResourceType.STONE, amount: 50 },
+        output: { resource: ResourceType.GAS, amount: 10 },
         description: 'Газификация камня (5:1)',
         requiredFacility: 'basic_refinery'
     },
     {
         id: 'coal_to_oil',
         name: 'Уголь → Нефть',
-        input: { resource: 'coal', amount: 20 },
-        output: { resource: 'oil', amount: 15 },
+        input: { resource: ResourceType.COAL, amount: 20 },
+        output: { resource: ResourceType.OIL, amount: 15 },
         description: 'Ликвефакция угля (4:3, эффективнее)',
         requiredFacility: 'advanced_refinery'
     }
@@ -53,7 +50,7 @@ export function getRecipeById(id: string): FuelRecipe | undefined {
  */
 export function canCraftRecipe(
     recipe: FuelRecipe,
-    resources: Record<ResourceType, number>,
+    resources: Partial<Resources>,
     facilities: FacilityId[] = []
 ): boolean {
     // Проверка facility

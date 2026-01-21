@@ -5,6 +5,7 @@
 
 import { REGIONAL_PRICE_MODIFIERS } from '../constants/marketPrices';
 import type { RegionId, Resources, MarketPrice } from '../types';
+import { ResourceType } from '../types';
 
 // Базовые цены ресурсов (в credits за единицу)
 // TODO: вынести в constants/prices.ts когда появится
@@ -25,6 +26,12 @@ const RESOURCE_PRICES: Record<keyof Resources, number> = {
     coal: 5,
     oil: 15,
     gas: 30,
+    ice: 10,
+    scrap: 8,
+    credits: 1,
+    repairKit: 500,
+    coolantPaste: 1000,
+    advancedCoolant: 5000
 };
 
 /**
@@ -126,11 +133,12 @@ export function getAllMarketPrices(
     activeEvents: string[] = [],
     activePerks: string[] = []
 ): MarketPrice[] {
-    const resources: (keyof Resources)[] = [
-        'clay', 'stone', 'copper', 'iron', 'silver', 'gold',
-        'titanium', 'uranium', 'nanoSwarm', 'ancientTech',
-        'rubies', 'emeralds', 'diamonds',
-        'coal', 'oil', 'gas'
+    const resources: ResourceType[] = [
+        ResourceType.CLAY, ResourceType.STONE, ResourceType.COPPER, ResourceType.IRON,
+        ResourceType.SILVER, ResourceType.GOLD, ResourceType.TITANIUM, ResourceType.URANIUM,
+        ResourceType.NANO_SWARM, ResourceType.ANCIENT_TECH, ResourceType.RUBIES, ResourceType.EMERALDS,
+        ResourceType.DIAMONDS, ResourceType.COAL, ResourceType.OIL, ResourceType.GAS,
+        ResourceType.ICE, ResourceType.SCRAP
     ];
 
     return resources.map(resource =>
