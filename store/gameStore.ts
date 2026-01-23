@@ -211,7 +211,10 @@ const INITIAL_STATE: GameState = {
     craftingQueue: [],  // Пустая очередь крафта
 
     // === PHASE 2.2: UNIFIED INVENTORY ===
-    equipmentInventory: []  // Пустой инвентарь equipment
+    equipmentInventory: [],  // Пустой инвентарь equipment
+
+    // === PHASE 4: FREE COOLING COOLDOWN ===
+    freeCoolingLastUsed: 0  // Изначально доступно
 };
 
 // === ПЕРСИСТЕНТНОСТЬ ===
@@ -229,7 +232,8 @@ const PERSISTENT_KEYS: (keyof GameState)[] = [
     'craftingQueue',  // Phase 2.1
     'equipmentInventory',  // Phase 2.2
     'consumables', // NEW: Phase 3
-    'unlockedBlueprints'
+    'unlockedBlueprints',
+    'freeCoolingLastUsed'  // Phase 4: Free cooling cooldown
 ];
 
 const createSnapshot = (state: GameState): Partial<GameState> => {

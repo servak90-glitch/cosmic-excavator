@@ -26,30 +26,51 @@ const VARIATIONS: Record<MusicMode, ScaleVariation[]> = {
     { label: 'Dusty Horizon', notes: [220, 261.63, 293.66, 349.23, 392], waveform: 'triangle', density: 0.6 },
     { label: 'Determination', notes: [110, 220, 329.63, 440, 493.88], waveform: 'sine', density: 0.5 },
     { label: 'Golden Sand', notes: [196, 220, 246.94, 293.66, 329.63], waveform: 'sine', density: 0.7 },
-    { label: 'Oasis Dream', notes: [220, 277.18, 329.63, 415.30, 440], waveform: 'triangle', density: 0.4 }
+    { label: 'Oasis Dream', notes: [220, 277.18, 329.63, 415.30, 440], waveform: 'triangle', density: 0.4 },
+    { label: 'Desert Wind', notes: [164.81, 196, 220, 261.63, 293.66], waveform: 'sine', density: 0.65 },
+    { label: 'First Light', notes: [246.94, 293.66, 329.63, 392, 440], waveform: 'triangle', density: 0.75 },
+    { label: 'Brave Journey', notes: [220, 261.63, 329.63, 392, 493.88], waveform: 'sine', density: 0.55 },
+    { label: 'Hope Rising', notes: [196, 246.94, 293.66, 349.23, 440], waveform: 'sine', density: 0.7 },
+    { label: 'New Frontier', notes: [220, 277.18, 349.23, 440, 523.25], waveform: 'triangle', density: 0.6 }
   ],
   [MusicMode.CRYSTAL]: [
     { label: 'Ethereal Shine', notes: [523.25, 587.33, 659.25, 739.99, 783.99, 880], waveform: 'sine', density: 0.9 },
     { label: 'Frozen Echo', notes: [440, 493.88, 523.25, 587.33, 659.25], waveform: 'sine', density: 0.4 },
     { label: 'Geode Pulse', notes: [261.63, 329.63, 392, 523.25, 659.25], waveform: 'sine', density: 0.7 },
     { label: 'Resonance', notes: [440, 554.37, 659.25, 880], waveform: 'sine', density: 0.6 },
-    { label: 'Prism Light', notes: [523.25, 659.25, 783.99, 1046.50], waveform: 'sine', density: 0.5 }
+    { label: 'Prism Light', notes: [523.25, 659.25, 783.99, 1046.50], waveform: 'sine', density: 0.5 },
+    { label: 'Crystal Cascade', notes: [392, 493.88, 587.33, 739.99, 880], waveform: 'sine', density: 0.8 },
+    { label: 'Shimmer Dance', notes: [523.25, 622.25, 739.99, 880, 1046.50], waveform: 'sine', density: 0.45 },
+    { label: 'Ice Cathedral', notes: [329.63, 440, 523.25, 659.25, 783.99], waveform: 'sine', density: 0.75 },
+    { label: 'Frozen Stars', notes: [493.88, 587.33, 698.46, 830.61, 987.77], waveform: 'sine', density: 0.55 },
+    { label: 'Diamond Rain', notes: [440, 523.25, 659.25, 783.99, 1046.50], waveform: 'sine', density: 0.65 }
   ],
   [MusicMode.DEEP]: [
     { label: 'Tension', notes: [164.81, 174.61, 196, 220, 246.94], waveform: 'triangle', density: 0.8 },
     { label: 'Heavy Metal', notes: [82.41, 110, 123.47, 164.81, 196], waveform: 'sawtooth', density: 0.5 },
     { label: 'Pressure', notes: [110, 116.54, 130.81, 164.81], waveform: 'triangle', density: 0.6 },
     { label: 'Iron Heart', notes: [73.42, 82.41, 110, 146.83], waveform: 'sawtooth', density: 0.7 },
-    { label: 'Abyss Echo', notes: [55, 65.41, 82.41, 110], waveform: 'triangle', density: 0.4 }
+    { label: 'Abyss Echo', notes: [55, 65.41, 82.41, 110], waveform: 'triangle', density: 0.4 },
+    { label: 'Crushing Depths', notes: [98, 110, 123.47, 146.83, 174.61], waveform: 'sawtooth', density: 0.75 },
+    { label: 'Molten Core', notes: [82.41, 92.50, 110, 130.81, 164.81], waveform: 'triangle', density: 0.65 },
+    { label: 'Underground Pulse', notes: [65.41, 73.42, 82.41, 98, 110], waveform: 'sawtooth', density: 0.55 },
+    { label: 'Stone Grind', notes: [110, 123.47, 138.59, 164.81, 196], waveform: 'triangle', density: 0.7 },
+    { label: 'Tectonic Shift', notes: [73.42, 87.31, 110, 138.59, 174.61], waveform: 'sawtooth', density: 0.6 }
   ],
   [MusicMode.VOID]: [
     { label: 'Entropy', notes: [110, 116.54, 138.59, 146.83, 174.61, 220], waveform: 'sawtooth', density: 0.9 },
     { label: 'The End', notes: [55, 61.74, 65.41, 82.41, 110], waveform: 'triangle', density: 0.4 },
     { label: 'Singularity', notes: [440, 466.16, 554.37, 587.33], waveform: 'sine', density: 0.3 },
     { label: 'Null Point', notes: [27.5, 30.87, 41.2, 55], waveform: 'sawtooth', density: 0.8 },
-    { label: 'Eternal Dark', notes: [55, 58.27, 61.74], waveform: 'triangle', density: 0.2 }
+    { label: 'Eternal Dark', notes: [55, 58.27, 61.74], waveform: 'triangle', density: 0.2 },
+    { label: 'Void Whispers', notes: [82.41, 92.50, 110, 123.47, 146.83], waveform: 'sawtooth', density: 0.75 },
+    { label: 'Reality Collapse', notes: [41.2, 46.25, 55, 61.74, 73.42], waveform: 'triangle', density: 0.35 },
+    { label: 'Event Horizon', notes: [220, 233.08, 277.18, 293.66, 349.23], waveform: 'sine', density: 0.25 },
+    { label: 'Cosmic Silence', notes: [27.5, 32.70, 41.2, 49.00], waveform: 'sawtooth', density: 0.85 },
+    { label: 'Final Descent', notes: [55, 58.27, 65.41, 73.42, 82.41], waveform: 'triangle', density: 0.5 }
   ]
 };
+
 
 export class AudioEngine {
   private ctx: AudioContext | null = null;
@@ -545,7 +566,7 @@ export class AudioEngine {
     setInterval(() => {
       if (!this.isRunning) return;
       this.rotateVariation();
-    }, 20000);
+    }, 12000); // Смена вариации каждые 12 секунд (было 20)
   }
 
   private rotateVariation() {

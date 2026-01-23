@@ -19,13 +19,40 @@ const ServiceTab: React.FC<ServiceTabProps> = ({
 }) => {
     const buyCityBuff = useGameStore(s => s.buyCityBuff);
     const lang = useGameStore(s => s.settings.language);
+    const freeCoolingLastUsed = useGameStore(s => s.freeCoolingLastUsed);
 
+    const [cooldownRemaining, setCooldownRemaining] = React.useState(0);
 
     const isPaidCooling = depth >= CITY_SERVICE.PAID_COOLING_DEPTH;
     const coolingRes = depth > CITY_SERVICE.GOLD_COOLING_DEPTH ? 'gold' : 'stone';
     const coolingRate = depth > CITY_SERVICE.GOLD_COOLING_DEPTH ? CITY_SERVICE.COOLING_RATE_GOLD : CITY_SERVICE.COOLING_RATE_STONE;
     const coolingCost = Math.ceil(heat * coolingRate);
     const canAffordCooling = !isPaidCooling || resources[coolingRes as keyof Resources] >= coolingCost;
+
+    // Обновление таймера кулдауна каждую секунду
+    React.useEffect(() => {
+        if (isPaidCooling) return;
+
+        const interval = setInterval(() => {
+            const now = Date.now();
+            const timeSinceLastUse = now - (freeCoolingLastUsed || 0);
+            const remaining = Math.max(0, CITY_SERVICE.FREE_COOLING_COOLDOWN_MS - timeSinceLastUse);
+            setCooldownRemaining(remaining);
+        }, 1000);
+
+        return () => clearInterval(interval);
+    }, [freeCoolingLastUsed, isPaidCooling]);
+
+    const isOnCooldown = !isPaidCooling && cooldownRemaining > 0;
+    const canUseCooling = heat >= 1 && !isOnCooldown && canAffordCooling;
+
+    // Форматирование времени MM:SS
+    const formatTime = (ms: number) => {
+        const totalSeconds = Math.ceil(ms / 1000);
+        const minutes = Math.floor(totalSeconds / 60);
+        const seconds = totalSeconds % 60;
+        return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    };
 
     const repairInfo = calculateRepairCost(depth, integrity, maxIntegrity);
     const repairRes = repairInfo.resource;
@@ -59,15 +86,31 @@ const ServiceTab: React.FC<ServiceTabProps> = ({
                     )}
                 </div>
 
+                {/* Таймер кулдауна */}
+                {!isPaidCooling && isOnCooldown && (
+                    <div className="mb-2 text-center py-1 bg-yellow-900/20 border border-yellow-700/30 rounded">
+                        <span className="text-xs text-yellow-400 font-mono">
+                            ⏱️ ДОСТУПНО ЧЕРЕЗ: {formatTime(cooldownRemaining)}
+                        </span>
+                    </div>
+                )}
+
                 <button
                     onClick={onHeal}
-                    disabled={heat < 1 || !canAffordCooling}
+                    disabled={!canUseCooling}
                     className={`w-full py-2 md:py-3 font-bold border-2 transition-colors active:scale-95 text-xs md:text-sm
             ${heat < 1 ? 'border-zinc-800 text-zinc-600 cursor-not-allowed' :
-                            canAffordCooling ? 'border-cyan-500 text-cyan-500 hover:bg-cyan-500 hover:text-black' : 'border-red-900 text-red-700 cursor-not-allowed'}
+                            !canUseCooling ? 'border-zinc-800 text-zinc-600 cursor-not-allowed' : 'border-cyan-500 text-cyan-500 hover:bg-cyan-500 hover:text-black'}
           `}
                 >
-                    {heat < 1 ? 'СИСТЕМА В НОРМЕ' : canAffordCooling ? 'ЭКСТРЕННЫЙ СБРОС ТЕПЛА' : 'НЕДОСТАТОЧНО СРЕДСТВ'}
+                    {heat < 1
+                        ? 'СИСТЕМА В НОРМЕ'
+                        : isOnCooldown
+                            ? `КУЛДАУН: ${formatTime(cooldownRemaining)}`
+                            : canAffordCooling
+                                ? 'ЭКСТРЕННЫЙ СБРОС ТЕПЛА'
+                                : 'НЕДОСТАТОЧНО СРЕДСТВ'
+                    }
                 </button>
             </div>
 

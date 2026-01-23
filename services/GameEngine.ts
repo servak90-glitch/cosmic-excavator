@@ -183,7 +183,7 @@ export class GameEngine {
             }
         }
 
-        // [RAID SYSTEM] Check every 600 ticks (~1 min)
+        // [RAID SYSTEM] Check every 3600 ticks (~6 min) - v4.1.3 balance
         // Only if player has bases
         let playerBases = state.playerBases || [];
         const nowMs = Date.now();
@@ -225,7 +225,7 @@ export class GameEngine {
             return baseUpdated ? updatedBase : base;
         });
 
-        if (state.eventCheckTick % 1200 === 0 && playerBases.length > 0) {
+        if (state.eventCheckTick % 3600 === 0 && playerBases.length > 0) {
             const raidResult = raidSystem.processBaseRaids(
                 playerBases,
                 // Calculate aggregated reputation for raids (using REBELS mostly)

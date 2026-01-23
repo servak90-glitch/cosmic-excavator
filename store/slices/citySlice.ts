@@ -38,7 +38,40 @@ export const createCitySlice: SliceCreator<CityActions> = (set, get) => ({
     },
 
     healCity: () => {
-        set({ heat: 0 });
+        const s = get();
+
+        // Проверка кулдауна для бесплатного охлаждения (глубина < 1000м)
+        const isPaidCooling = s.depth >= 1000;  // CITY_SERVICE.PAID_COOLING_DEPTH
+
+        if (!isPaidCooling) {
+            const now = Date.now();
+            const timeSinceLastUse = now - (s.freeCoolingLastUsed || 0);
+            const cooldownRemaining = 150000 - timeSinceLastUse;  // CITY_SERVICE.FREE_COOLING_COOLDOWN_MS
+
+            if (cooldownRemaining > 0) {
+                // На кулдауне - показать ошибку
+                const secondsRemaining = Math.ceil(cooldownRemaining / 1000);
+                const minutes = Math.floor(secondsRemaining / 60);
+                const seconds = secondsRemaining % 60;
+                const timeStr = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+
+                const errorEvent: VisualEvent = {
+                    type: 'LOG',
+                    msg: `⏱️ ОХЛАЖДЕНИЕ НА КУЛДАУНЕ: ${timeStr}`,
+                    color: 'text-yellow-500'
+                };
+                set({ actionLogQueue: pushLog(s, errorEvent) });
+                audioEngine.playUIError();
+                return;
+            }
+
+            // Обновить timestamp последнего использования
+            set({ heat: 0, freeCoolingLastUsed: now });
+        } else {
+            // Платное охлаждение - просто сбросить heat
+            set({ heat: 0 });
+        }
+
         audioEngine.playLog();
     },
 
@@ -93,7 +126,7 @@ export const createCitySlice: SliceCreator<CityActions> = (set, get) => ({
         if (s.resources[res] >= amount) {
             const win = Math.random() < 0.45;
             const newRes = { ...s.resources };
-            
+
             if (win) {
                 // Выигрыш: +ставка (итого +amount)
                 newRes[res] += amount;

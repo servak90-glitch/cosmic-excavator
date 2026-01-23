@@ -204,16 +204,12 @@ export const createInventorySlice: SliceCreator<InventoryActions> = (set, get) =
         // Получить текущую деталь на буре
         const currentPart = s.drill[item.slotType as keyof typeof s.drill];
 
-        // Создать EquipmentItem из снятой детали
-        const unequippedItem: import('../../types').EquipmentItem = {
-            instanceId: Math.random().toString(36).substring(2, 15),
-            partId: currentPart.id,
-            slotType: item.slotType,
-            tier: currentPart.tier,
-            acquiredAt: Date.now(),
-            isEquipped: false,
-            scrapValue: currentPart.tier * 10
-        };
+        // ИСПРАВЛЕНИЕ БАГА: Проверить, есть ли снимаемая деталь уже в инвентаре
+        const existingUnequipped = s.equipmentInventory.find(
+            i => i.partId === currentPart.id &&
+                i.slotType === item.slotType &&
+                !i.isEquipped
+        );
 
         // Получить новую деталь definition
         const allParts = [...BITS, ...ENGINES, ...COOLERS, ...HULLS, ...LOGIC_CORES, ...CONTROL_UNITS, ...GEARBOXES, ...POWER_CORES, ...ARMORS, ...CARGO_BAYS];
@@ -224,12 +220,29 @@ export const createInventorySlice: SliceCreator<InventoryActions> = (set, get) =
             return;
         }
 
-        // Обновить inventory: пометить новую деталь как equipped, добавить снятую
-        const updatedInventory = [
-            ...s.equipmentInventory.filter(i => i.instanceId !== itemInstanceId),
-            { ...item, isEquipped: true },
-            unequippedItem
-        ];
+        // Обновить inventory: удалить устанавливаемую деталь, добавить снятую (если её ещё нет)
+        let updatedInventory;
+
+        if (existingUnequipped) {
+            // Снимаемая деталь уже в инвентаре - просто удаляем устанавливаемую
+            updatedInventory = s.equipmentInventory.filter(i => i.instanceId !== itemInstanceId);
+        } else {
+            // Снимаемой детали нет - создаём новый экземпляр и добавляем
+            const unequippedItem: import('../../types').EquipmentItem = {
+                instanceId: Math.random().toString(36).substring(2, 15),
+                partId: currentPart.id,
+                slotType: item.slotType,
+                tier: currentPart.tier,
+                acquiredAt: Date.now(),
+                isEquipped: false,
+                scrapValue: currentPart.tier * 10
+            };
+
+            updatedInventory = [
+                ...s.equipmentInventory.filter(i => i.instanceId !== itemInstanceId),
+                unequippedItem
+            ];
+        }
 
         const successEvent: VisualEvent = {
             type: 'LOG',

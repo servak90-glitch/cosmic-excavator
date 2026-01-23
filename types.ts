@@ -1090,6 +1090,9 @@ export interface GameState {
 
   // === PHASE 3: SIDE TUNNELS ===
   sideTunnel: SideTunnelState | null;   // Активный боковой туннель
+
+  // === PHASE 4: FREE COOLING COOLDOWN ===
+  freeCoolingLastUsed: number;          // Timestamp последнего использования бесплатного охлаждения (0 = доступно)
 }
 
 export type VisualEvent =

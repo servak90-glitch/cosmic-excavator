@@ -40,6 +40,7 @@ export interface AdminActions {
     adminForceRaid: () => void;
     adminAddLevel: (amount: number) => void;
     adminClearEffects: () => void;
+    adminResetFreeCoolingCooldown: () => void;  // NEW: Reset free cooling cooldown
 }
 
 export const createAdminSlice: SliceCreator<AdminActions> = (set, get) => ({
@@ -319,4 +320,9 @@ export const createAdminSlice: SliceCreator<AdminActions> = (set, get) => ({
     adminAddLevel: (amount) => set(s => ({ level: Math.max(1, (s.level || 1) + amount) })),
 
     adminClearEffects: () => set({ activeEffects: [] }),
+
+    adminResetFreeCoolingCooldown: () => {
+        set({ freeCoolingLastUsed: 0 });
+        audioEngine.playClick();
+    },
 });

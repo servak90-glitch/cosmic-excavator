@@ -220,7 +220,7 @@ class SideTunnelSystem {
             type,
             name: def.name,
             progress: 0,
-            maxProgress: 100 + (depth / 100), // Сложность растет с глубиной
+            maxProgress: (100 + (depth / 100)) / 3, // Сокращено в 3 раза для баланса (v4.1.3)
             rewards,
             difficulty: 1 + (def.baseRisk * 5),
         };

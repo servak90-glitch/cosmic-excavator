@@ -50,6 +50,9 @@ export const CITY_SERVICE = {
     COOLING_RATE_GOLD: 1,
     COOLING_RATE_STONE: 5,
 
+    /** Free cooling cooldown (2.5 minutes in milliseconds) */
+    FREE_COOLING_COOLDOWN_MS: 150000,
+
     /** Quest refresh cost */
     QUEST_REFRESH_COST: 100
 } as const;

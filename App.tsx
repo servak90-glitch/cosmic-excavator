@@ -47,7 +47,7 @@ import { EquipmentInventoryView } from './components/EquipmentInventoryView';
 import { ConsumableBar } from './components/ConsumableBar';
 import { PredictionAlert } from './components/PredictionAlert';
 
-const GAME_VERSION = "v4.0.0 (THE GREAT AUDIT)";
+const GAME_VERSION = "v4.1.3 (BALANCE UPDATE)";
 
 const TravelProgressMini = ({ travel, lang }: { travel: any, lang: string }) => {
     const [progress, setProgress] = useState(0);
