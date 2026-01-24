@@ -248,24 +248,25 @@ export function processDrilling(
             if (e.modifiers.consumableDropMultiplier) dropMult *= e.modifiers.consumableDropMultiplier;
         });
 
-        // Базовый шанс: 0.2% в секунду
-        if (Math.random() < 0.002 * dropMult * dt * 60) {
+        // Базовый шанс: 0.05% в секунду (уменьшено в 4 раза)
+        if (Math.random() < 0.0005 * dropMult * dt * 60) {
             const dropRoll = Math.random();
-            const consumableType = dropRoll < 0.6 ? ResourceType.REPAIR_KIT : ResourceType.COOLANT_PASTE;
-            resourceChanges[consumableType] = (resourceChanges[consumableType] || 0) + 1;
+            const consumableType = dropRoll < 0.6 ? ResourceType.SCRAP : ResourceType.ICE;
+            const amount = Math.floor(Math.random() * 3) + 2; // 2-4 единицы сырья
+            resourceChanges[consumableType] = (resourceChanges[consumableType] || 0) + amount;
 
             events.push({
                 type: 'LOG',
-                msg: `📦 НАЙДЕНО В ПОРОДЕ: ${consumableType === ResourceType.REPAIR_KIT ? 'РЕМКОМПЛЕКТ' : 'ХЛАДАГЕНТ'}`,
-                color: 'text-green-300 font-bold',
-                icon: '🎁'
+                msg: `📦 НАЙДЕНО В ПОРОДЕ: ${consumableType === ResourceType.SCRAP ? 'ЛОМ' : 'ЛЁД'} (+${amount})`,
+                color: 'text-zinc-400 font-bold',
+                icon: consumableType === ResourceType.SCRAP ? '♻️' : '❄️'
             });
             events.push({
                 type: 'TEXT',
                 position: 'CENTER',
-                text: `+1 ${consumableType.toUpperCase()}`,
+                text: `+${amount} ${consumableType.toUpperCase()}`,
                 style: 'RESOURCE',
-                color: '#4ADE80'
+                color: consumableType === ResourceType.SCRAP ? '#A1A1AA' : '#22D3EE'
             });
         }
 
