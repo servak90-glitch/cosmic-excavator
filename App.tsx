@@ -13,7 +13,7 @@ import {
     useAIState
 } from './store/selectors';
 import { View, Language } from './types';
-import { calculateStats, calculateShieldRechargeCost, formatCompactNumber } from './services/gameMath';
+import { calculateStats, calculateShieldRechargeCost, formatCompactNumber, calculateTotalFuel } from './services/gameMath';
 import { BIOMES } from './constants';
 import { audioEngine } from './services/audioEngine';
 import { t, TEXT_IDS } from './services/localization';
@@ -332,6 +332,21 @@ const App: React.FC = () => {
         const stats = calculateStats(drill, skillLevels, equippedArtifacts, inventory, depth);
         const energyLoad = stats.energyProd > 0 ? (stats.energyCons / stats.energyProd) * 100 : 100;
         const isCargoFull = currentCargoWeight > stats.totalCargoCapacity && !useGameStore.getState().isZeroWeight;
+        const totalFuel = calculateTotalFuel(resources);
+
+        if (totalFuel < 1) {
+            let x = 0, y = 0;
+            if ('touches' in e) {
+                x = e.touches[0].clientX;
+                y = e.touches[0].clientY;
+            } else {
+                x = (e as React.MouseEvent).clientX;
+                y = (e as React.MouseEvent).clientY;
+            }
+            textRef.current?.addText(x, y - 50, "НЕТ ТОПЛИВА!", "DAMAGE");
+            audioEngine.playError();
+            return;
+        }
 
         if (energyLoad > 100 || isCargoFull) {
             let x = 0, y = 0;
@@ -488,16 +503,18 @@ const App: React.FC = () => {
                                             ? 'bg-zinc-900 border-orange-600 text-orange-500 cursor-not-allowed opacity-90 animate-pulse'
                                             : isOverheated
                                                 ? 'bg-zinc-800 border-red-900 text-red-500 cursor-not-allowed opacity-80'
-                                                : heat > 90
-                                                    ? 'bg-red-900 border-red-500 text-red-100 animate-pulse'
-                                                    : 'bg-zinc-800 border-zinc-600 text-zinc-300 hover:border-cyan-500 hover:text-white'}
+                                                : calculateTotalFuel(resources) < 1
+                                                    ? 'bg-zinc-900 border-orange-700 text-orange-600 animate-pulse cursor-not-allowed'
+                                                    : heat > 90
+                                                        ? 'bg-red-900 border-red-500 text-red-100 animate-pulse'
+                                                        : 'bg-zinc-800 border-zinc-600 text-zinc-300 hover:border-cyan-500 hover:text-white'}
                                 ${isDrilling && !isOverheated && !isLowPower ? 'scale-95 border-cyan-400 text-cyan-400 bg-zinc-900 shadow-[0_0_30px_rgba(34,211,238,0.3)]' : ''}
                             `}
                                     onPointerDown={handleDrillStart}
                                     onPointerUp={handleDrillEnd}
                                     onPointerLeave={handleDrillEnd}
                                 >
-                                    {isLowPower ? 'ПЕРЕГРУЗКА!' : (currentCargoWeight > stats.totalCargoCapacity && !useGameStore.getState().isZeroWeight) ? 'СКЛАД ПОЛОН' : isOverheated ? 'ОСТЫВАНИЕ' : (heat > 90 ? '!!!' : 'БУРИТЬ')}
+                                    {calculateTotalFuel(resources) < 1 ? 'НЕТ ТОПЛИВА' : isLowPower ? 'ПЕРЕГРУЗКА!' : (currentCargoWeight > stats.totalCargoCapacity && !useGameStore.getState().isZeroWeight) ? 'СКЛАД ПОЛОН' : isOverheated ? 'ОСТЫВАНИЕ' : (heat > 90 ? '!!!' : 'БУРИТЬ')}
 
                                     {/* SHIELD CAPACITOR INDICATOR (RING) */}
                                     <svg className="absolute inset-0 w-full h-full pointer-events-none -rotate-90 scale-110" viewBox="0 0 100 100">

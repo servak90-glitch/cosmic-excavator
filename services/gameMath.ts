@@ -113,6 +113,13 @@ export function calculateCargoWeight(resources: Partial<Resources>): number {
 }
 
 /**
+ * Рассчитывает общее количество топлива в условных единицах
+ */
+export function calculateTotalFuel(resources: Partial<Resources>): number {
+    return (resources.coal || 0) + (resources.oil || 0) * 1.5 + (resources.gas || 0) * 2;
+}
+
+/**
  * Вспомогательная функция для обновления currentCargoWeight в state
  * Используется в слайсах при изменении ресурсов
  * @param resources - Текущие ресурсы игрока

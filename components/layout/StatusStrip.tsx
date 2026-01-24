@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useGameStore } from '../../store/gameStore';
-import { calculateStats } from '../../services/gameMath';
+import { calculateStats, calculateTotalFuel } from '../../services/gameMath';
 import { calculateTotalMass } from '../../services/mathEngine';
 
 const StatusStrip: React.FC = () => {
@@ -25,8 +25,7 @@ const StatusStrip: React.FC = () => {
     const isOverloaded = energyLoadRaw > 100;
 
     // Fuel weight calculation (for tooltip)
-    const fuelWeightVal = (resources.coal || 0) * 3 + (resources.oil || 0) * 2 + (resources.gas || 0) * 1;
-    const totalFuelUnits = (resources.coal || 0) + (resources.oil || 0) * 1.5 + (resources.gas || 0) * 2;
+    const totalFuelUnits = calculateTotalFuel(resources);
     const maxFuelUnits = 10000;
     const fuelPercent = Math.min(100, (totalFuelUnits / maxFuelUnits) * 100);
     const isLowFuel = totalFuelUnits < 500;
