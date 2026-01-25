@@ -62,10 +62,12 @@ export function applyResourceChanges(
         const oldValue = newResources[resKey] || 0;
         const newValue = Math.max(0, oldValue + (value || 0));
 
-        // Отладочное логирование при значимом уменьшении ресурсов
+        // Отладочное логирование при значимом уменьшении ресурсов (отключено для производительности)
+        /*
         if (value && value < 0 && Math.abs(value) > 0.001) {
             console.log(`[RESOURCE_CHANGE] ${resKey}: ${oldValue.toFixed(2)} -> ${newValue.toFixed(2)} (diff: ${value.toFixed(4)})`);
         }
+        */
 
         newResources[resKey] = newValue;
     }

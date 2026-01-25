@@ -55,11 +55,11 @@ export const DrillStatsPanel: React.FC = () => {
         <>
             {/* Backdrop */}
             <div
-                className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[105] pointer-events-auto"
+                className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[190] pointer-events-auto"
                 onClick={() => setIsOpen(false)}
             />
 
-            <div className="fixed right-0 top-0 bottom-0 w-full sm:w-80 md:w-72 bg-gray-950 border-l border-cyan-500/50 z-[110] flex flex-col shadow-[-20px_0_50px_rgba(0,0,0,0.9)] animate-in slide-in-from-right duration-300 pointer-events-auto">
+            <div className="fixed right-0 top-0 bottom-0 w-full sm:w-80 md:w-72 bg-gray-950 border-l border-cyan-500/50 z-[200] flex flex-col shadow-[-20px_0_50px_rgba(0,0,0,0.9)] animate-in slide-in-from-right duration-300 pointer-events-auto">
                 {/* Header */}
                 <div className="p-4 border-b border-zinc-800 flex justify-between items-center bg-cyan-950/20">
                     <div className="flex items-center gap-3">

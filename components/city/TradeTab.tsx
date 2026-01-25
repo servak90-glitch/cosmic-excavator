@@ -1,3 +1,10 @@
+
+import React from 'react';
+import { useGameStore } from '../../store/gameStore';
+import { t, TL } from '../../services/localization';
+import { ResourceType, Resources } from '../../types';
+import { getResourceLabel, formatCompactNumber } from '../../services/gameMath';
+import { CITY_TRADES, REVERSE_TRADES } from '../../constants/balance.ts';
 import {
     Fuel,
     Recycle,
@@ -6,6 +13,12 @@ import {
     Ghost,
     ArrowRight
 } from 'lucide-react';
+
+interface TradeTabProps {
+    resources: Resources;
+    depth: number;
+    onTrade: (cost: Partial<Resources>, reward: Partial<Resources> & { XP?: number }) => void;
+}
 
 const TradeTab: React.FC<TradeTabProps> = ({ resources, onTrade }) => {
     const lang = useGameStore(s => s.settings.language);
