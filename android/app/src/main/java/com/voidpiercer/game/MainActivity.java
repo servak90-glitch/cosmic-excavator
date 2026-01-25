@@ -10,15 +10,17 @@ import com.getcapacitor.BridgeActivity;
 public class MainActivity extends BridgeActivity {
   @Override
   protected void onCreate(Bundle savedInstanceState) {
+    // Sets the theme to AppTheme.NoActionBar, which is a fullscreen theme.
+    // This must be called before super.onCreate().
+    setTheme(R.style.AppTheme_NoActionBar);
     super.onCreate(savedInstanceState);
 
+    // The previous code to hide the status bar is kept as a fallback.
     WindowInsetsControllerCompat windowInsetsController =
         WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
-    // Configure the behavior of the hidden system bars
     windowInsetsController.setSystemBarsBehavior(
         WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
     );
-    // Hide both the status bar and the navigation bar
-    windowInsetsController.hide(WindowInsetsCompat.Type.systemBars());
+    windowInsetsController.hide(WindowInsetsCompat.Type.statusBars());
   }
 }

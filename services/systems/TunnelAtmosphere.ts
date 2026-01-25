@@ -101,6 +101,7 @@ export class TunnelAtmosphere {
   private screenShake = { x: 0, y: 0 };
 
   private config: AtmosphereConfig = { screenWidth: 800, screenHeight: 600 };
+  private currentQuality: 'low' | 'medium' | 'high' = 'high';
 
   constructor() {
     this.debrisLayer = new Container();
@@ -193,10 +194,35 @@ export class TunnelAtmosphere {
     parent.addChild(this.debrisLayer);
     parent.addChild(this.hazardLayer);
 
-    this.createBackgroundObjects(15);
-    this.createDebris(30, 'small');
-    this.createDebris(10, 'large');
+    // Initial quality from store
+    try {
+      // @ts-ignore - Importing store might cause circular dep if not careful, using getState
+      const initialQuality = (window as any).useGameStore?.getState()?.settings?.graphicsQuality || 'high';
+      this.setQuality(initialQuality);
+    } catch (e) {
+      this.setQuality('high');
+    }
+
     this.createFog();
+  }
+
+  setQuality(quality: 'low' | 'medium' | 'high'): void {
+    this.currentQuality = quality;
+    this.debrisLayer.removeChildren();
+    this.debris = [];
+
+    if (quality === 'low') {
+      this.createBackgroundObjects(5);
+      this.createDebris(10, 'small');
+    } else if (quality === 'medium') {
+      this.createBackgroundObjects(10);
+      this.createDebris(20, 'small');
+      this.createDebris(5, 'large');
+    } else {
+      this.createBackgroundObjects(20);
+      this.createDebris(40, 'small');
+      this.createDebris(15, 'large');
+    }
   }
 
   private createDebris(count: number, size: 'small' | 'large'): void {
@@ -239,6 +265,13 @@ export class TunnelAtmosphere {
   private updateFog(depth: number): void {
     if (!this.fogGraphics) return;
     const { screenWidth, screenHeight } = this.config;
+
+    // NO FOG ON LOW
+    if (this.currentQuality === 'low') {
+      this.fogGraphics.clear();
+      return;
+    }
+
     const fogIntensity = Math.min(1, Math.max(0, (depth - 5000) / 45000));
 
     this.fogGraphics.clear();

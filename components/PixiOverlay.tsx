@@ -1,7 +1,7 @@
 
 import React, { useEffect, useRef, useImperativeHandle, forwardRef } from 'react';
 import { Application, Container, Graphics, Sprite, Texture, Circle } from 'pixi.js';
-import { CRTFilter, RGBSplitFilter } from 'pixi-filters';
+import { CRTFilter, RGBSplitFilter, BloomFilter, AdjustmentFilter } from 'pixi-filters';
 import { useGameStore } from '../store/gameStore';
 import { DroneType } from '../types'; // [DEV_CONTEXT: HARDENING]
 import { tunnelAtmosphere } from '../services/systems/TunnelAtmosphere'; // [DEV_CONTEXT: ATMOSPHERE]
@@ -21,6 +21,8 @@ let globalObjectTextures: Map<string, Texture> | null = null;
 // Global refs for filters to ensure reactivity and persistency
 let globalCRTFilter: CRTFilter | null = null;
 let globalRGBSplitFilter: RGBSplitFilter | null = null;
+let globalBloomFilter: BloomFilter | null = null;
+let globalAdjustmentFilter: AdjustmentFilter | null = null;
 
 // [DEV_CONTEXT: OPTIMIZATION] Removed globalPropsRef. The ticker now accesses the store directly.
 
@@ -111,22 +113,33 @@ const PixiOverlay = forwardRef<PixiOverlayHandle, PixiOverlayProps>(({ onObjectC
                         }
 
                         if (!globalRGBSplitFilter) {
-                            globalRGBSplitFilter = new RGBSplitFilter(
-                                { x: 0, y: 0 },
-                                { x: 0, y: 0 },
-                                { x: 0, y: 0 }
-                            );
+                            globalRGBSplitFilter = new RGBSplitFilter({
+                                red: { x: 0, y: 0 },
+                                green: { x: 0, y: 0 },
+                                blue: { x: 0, y: 0 }
+                            });
                         }
 
-                        // [DEV_CONTEXT: GRAPHICS] Initial quality setup (Reactivity handled in separate useEffect)
-                        const isMobile = window.innerWidth < 768;
+                        if (!globalBloomFilter) {
+                            globalBloomFilter = new BloomFilter({
+                                strength: 1.5,
+                                quality: 4,
+                                kernelSize: 5
+                            });
+                        }
+
+                        if (!globalAdjustmentFilter) {
+                            globalAdjustmentFilter = new AdjustmentFilter({
+                                gamma: 1.2,
+                                contrast: 1.2,
+                                saturation: 1.5,
+                                brightness: 1.1
+                            });
+                        }
+
+                        // [DEV_CONTEXT: GRAPHICS] Initial quality setup
                         const initialQuality = useGameStore.getState().settings.graphicsQuality || 'high';
-
-                        if (initialQuality === 'low') {
-                            app.stage.filters = [];
-                        } else {
-                            app.stage.filters = isMobile ? [] : [globalRGBSplitFilter, globalCRTFilter];
-                        }
+                        tunnelAtmosphere.setQuality(initialQuality);
 
                         tunnelAtmosphere.init(app.stage, {
                             screenWidth: app.screen.width,
@@ -319,25 +332,35 @@ const PixiOverlay = forwardRef<PixiOverlayHandle, PixiOverlayProps>(({ onObjectC
                                 }
 
                                 if (glitchIntensity > 0 && globalRGBSplitFilter) {
-                                    const offset = glitchIntensity * 5;
+                                    const offset = glitchIntensity * (quality === 'high' ? 8 : 5);
                                     globalRGBSplitFilter.red = { x: offset * Math.sin(time * 20), y: 0 };
                                     globalRGBSplitFilter.blue = { x: -offset * Math.cos(time * 15), y: 0 };
 
                                     if (currentEffect === 'GLITCH_RED') {
-                                        globalRGBSplitFilter.red = { x: 10, y: 0 };
-                                        globalRGBSplitFilter.green = { x: 0, y: 0 };
-                                        globalRGBSplitFilter.blue = { x: 0, y: 0 };
+                                        globalRGBSplitFilter.red = { x: 15 * (quality === 'high' ? 1.5 : 1), y: 0 };
                                     }
                                 } else if (globalRGBSplitFilter) {
-                                    globalRGBSplitFilter.red = { x: 0, y: 0 };
-                                    globalRGBSplitFilter.blue = { x: 0, y: 0 };
+                                    // High quality ALWAYS has tiny chromatic aberration for "analog" feel
+                                    if (quality === 'high') {
+                                        globalRGBSplitFilter.red = { x: 1.5 * Math.sin(time * 2), y: 0 };
+                                        globalRGBSplitFilter.blue = { x: -1.5 * Math.cos(time * 1.5), y: 0 };
+                                    } else {
+                                        globalRGBSplitFilter.red = { x: 0, y: 0 };
+                                        globalRGBSplitFilter.blue = { x: 0, y: 0 };
+                                    }
                                 }
 
-                                if (!isMobile && quality !== 'low' && globalCRTFilter) {
-                                    const damageRatio = (100 - integrity) / 100;
-                                    globalCRTFilter.noise = 0.1 + (damageRatio * 0.4);
-                                    globalCRTFilter.curvature = 1 + (damageRatio > 0.8 ? Math.sin(time * 10) * 0.5 : 0);
-                                    globalCRTFilter.time = time;
+                                if (globalCRTFilter) {
+                                    if (quality === 'low') {
+                                        globalCRTFilter.vignetting = 0;
+                                        globalCRTFilter.noise = 0;
+                                    } else {
+                                        const damageRatio = (100 - integrity) / 100;
+                                        globalCRTFilter.noise = (quality === 'high' ? 0.15 : 0.05) + (damageRatio * 0.4);
+                                        globalCRTFilter.curvature = (quality === 'high' ? 1.2 : 1.0) + (damageRatio > 0.8 ? Math.sin(time * 10) * 0.5 : 0);
+                                        globalCRTFilter.vignetting = quality === 'high' ? 0.3 : 0.1;
+                                        globalCRTFilter.time = time;
+                                    }
                                 }
 
                                 const warpSpeed = isDrillingActive ? 25 : 1;
@@ -491,11 +514,22 @@ const PixiOverlay = forwardRef<PixiOverlayHandle, PixiOverlayProps>(({ onObjectC
 
         const isMobile = window.innerWidth < 768;
 
+        // Sync Atmosphere
+        tunnelAtmosphere.setQuality(graphicsQuality);
+
         if (graphicsQuality === 'low') {
             globalApp.stage.filters = [];
-        } else {
-            // Apply filters if not on mobile
+        } else if (graphicsQuality === 'medium') {
+            // Apply standard filters
             globalApp.stage.filters = isMobile ? [] : (globalRGBSplitFilter && globalCRTFilter ? [globalRGBSplitFilter, globalCRTFilter] : []);
+        } else {
+            // HIGH - Full effect suite
+            const suite = [];
+            if (globalAdjustmentFilter) suite.push(globalAdjustmentFilter);
+            if (globalRGBSplitFilter) suite.push(globalRGBSplitFilter);
+            if (globalCRTFilter) suite.push(globalCRTFilter);
+            if (globalBloomFilter) suite.push(globalBloomFilter);
+            globalApp.stage.filters = suite as any;
         }
     }, [graphicsQuality]);
 
@@ -506,13 +540,14 @@ const PixiOverlay = forwardRef<PixiOverlayHandle, PixiOverlayProps>(({ onObjectC
             const quality = useGameStore.getState().settings.graphicsQuality || 'high';
 
             // [DEV_CONTEXT: GRAPHICS] Particle count scale
-            const qualityScale = quality === 'low' ? 0.3 : (quality === 'medium' ? 0.6 : 1.0);
-            const maxParticles = quality === 'low' ? 100 : (quality === 'medium' ? 250 : 500);
+            let countMultiplier = quality === 'low' ? 0.2 : (quality === 'medium' ? 0.6 : 1.0);
+            const actualCount = Math.max(1, Math.floor(count * countMultiplier * (isMobile ? 0.5 : 1.0)));
 
             let color = 0xffffff;
             if (colorStr.startsWith('#')) color = parseInt(colorStr.replace('#', ''), 16);
 
-            const adjustedCount = Math.max(1, Math.ceil(count * qualityScale * (isMobile ? 0.5 : 1.0)));
+            const adjustedCount = Math.max(1, Math.floor(count * countMultiplier * (isMobile ? 0.5 : 1.0)));
+            const maxParticles = quality === 'low' ? 100 : (quality === 'medium' ? 250 : 500);
 
             for (let i = 0; i < adjustedCount; i++) {
                 let tex = globalTextures.debris;
@@ -543,6 +578,7 @@ const PixiOverlay = forwardRef<PixiOverlayHandle, PixiOverlayProps>(({ onObjectC
                 globalParticleLayer.addChild(sprite);
                 globalParticles.push({ sprite, vx, vy, life, maxLife: life, type });
             }
+
             if (globalParticles.length > maxParticles) {
                 const removed = globalParticles.splice(0, globalParticles.length - maxParticles);
                 removed.forEach(p => p.sprite.destroy());

@@ -145,7 +145,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                         <div className="p-2 glass-panel border-white/10 bg-white/5">
                             <Settings className="w-5 h-5 text-cyan-400" />
                         </div>
-                        <h2 onClick={handleTitleClick} className="text-xl font-black font-technical uppercase tracking-tighter text-white select-none cursor-default italic">
+                        <h2 onClick={handleTitleClick} className="text-sm md:text-xl font-black font-technical uppercase tracking-tighter text-white select-none cursor-default italic truncate mr-4">
                             {t(TEXT_IDS.SETTINGS_CONFIG_TITLE, language)}_V{GAME_VERSION}
                         </h2>
                     </div>
