@@ -54,6 +54,37 @@ interface DustParticle {
     speed: number;
 }
 
+// [DEV_CONTEXT: GRAPHICS] Centralized quality application function
+function applyQualitySettings(app: Application, quality: 'low' | 'medium' | 'high') {
+    if (!app || !app.stage) return;
+
+    const isMobile = window.innerWidth < 768;
+    console.log(`[PixiOverlay] FORCE APPLY QUALITY: ${quality} (isMobile: ${isMobile})`);
+
+    // Sync Atmosphere
+    tunnelAtmosphere.setQuality(quality);
+
+    if (quality === 'low') {
+        app.stage.filters = [];
+    } else if (quality === 'medium') {
+        // Apply basic filters on desktop only
+        const suite = [];
+        if (!isMobile) {
+            if (globalRGBSplitFilter) suite.push(globalRGBSplitFilter);
+            if (globalCRTFilter) suite.push(globalCRTFilter);
+        }
+        app.stage.filters = suite as any;
+    } else {
+        // HIGH - Full effect suite, ignore mobile restriction
+        const suite = [];
+        if (globalAdjustmentFilter) suite.push(globalAdjustmentFilter);
+        if (globalRGBSplitFilter) suite.push(globalRGBSplitFilter);
+        if (globalCRTFilter) suite.push(globalCRTFilter);
+        if (globalBloomFilter) suite.push(globalBloomFilter);
+        app.stage.filters = suite as any;
+    }
+}
+
 const PixiOverlay = forwardRef<PixiOverlayHandle, PixiOverlayProps>(({ onObjectClick, onDrillClick, visualEffect }, ref) => {
     const containerRef = useRef<HTMLDivElement>(null);
 
@@ -122,18 +153,18 @@ const PixiOverlay = forwardRef<PixiOverlayHandle, PixiOverlayProps>(({ onObjectC
 
                         if (!globalBloomFilter) {
                             globalBloomFilter = new BloomFilter({
-                                strength: 1.5,
-                                quality: 4,
-                                kernelSize: 5
+                                strength: 3.0,
+                                quality: 5,
+                                kernelSize: 15
                             });
                         }
 
                         if (!globalAdjustmentFilter) {
                             globalAdjustmentFilter = new AdjustmentFilter({
-                                gamma: 1.2,
-                                contrast: 1.2,
-                                saturation: 1.5,
-                                brightness: 1.1
+                                gamma: 1.3,
+                                contrast: 1.3,
+                                saturation: 2.0,
+                                brightness: 1.2
                             });
                         }
 
@@ -462,6 +493,10 @@ const PixiOverlay = forwardRef<PixiOverlayHandle, PixiOverlayProps>(({ onObjectC
                         });
 
                         globalApp = app;
+
+                        // [DEV_CONTEXT: GRAPHICS] Force initial settings application
+                        applyQualitySettings(app, initialQuality);
+
                         return app;
                     })();
                 }
@@ -510,26 +545,8 @@ const PixiOverlay = forwardRef<PixiOverlayHandle, PixiOverlayProps>(({ onObjectC
     // [DEV_CONTEXT: REACTIVITY] New Effect to handle graphics quality changes
     const graphicsQuality = useGameStore(state => state.settings.graphicsQuality);
     useEffect(() => {
-        if (!globalApp || !globalApp.stage) return;
-
-        const isMobile = window.innerWidth < 768;
-
-        // Sync Atmosphere
-        tunnelAtmosphere.setQuality(graphicsQuality);
-
-        if (graphicsQuality === 'low') {
-            globalApp.stage.filters = [];
-        } else if (graphicsQuality === 'medium') {
-            // Apply standard filters
-            globalApp.stage.filters = isMobile ? [] : (globalRGBSplitFilter && globalCRTFilter ? [globalRGBSplitFilter, globalCRTFilter] : []);
-        } else {
-            // HIGH - Full effect suite
-            const suite = [];
-            if (globalAdjustmentFilter) suite.push(globalAdjustmentFilter);
-            if (globalRGBSplitFilter) suite.push(globalRGBSplitFilter);
-            if (globalCRTFilter) suite.push(globalCRTFilter);
-            if (globalBloomFilter) suite.push(globalBloomFilter);
-            globalApp.stage.filters = suite as any;
+        if (globalApp) {
+            applyQualitySettings(globalApp, graphicsQuality);
         }
     }, [graphicsQuality]);
 

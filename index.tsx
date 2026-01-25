@@ -1,5 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import { Capacitor } from '@capacitor/core';
+import { StatusBar } from '@capacitor/status-bar';
 import App from './App';
 import ErrorBoundary from './components/common/ErrorBoundary';
 
@@ -9,6 +11,18 @@ if (!rootElement) {
 }
 
 const root = ReactDOM.createRoot(rootElement);
+
+// [DEV_CONTEXT: MOBILE] Hide status bar on native platforms
+const hideStatusBar = async () => {
+  if (Capacitor.isNativePlatform()) {
+    try {
+      await StatusBar.hide();
+    } catch (e) {
+      console.warn("StatusBar.hide failed:", e);
+    }
+  }
+};
+hideStatusBar();
 
 // Global Error Handler for the "Black Screen" issue
 try {
