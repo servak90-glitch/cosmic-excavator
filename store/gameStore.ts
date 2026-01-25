@@ -161,7 +161,7 @@ const INITIAL_STATE: GameState = {
 
     // SETTINGS
     // SETTINGS
-    settings: { musicVolume: 0.5, sfxVolume: 0.5, drillVolume: 0.5, musicMuted: false, sfxMuted: false, drillMuted: false, language: 'RU' },
+    settings: { musicVolume: 0.5, sfxVolume: 0.5, drillVolume: 0.5, musicMuted: false, sfxMuted: false, drillMuted: false, language: 'RU', graphicsQuality: 'high' },
     selectedBiome: null,
     debugUnlocked: false,
     isGodMode: false,

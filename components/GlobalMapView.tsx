@@ -445,9 +445,9 @@ export const GlobalMapView = () => {
                     />
                 )}
                 {managedBaseId && (
-                    <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
-                        <div className="absolute inset-0 bg-void/90 backdrop-blur-xl" onClick={() => setManagedBaseId(null)} />
-                        <div className="relative w-full max-w-5xl h-[85vh] glass-panel bg-void/60 border-white/10 shadow-[0_0_100px_rgba(0,0,0,0.8)] flex flex-col overflow-hidden">
+                    <div className="fixed inset-0 z-[110] flex items-center justify-center p-2 md:p-4 overflow-hidden">
+                        <div className="absolute inset-0 bg-void/95 backdrop-blur-xl" onClick={() => setManagedBaseId(null)} />
+                        <div className="relative w-full max-w-7xl h-full md:h-[90vh] glass-panel bg-void/60 border-white/10 shadow-[0_0_100px_rgba(0,0,0,0.8)] flex flex-col overflow-hidden my-auto">
                             <BaseView
                                 baseId={managedBaseId}
                                 onClose={() => setManagedBaseId(null)}

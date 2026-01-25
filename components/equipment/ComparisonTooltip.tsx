@@ -42,7 +42,7 @@ export const ComparisonTooltip: React.FC<ComparisonTooltipProps> = ({ item }) =>
     // Определение характеристик для сравнения в зависимости от слота
     const getStatsToCompare = () => {
         const base = [
-            { key: 'energyCons', label: 'Энергопотребление', unit: 'W', format: (v: number) => Math.round(v).toString(), inverse: true }
+            { key: 'energyCost', label: 'Энергопотребление', unit: 'W', format: (v: number) => Math.round(v).toString(), inverse: true }
         ];
 
         switch (item.slotType) {

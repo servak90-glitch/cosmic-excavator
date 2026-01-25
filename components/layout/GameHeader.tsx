@@ -26,6 +26,13 @@ const RARE_RESOURCES: ResourceType[] = [
     ResourceType.ANCIENT_TECH, ResourceType.RUBIES, ResourceType.EMERALDS,
     ResourceType.DIAMONDS
 ];
+const FUEL_RESOURCES: ResourceType[] = [
+    ResourceType.COAL, ResourceType.OIL, ResourceType.GAS,
+    ResourceType.ICE, ResourceType.SCRAP
+];
+const SUPPLY_RESOURCES: ResourceType[] = [
+    ResourceType.REPAIR_KIT, ResourceType.COOLANT_PASTE, ResourceType.ADVANCED_COOLANT
+];
 
 const ResourceItem: React.FC<{ name: string; amount: number; label: React.ReactNode }> = ({ amount, label }) => (
     <div
@@ -163,23 +170,67 @@ export const RareResourcesMenu: React.FC<{
                         </div>
                     </div>
 
-                    {/* 2. BASE ASSETS (Mobile only) */}
-                    <div className="md:hidden px-4">
+                    {/* 2. BASE ASSETS */}
+                    <div className="px-4 md:px-3">
                         <div className="flex items-center gap-2 mb-3 opacity-30">
                             <Box className="w-3 h-3" />
                             <span className="text-[9px] font-black uppercase tracking-[0.3em] font-technical">Base Assets</span>
                         </div>
-                        <div className="grid grid-cols-2 gap-2">
+                        <div className="grid grid-cols-2 md:grid-cols-2 gap-2">
                             {COMMON_RESOURCES.map(key => (
-                                <div key={key} className="flex flex-col p-2.5 glass-panel border-white/5 bg-white/5">
-                                    <span className="text-[8px] font-technical text-white/30 uppercase tracking-tighter mb-1">{t(getResourceLabel(key), lang)}</span>
-                                    <span className="text-[11px] font-technical font-bold text-white">{(resources[key] || 0).toLocaleString()}</span>
+                                <div key={key} className="flex flex-col p-2.5 glass-panel border-white/5 bg-white/5 hover:bg-white/10 transition-colors group">
+                                    <span className="text-[8px] font-technical text-white/30 group-hover:text-white/50 uppercase tracking-tighter mb-1 truncate">
+                                        {t(getResourceLabel(key), lang)}
+                                    </span>
+                                    <span className="text-[11px] font-technical font-bold text-white">
+                                        {formatCompactNumber(resources[key] || 0)}
+                                    </span>
                                 </div>
                             ))}
                         </div>
                     </div>
 
-                    {/* 3. RARE ASSETS */}
+                    {/* 3. FUEL & ENERGY */}
+                    <div className="px-4 md:px-3">
+                        <div className="flex items-center gap-2 mb-3 opacity-30">
+                            <Activity className="w-3 h-3" />
+                            <span className="text-[9px] font-black uppercase tracking-[0.3em] font-technical">Fuel & Energy</span>
+                        </div>
+                        <div className="grid grid-cols-3 gap-2">
+                            {FUEL_RESOURCES.map(key => (
+                                <div key={key} className="flex flex-col p-2.5 glass-panel border-white/5 bg-white/5 hover:bg-white/10 transition-colors group">
+                                    <span className="text-[8px] font-technical text-white/30 group-hover:text-white/50 uppercase tracking-tighter mb-1 truncate">
+                                        {t(getResourceLabel(key), lang)}
+                                    </span>
+                                    <span className="text-[11px] font-technical font-bold text-cyan-400">
+                                        {formatCompactNumber(resources[key] || 0)}
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* 4. DRILL SUPPLIES */}
+                    <div className="px-4 md:px-3">
+                        <div className="flex items-center gap-2 mb-3 opacity-30">
+                            <Settings2 className="w-3 h-3" />
+                            <span className="text-[9px] font-black uppercase tracking-[0.3em] font-technical">Drill Supplies</span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                            {SUPPLY_RESOURCES.map(key => (
+                                <div key={key} className="flex flex-col p-2.5 glass-panel border-white/5 bg-white/5 hover:bg-white/10 transition-colors group">
+                                    <span className="text-[8px] font-technical text-white/30 group-hover:text-white/50 uppercase tracking-tighter mb-1 truncate">
+                                        {t(getResourceLabel(key), lang)}
+                                    </span>
+                                    <span className="text-[11px] font-technical font-bold text-amber-400">
+                                        {formatCompactNumber(resources[key] || 0)}
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* 5. RARE ASSETS */}
                     <div className="px-4 md:px-3 pb-8 md:pb-4">
                         <div className="flex items-center gap-2 mb-3 opacity-30">
                             <Gem className="w-3 h-3" />

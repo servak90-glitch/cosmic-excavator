@@ -22,6 +22,7 @@ export interface GameSettings {
   sfxMuted: boolean;
   drillMuted: boolean;
   language: Language;
+  graphicsQuality: 'low' | 'medium' | 'high';
 }
 
 export enum ResourceType {

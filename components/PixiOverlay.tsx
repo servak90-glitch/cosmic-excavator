@@ -18,6 +18,10 @@ const globalParticles: Particle[] = [];
 let globalDroneTextures: Map<string, Texture> | null = null;
 let globalObjectTextures: Map<string, Texture> | null = null;
 
+// Global refs for filters to ensure reactivity and persistency
+let globalCRTFilter: CRTFilter | null = null;
+let globalRGBSplitFilter: RGBSplitFilter | null = null;
+
 // [DEV_CONTEXT: OPTIMIZATION] Removed globalPropsRef. The ticker now accesses the store directly.
 
 export interface PixiOverlayHandle {
@@ -96,22 +100,33 @@ const PixiOverlay = forwardRef<PixiOverlayHandle, PixiOverlayProps>(({ onObjectC
                         // Expose particle layer to global scope for Imperative Handle
                         globalParticleLayer = particleLayer;
 
-                        // [DEV_CONTEXT: FILTERS] Using pixi-filters library
-                        const crtFilter = new CRTFilter({
-                            curvature: 1,
-                            lineWidth: 1,
-                            lineContrast: 0.3,
-                            noise: 0.1
-                        });
+                        // [DEV_CONTEXT: FILTERS] Using pixi-filters library - Global Singletons
+                        if (!globalCRTFilter) {
+                            globalCRTFilter = new CRTFilter({
+                                curvature: 1,
+                                lineWidth: 1,
+                                lineContrast: 0.3,
+                                noise: 0.1
+                            });
+                        }
 
-                        const rgbSplitFilter = new RGBSplitFilter(
-                            { x: 0, y: 0 },
-                            { x: 0, y: 0 },
-                            { x: 0, y: 0 }
-                        );
+                        if (!globalRGBSplitFilter) {
+                            globalRGBSplitFilter = new RGBSplitFilter(
+                                { x: 0, y: 0 },
+                                { x: 0, y: 0 },
+                                { x: 0, y: 0 }
+                            );
+                        }
 
+                        // [DEV_CONTEXT: GRAPHICS] Initial quality setup (Reactivity handled in separate useEffect)
                         const isMobile = window.innerWidth < 768;
-                        app.stage.filters = isMobile ? [] : [rgbSplitFilter, crtFilter];
+                        const initialQuality = useGameStore.getState().settings.graphicsQuality || 'high';
+
+                        if (initialQuality === 'low') {
+                            app.stage.filters = [];
+                        } else {
+                            app.stage.filters = isMobile ? [] : [globalRGBSplitFilter, globalCRTFilter];
+                        }
 
                         tunnelAtmosphere.init(app.stage, {
                             screenWidth: app.screen.width,
@@ -268,12 +283,20 @@ const PixiOverlay = forwardRef<PixiOverlayHandle, PixiOverlayProps>(({ onObjectC
                                 const cy = screenH * 0.35;
 
                                 const state = useGameStore.getState();
-                                const { activeDrones, droneLevels, flyingObjects, heat, integrity, depth } = state;
+                                const { activeDrones, droneLevels, flyingObjects, heat, integrity, depth, settings } = state;
+                                const quality = settings?.graphicsQuality || 'high';
 
                                 // [OPTIMIZATION] Early exit if nothing rendering-intensive is active
                                 const hasParticles = globalParticles.length > 0;
                                 const hasDrones = activeDrones.length > 0;
                                 const hasObjects = flyingObjects.length > 0;
+
+                                // [DEV_CONTEXT: GRAPHICS] Update particles per frame budget
+                                const frameMaxParticles = quality === 'low' ? 50 : (quality === 'medium' ? 150 : 300);
+                                if (globalParticles.length > frameMaxParticles) {
+                                    const removed = globalParticles.splice(0, globalParticles.length - frameMaxParticles);
+                                    removed.forEach(p => p.sprite.destroy());
+                                }
                                 if (!hasParticles && !hasDrones && !hasObjects && !tunnelAtmosphere.hasActiveHazard()) {
                                     // We can skip most of the logic if nothing is happening, but we still update dust for ambiance
                                 }
@@ -286,38 +309,35 @@ const PixiOverlay = forwardRef<PixiOverlayHandle, PixiOverlayProps>(({ onObjectC
                                 }
 
                                 const heatRatio = heat / 100;
-                                let glitchIntensity = Math.max(0, (heatRatio - 0.6) * 2.5);
+                                const glitchIntensity = Math.max(0, (heatRatio - 0.6) * 2.5);
 
                                 // FORCE VISUAL EFFECTS
                                 const currentEffect = propsRef.current.visualEffect;
-                                if (currentEffect === 'GLITCH_RED' || currentEffect === 'RAID_ALARM') {
-                                    glitchIntensity = 0.8;
-                                    crtFilter.vignetting = 0.6;
-                                    crtFilter.vignettingAlpha = 0.8; // Red tint handled? No, CRT v5 maybe not.
-                                    // Use RGB split for Red effect
+                                if ((currentEffect === 'GLITCH_RED' || currentEffect === 'RAID_ALARM') && globalCRTFilter) {
+                                    globalCRTFilter.vignetting = 0.6;
+                                    globalCRTFilter.vignettingAlpha = 0.8;
                                 }
 
-                                if (glitchIntensity > 0) {
+                                if (glitchIntensity > 0 && globalRGBSplitFilter) {
                                     const offset = glitchIntensity * 5;
-                                    rgbSplitFilter.red = { x: offset * Math.sin(time * 20), y: 0 };
-                                    rgbSplitFilter.blue = { x: -offset * Math.cos(time * 15), y: 0 };
+                                    globalRGBSplitFilter.red = { x: offset * Math.sin(time * 20), y: 0 };
+                                    globalRGBSplitFilter.blue = { x: -offset * Math.cos(time * 15), y: 0 };
 
                                     if (currentEffect === 'GLITCH_RED') {
-                                        // Extra Red Shift
-                                        rgbSplitFilter.red = { x: 10, y: 0 };
-                                        rgbSplitFilter.green = { x: 0, y: 0 };
-                                        rgbSplitFilter.blue = { x: 0, y: 0 };
+                                        globalRGBSplitFilter.red = { x: 10, y: 0 };
+                                        globalRGBSplitFilter.green = { x: 0, y: 0 };
+                                        globalRGBSplitFilter.blue = { x: 0, y: 0 };
                                     }
-                                } else {
-                                    rgbSplitFilter.red = { x: 0, y: 0 };
-                                    rgbSplitFilter.blue = { x: 0, y: 0 };
+                                } else if (globalRGBSplitFilter) {
+                                    globalRGBSplitFilter.red = { x: 0, y: 0 };
+                                    globalRGBSplitFilter.blue = { x: 0, y: 0 };
                                 }
 
-                                if (!isMobile) {
+                                if (!isMobile && quality !== 'low' && globalCRTFilter) {
                                     const damageRatio = (100 - integrity) / 100;
-                                    crtFilter.noise = 0.1 + (damageRatio * 0.4);
-                                    crtFilter.curvature = 1 + (damageRatio > 0.8 ? Math.sin(time * 10) * 0.5 : 0);
-                                    crtFilter.time = time;
+                                    globalCRTFilter.noise = 0.1 + (damageRatio * 0.4);
+                                    globalCRTFilter.curvature = 1 + (damageRatio > 0.8 ? Math.sin(time * 10) * 0.5 : 0);
+                                    globalCRTFilter.time = time;
                                 }
 
                                 const warpSpeed = isDrillingActive ? 25 : 1;
@@ -464,15 +484,37 @@ const PixiOverlay = forwardRef<PixiOverlayHandle, PixiOverlayProps>(({ onObjectC
         };
     }, []);
 
+    // [DEV_CONTEXT: REACTIVITY] New Effect to handle graphics quality changes
+    const graphicsQuality = useGameStore(state => state.settings.graphicsQuality);
+    useEffect(() => {
+        if (!globalApp || !globalApp.stage) return;
+
+        const isMobile = window.innerWidth < 768;
+
+        if (graphicsQuality === 'low') {
+            globalApp.stage.filters = [];
+        } else {
+            // Apply filters if not on mobile
+            globalApp.stage.filters = isMobile ? [] : (globalRGBSplitFilter && globalCRTFilter ? [globalRGBSplitFilter, globalCRTFilter] : []);
+        }
+    }, [graphicsQuality]);
+
     useImperativeHandle(ref, () => ({
         emitParticle: (x, y, colorStr, type, count) => {
             if (!globalApp || !globalTextures || !globalParticleLayer) return;
             const isMobile = window.innerWidth < 768;
-            const maxParticles = isMobile ? 100 : 300;
+            const quality = useGameStore.getState().settings.graphicsQuality || 'high';
+
+            // [DEV_CONTEXT: GRAPHICS] Particle count scale
+            const qualityScale = quality === 'low' ? 0.3 : (quality === 'medium' ? 0.6 : 1.0);
+            const maxParticles = quality === 'low' ? 100 : (quality === 'medium' ? 250 : 500);
+
             let color = 0xffffff;
             if (colorStr.startsWith('#')) color = parseInt(colorStr.replace('#', ''), 16);
 
-            for (let i = 0; i < (isMobile ? Math.ceil(count / 2) : count); i++) {
+            const adjustedCount = Math.max(1, Math.ceil(count * qualityScale * (isMobile ? 0.5 : 1.0)));
+
+            for (let i = 0; i < adjustedCount; i++) {
                 let tex = globalTextures.debris;
                 let life = 0, vx = 0, vy = 0;
 

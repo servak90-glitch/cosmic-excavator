@@ -20,7 +20,8 @@ import {
     Cpu,
     Database,
     Binary,
-    Terminal
+    Terminal,
+    Monitor
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -145,7 +146,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                             <Settings className="w-5 h-5 text-cyan-400" />
                         </div>
                         <h2 onClick={handleTitleClick} className="text-xl font-black font-technical uppercase tracking-tighter text-white select-none cursor-default italic">
-                            System_Config_V{GAME_VERSION}
+                            {t(TEXT_IDS.SETTINGS_CONFIG_TITLE, language)}_V{GAME_VERSION}
                         </h2>
                     </div>
                     <button onClick={() => { audioEngine.playUIPanelClose(); onClose(); }} className="p-2 glass-panel hover:bg-rose-500/20 hover:text-rose-400 text-white/40 transition-all z-10">
@@ -195,7 +196,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                         <section className="glass-panel p-5 bg-white/[0.03] border-white/10">
                             <div className="flex items-center gap-3 mb-6">
                                 <Globe className="w-4 h-4 text-cyan-400" />
-                                <h3 className="text-[10px] font-black font-technical text-white/60 uppercase tracking-widest">Localization_Bus</h3>
+                                <h3 className="text-[10px] font-black font-technical text-white/60 uppercase tracking-widest">{t(TEXT_IDS.SETTINGS_LOCALIZATION_BUS, language)}</h3>
                             </div>
                             <div className="flex gap-2">
                                 {(['RU', 'EN'] as Language[]).map(lang => (
@@ -211,29 +212,49 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                             </div>
                         </section>
 
+                        {/* GRAPHICS CONFIG */}
+                        <section className="glass-panel p-5 bg-white/[0.03] border-white/10">
+                            <div className="flex items-center gap-3 mb-6">
+                                <Monitor className="w-4 h-4 text-cyan-400" />
+                                <h3 className="text-[10px] font-black font-technical text-white/60 uppercase tracking-widest">{t(TEXT_IDS.SETTINGS_GRAPHICS_RENDERER, language)}</h3>
+                            </div>
+                            <div className="flex gap-2">
+                                {(['low', 'medium', 'high'] as const).map(quality => (
+                                    <button
+                                        key={quality}
+                                        onClick={() => onUpdateSettings({ graphicsQuality: quality })}
+                                        className={`flex-1 py-3 text-[10px] font-black font-technical border transition-all uppercase
+                                            ${settings.graphicsQuality === quality ? 'bg-cyan-400 text-black border-cyan-400' : 'bg-white/5 border-white/10 text-white/40 hover:text-white hover:border-white/20'}`}
+                                    >
+                                        {quality}
+                                    </button>
+                                ))}
+                            </div>
+                        </section>
+
                         {/* DEBUG MODULE */}
                         <section className="glass-panel p-5 bg-white/[0.03] border-white/10 flex flex-col justify-center">
                             <div className="flex items-center gap-3 mb-4">
                                 <Binary className="w-4 h-4 text-white/30" />
-                                <h3 className="text-[10px] font-black font-technical text-white/30 uppercase tracking-widest">Internal_Bypass</h3>
+                                <h3 className="text-[10px] font-black font-technical text-white/30 uppercase tracking-widest">{t(TEXT_IDS.SETTINGS_INTERNAL_BYPASS, language)}</h3>
                             </div>
                             {(showDebugLogin || isDebugUnlocked) && (
                                 <div className="space-y-3">
                                     {isDebugUnlocked ? (
                                         <button onClick={() => { toggleDebugUI(true); onClose(); }} className="w-full py-2.5 glass-panel border-cyan-500/30 bg-cyan-500/5 text-[9px] font-black font-technical text-cyan-400 uppercase tracking-widest hover:bg-cyan-500 hover:text-black transition-all">
-                                            Open_Dev_Console
+                                            {t(TEXT_IDS.SETTINGS_BTN_DEV_CONSOLE, language)}
                                         </button>
                                     ) : (
                                         <div className="flex gap-2">
                                             <input
                                                 type="password"
-                                                placeholder="ACCESS_CODE"
+                                                placeholder={t(TEXT_IDS.SETTINGS_PLACEHOLDER_ACCESS_CODE, language)}
                                                 className="flex-1 bg-black/40 border border-white/10 text-cyan-400 font-technical text-[10px] px-3 outline-none focus:border-cyan-400"
                                                 value={debugPassword}
                                                 onChange={(e) => setDebugPassword(e.target.value)}
                                             />
                                             <button onClick={handleDebugLogin} className="px-4 py-2 glass-panel border-white/10 bg-white/5 text-[9px] font-black font-technical text-white hover:bg-white hover:text-black">
-                                                VERIFY
+                                                {t(TEXT_IDS.SETTINGS_BTN_VERIFY, language)}
                                             </button>
                                         </div>
                                     )}
@@ -246,7 +267,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                     <section className="glass-panel p-5 bg-white/[0.02] border-white/5">
                         <div className="flex items-center gap-3 mb-8">
                             <Music className="w-4 h-4 text-cyan-400" />
-                            <h3 className="text-xs font-black font-technical text-white uppercase tracking-widest">Audio_Mixer_Subsystem</h3>
+                            <h3 className="text-xs font-black font-technical text-white uppercase tracking-widest">{t(TEXT_IDS.SETTINGS_AUDIO_MIXER, language)}</h3>
                             <div className="h-px bg-white/5 flex-1" />
                         </div>
 
@@ -267,7 +288,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                                             className={`px-3 py-1 rounded-full text-[8px] font-black font-technical transition-all
                                                 ${bus.muted ? 'bg-rose-500 text-black' : 'bg-white/10 text-cyan-400 hover:bg-cyan-500/20'}`}
                                         >
-                                            {bus.muted ? 'MUTED' : 'ONLINE'}
+                                            {bus.muted ? t(TEXT_IDS.SETTINGS_STATUS_MUTED, language) : t(TEXT_IDS.SETTINGS_STATUS_ONLINE, language)}
                                         </button>
                                     </div>
                                     <input
@@ -365,7 +386,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                     </section>
 
                     <div className="pt-4 text-center">
-                        <span className="text-[9px] text-white/10 font-technical font-black tracking-[0.5em] select-none">BUILD_REVISION_V{GAME_VERSION}</span>
+                        <span className="text-[9px] text-white/10 font-technical font-black tracking-[0.5em] select-none">{t(TEXT_IDS.SETTINGS_BUILD_REVISION, language)}_V{GAME_VERSION}</span>
                     </div>
                 </div>
             </motion.div>

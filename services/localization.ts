@@ -598,7 +598,20 @@ export const TEXT_IDS = {
   FUSION_ALREADY_UPGRADED: { RU: 'УЖЕ УЛУЧШЕНО', EN: 'ALREADY UPGRADED' },
   FUSION_INSTALLED: { RU: 'УСТАНОВЛЕНО', EN: 'INSTALLED' },
   FUSION_SYNTHESIZE: { RU: 'СИНТЕЗИРОВАТЬ', EN: 'SYNTHESIZE' },
-  FUSION_UNAVAILABLE: { RU: 'НЕДОСТУПНО', EN: 'UNAVAILABLE' }
+  FUSION_UNAVAILABLE: { RU: 'НЕДОСТУПНО', EN: 'UNAVAILABLE' },
+
+  // Системные настройки (технические термины)
+  SETTINGS_CONFIG_TITLE: { RU: "КОНФИГУРАЦИЯ СИСТЕМЫ", EN: "SYSTEM CONFIGURATION" },
+  SETTINGS_LOCALIZATION_BUS: { RU: "ШИНА ЛОКАЛИЗАЦИИ", EN: "LOCALIZATION BUS" },
+  SETTINGS_GRAPHICS_RENDERER: { RU: "ГРАФИЧЕСКИЙ РЕНДЕРЕР", EN: "GRAPHICS RENDERER" },
+  SETTINGS_INTERNAL_BYPASS: { RU: "ВНУТРЕННИЙ ОБХОД", EN: "INTERNAL BYPASS" },
+  SETTINGS_BTN_DEV_CONSOLE: { RU: "ОТКРЫТЬ КОНСОЛЬ РАЗРАБОТЧИКА", EN: "OPEN DEV CONSOLE" },
+  SETTINGS_PLACEHOLDER_ACCESS_CODE: { RU: "КОД ДОСТУПА", EN: "ACCESS CODE" },
+  SETTINGS_BTN_VERIFY: { RU: "ПРОВЕРИТЬ", EN: "VERIFY" },
+  SETTINGS_AUDIO_MIXER: { RU: "ПОДСИСТЕМА АУДИО-МИКШЕРА", EN: "AUDIO MIXER SUBSYSTEM" },
+  SETTINGS_STATUS_MUTED: { RU: "ОТКЛЮЧЕНО", EN: "MUTED" },
+  SETTINGS_STATUS_ONLINE: { RU: "В СЕТИ", EN: "ONLINE" },
+  SETTINGS_BUILD_REVISION: { RU: "РЕВИЗИЯ СБОРКИ", EN: "BUILD REVISION" }
 } as const;
 
 

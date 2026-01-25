@@ -57,8 +57,8 @@ export const TUNNEL_PROPS: TunnelPropDef[] = [
 // ... (REST OF THE FILE REMAINS UNCHANGED - BITS, ENGINES, ETC.)
 // RE-EXPORTING EXISTING ARRAYS FOR BREVITY IN XML
 export const BITS: DrillPart[] = [
-  { id: 'bit_1', tier: 1, mass: 10, rarity: 'Common', name: { RU: 'Ржавое жало', EN: 'Rusty Sting' }, description: { RU: 'Для тех, кому нечего терять.', EN: 'For those with nothing to lose.' }, cost: { clay: 50 }, baseStats: { damage: 1, energyCost: 1 }, fxId: 'pixel_sparks_brown' },
-  { id: 'bit_2', tier: 2, mass: 17, rarity: 'Common', name: { RU: 'Стальной Крот', EN: 'Steel Mole' }, description: { RU: 'Стандарт шахтерских союзов.', EN: 'Standard of miner unions.' }, cost: { clay: 200, stone: 50 }, baseStats: { damage: 5, energyCost: 3 }, fxId: 'none' },
+  { id: 'bit_1', tier: 1, mass: 10, rarity: 'Common', name: { RU: 'Ржавое жало', EN: 'Rusty Sting' }, description: { RU: 'Базовый урон 1. Потребляет 1 энергии.', EN: 'Base damage 1. Consumes 1 energy.' }, cost: { clay: 50 }, baseStats: { damage: 1, energyCost: 1 }, fxId: 'pixel_sparks_brown' },
+  { id: 'bit_2', tier: 2, mass: 17, rarity: 'Common', name: { RU: 'Стальной Крот', EN: 'Steel Mole' }, description: { RU: 'Урон 5. Потребляет 3 энергии.', EN: 'Damage 5. Consumes 3 energy.' }, cost: { clay: 200, stone: 50 }, baseStats: { damage: 5, energyCost: 3 }, fxId: 'none' },
   { id: 'bit_3', tier: 3, mass: 23, rarity: 'Common', name: { RU: 'Зуб Мамонта', EN: 'Mammoth Tooth' }, description: { RU: 'Усиленный сплав, тяжелый и надежный.', EN: 'Reinforced alloy, heavy and reliable.' }, cost: { stone: 300, copper: 100 }, baseStats: { damage: 12, energyCost: 5 }, fxId: 'none' },
   { id: 'bit_4', tier: 4, mass: 28, rarity: 'Rare', name: { RU: 'Победитовое сверло', EN: 'Widia Drill' }, description: { RU: 'Классика индустриальной эпохи.', EN: 'Industrial age classic.' }, cost: { copper: 500, iron: 200 }, baseStats: { damage: 25, energyCost: 8 }, fxId: 'blue_glint' },
   { id: 'bit_5', tier: 5, mass: 33, rarity: 'Rare', name: { RU: 'Титановый Клык', EN: 'Titanium Fang' }, description: { RU: 'Легкий, быстрый, острый.', EN: 'Light, fast, sharp.' }, cost: { iron: 800, silver: 300 }, baseStats: { damage: 45, energyCost: 12 }, fxId: 'blue_glint' },
@@ -77,12 +77,12 @@ export const BITS: DrillPart[] = [
 
 
 export const ENGINES: EnginePart[] = [
-  { id: 'eng_1', tier: 1, mass: 80, rarity: 'Common', name: { RU: 'Ручной привод', EN: 'Manual Drive' }, description: { RU: 'Твоя ярость — его топливо.', EN: 'Your rage is its fuel.' }, cost: { clay: 50 }, baseStats: { speed: 1.0, energyCost: 0 } },
-  { id: 'eng_2', tier: 2, mass: 139, rarity: 'Common', name: { RU: 'Паровой котел', EN: 'Steam Boiler' }, description: { RU: 'Пыхтит, но крутит.', EN: 'Puffs, but turns.' }, cost: { stone: 100 }, baseStats: { speed: 2.5, energyCost: 5 } },
-  { id: 'eng_3', tier: 3, mass: 193, rarity: 'Common', name: { RU: 'Дизель "Старый Джо"', EN: 'Diesel "Old Joe"' }, description: { RU: 'Дымный, но неубиваемый.', EN: 'Smoky, but indestructible.' }, cost: { copper: 300 }, baseStats: { speed: 1.0, energyCost: 10 } },
-  { id: 'eng_4', tier: 4, mass: 243, rarity: 'Rare', name: { RU: 'Электромотор "Искра"', EN: 'Electric Motor "Spark"' }, description: { RU: 'Чистая энергия, тихий ход.', EN: 'Clean energy, silent running.' }, cost: { iron: 600 }, baseStats: { speed: 1.5, energyCost: 15 } },
-  { id: 'eng_5', tier: 5, mass: 290, rarity: 'Rare', name: { RU: 'Турбина "Циклон"', EN: 'Turbine "Cyclone"' }, description: { RU: 'Высокие обороты, свист металла.', EN: 'High RPM, whistling metal.' }, cost: { silver: 1000 }, baseStats: { speed: 2.5, energyCost: 25 } },
-  { id: 'eng_6', tier: 6, mass: 335, rarity: 'Rare', name: { RU: 'Ротор "Вихрь"', EN: 'Rotor "Whirl"' }, description: { RU: 'Двойная система вращения.', EN: 'Double rotation system.' }, cost: { gold: 1500, rubies: 5 }, baseStats: { speed: 4.0, energyCost: 40 } },
+  { id: 'eng_1', tier: 1, mass: 80, rarity: 'Common', name: { RU: 'Ручной привод', EN: 'Manual Drive' }, description: { RU: 'Скорость 1.0. Не требует энергии.', EN: 'Speed 1.0. Requires no energy.' }, cost: { clay: 50 }, baseStats: { speed: 1.0, energyCost: 0 } },
+  { id: 'eng_2', tier: 2, mass: 139, rarity: 'Common', name: { RU: 'Паровой котел', EN: 'Steam Boiler' }, description: { RU: 'Скорость 2.5. Потребляет 5 энергии.', EN: 'Speed 2.5. Consumes 5 energy.' }, cost: { stone: 100 }, baseStats: { speed: 2.5, energyCost: 5 } },
+  { id: 'eng_3', tier: 3, mass: 193, rarity: 'Common', name: { RU: 'Дизель "Старый Джо"', EN: 'Diesel "Old Joe"' }, description: { RU: 'Скорость 1.0. Высокий крутящий момент. Энергия: 10.', EN: 'Speed 1.0. High torque. Energy: 10.' }, cost: { copper: 300 }, baseStats: { speed: 1.0, energyCost: 10 } },
+  { id: 'eng_4', tier: 4, mass: 243, rarity: 'Rare', name: { RU: 'Электромотор "Искра"', EN: 'Electric Motor "Spark"' }, description: { RU: 'Скорость 1.5. Энергия: 15.', EN: 'Speed 1.5. Energy: 15.' }, cost: { iron: 600 }, baseStats: { speed: 1.5, energyCost: 15 } },
+  { id: 'eng_5', tier: 5, mass: 290, rarity: 'Rare', name: { RU: 'Турбина "Циклон"', EN: 'Turbine "Cyclone"' }, description: { RU: 'Скорость 2.5. Энергия: 25.', EN: 'Speed 2.5. Energy: 25.' }, cost: { silver: 1000 }, baseStats: { speed: 2.5, energyCost: 25 } },
+  { id: 'eng_6', tier: 6, mass: 335, rarity: 'Rare', name: { RU: 'Ротор "Вихрь"', EN: 'Rotor "Whirl"' }, description: { RU: 'Скорость 4.0. Энергия: 40.', EN: 'Speed 4.0. Energy: 40.' }, cost: { gold: 1500, rubies: 5 }, baseStats: { speed: 4.0, energyCost: 40 } },
   { id: 'eng_7', tier: 7, mass: 379, rarity: 'Epic', name: { RU: 'Магнитный драйв', EN: 'Magnetic Drive' }, description: { RU: 'Никакого трения, только мощь.', EN: 'No friction, only power.' }, cost: { titanium: 2500, nanoSwarm: 50 }, blueprintId: 'blueprint_high_power_engines', baseStats: { speed: 6.0, energyCost: 60 } },
   { id: 'eng_8', tier: 8, mass: 422, rarity: 'Epic', name: { RU: 'Ионный ускоритель', EN: 'Ionic Accelerator' }, description: { RU: 'Синее свечение и бешеная скорость.', EN: 'Blue glow and insane speed.' }, cost: { uranium: 1000, emeralds: 20 }, blueprintId: 'blueprint_high_power_engines', baseStats: { speed: 9.0, energyCost: 80 } },
   { id: 'eng_9', tier: 9, mass: 464, rarity: 'Epic', name: { RU: 'Фотонный двигатель', EN: 'Photonic Engine' }, description: { RU: 'Энергия света в механическом теле.', EN: 'Light energy in a mechanical body.' }, cost: { ancientTech: 20, rubies: 30 }, blueprintId: 'blueprint_high_power_engines', baseStats: { speed: 12.0, energyCost: 100 } },
@@ -96,8 +96,8 @@ export const ENGINES: EnginePart[] = [
 
 
 export const COOLERS: CoolerPart[] = [
-  { id: 'cool_1', tier: 1, mass: 30, rarity: 'Common', name: { RU: 'Дырявый бак', EN: 'Leaky Tank' }, description: { RU: 'Поливай его водой вручную.', EN: 'Pour water on it manually.' }, cost: { clay: 20 }, baseStats: { cooling: 1, energyCost: 0 } },
-  { id: 'cool_2', tier: 2, mass: 49, rarity: 'Common', name: { RU: 'Медный радиатор', EN: 'Copper Radiator' }, description: { RU: 'Базовая теплоотдача.', EN: 'Basic heat dissipation.' }, cost: { copper: 100 }, baseStats: { cooling: 3, energyCost: 1 } },
+  { id: 'cool_1', tier: 1, mass: 30, rarity: 'Common', name: { RU: 'Дырявый бак', EN: 'Leaky Tank' }, description: { RU: 'Охлаждение 1. Экономит энергию.', EN: 'Cooling 1. Saves energy.' }, cost: { clay: 20 }, baseStats: { cooling: 1, energyCost: 0 } },
+  { id: 'cool_2', tier: 2, mass: 49, rarity: 'Common', name: { RU: 'Медный радиатор', EN: 'Copper Radiator' }, description: { RU: 'Охлаждение 3. Потребляет 1 энергии.', EN: 'Cooling 3. Consumes 1 energy.' }, cost: { copper: 100 }, baseStats: { cooling: 3, energyCost: 1 } },
   { id: 'cool_3', tier: 3, mass: 65, rarity: 'Common', name: { RU: 'Вентилятор "Тайфун"', EN: 'Turbine "Typhoon"' }, description: { RU: 'Активный обдув горячего вала.', EN: 'Active cooling of the hot shaft.' }, cost: { iron: 300 }, baseStats: { cooling: 5, energyCost: 3 } },
   { id: 'cool_4', tier: 4, mass: 79, rarity: 'Rare', name: { RU: 'Масляный контур', EN: 'Oil Circuit' }, description: { RU: 'Более вязкая и эффективная система.', EN: 'More viscous and efficient system.' }, cost: { silver: 600 }, baseStats: { cooling: 8, energyCost: 6 } },
   { id: 'cool_5', tier: 5, mass: 93, rarity: 'Rare', name: { RU: 'Фреоновая петля', EN: 'Freon Loop' }, description: { RU: 'Холод старых холодильников.', EN: 'Cold of old refrigerators.' }, cost: { gold: 1000, emeralds: 5 }, baseStats: { cooling: 12, energyCost: 10 } },
@@ -134,7 +134,7 @@ export const HULLS: HullPart[] = [
 
 
 export const LOGIC_CORES: LogicPart[] = [
-  { id: 'cpu_1', tier: 1, mass: 5, rarity: 'Common', name: { RU: 'Калькулятор', EN: 'Calculator' }, description: { RU: 'Считает на пальцах.', EN: 'Counts on fingers.' }, cost: { clay: 50 }, baseStats: { critChance: 1, energyCost: 1, luck: 0, predictionTime: 0 } },
+  { id: 'cpu_1', tier: 1, mass: 5, rarity: 'Common', name: { RU: 'Калькулятор', EN: 'Calculator' }, description: { RU: 'Крит 1%. Энергия: 1.', EN: 'Crit 1%. Energy: 1.' }, cost: { clay: 50 }, baseStats: { critChance: 1, energyCost: 1, luck: 0, predictionTime: 0 } },
   { id: 'cpu_2', tier: 2, mass: 8, rarity: 'Common', name: { RU: 'Блок "Сигнал"', EN: 'Unit "Signal"' }, description: { RU: 'Ловит эхо породы.', EN: 'Catches rock echoes.' }, cost: { copper: 150 }, baseStats: { critChance: 3, energyCost: 3, luck: 0, predictionTime: 0 } },
   { id: 'cpu_3', tier: 3, mass: 10, rarity: 'Common', name: { RU: 'Логика "Скан"', EN: 'Logic "Scan"' }, description: { RU: 'Видит структуру.', EN: 'Sees the structure.' }, cost: { iron: 300 }, baseStats: { critChance: 4, energyCost: 5, luck: 1, predictionTime: 0 } },
   { id: 'cpu_4', tier: 4, mass: 11, rarity: 'Rare', name: { RU: 'Процессор "Вектор"', EN: 'Processor "Vector"' }, description: { RU: 'Быстрые вычисления.', EN: 'Fast calculations.' }, cost: { silver: 600 }, baseStats: { critChance: 5, energyCost: 8, luck: 2, predictionTime: 0 } },
@@ -191,7 +191,7 @@ export const GEARBOXES: GearboxPart[] = [
 
 
 export const POWER_CORES: PowerCorePart[] = [
-  { id: 'pwr_1', tier: 1, mass: 100, rarity: 'Common', name: { RU: 'Батарейка АА', EN: 'AA Battery' }, description: { RU: '10 ед.', EN: '10 units.' }, cost: { clay: 50 }, baseStats: { energyOutput: 10, droneEfficiency: 1.0 } },
+  { id: 'pwr_1', tier: 1, mass: 100, rarity: 'Common', name: { RU: 'Батарейка АА', EN: 'AA Battery' }, description: { RU: 'Выход: 10 ед. энергии.', EN: 'Output: 10 energy units.' }, cost: { clay: 50 }, baseStats: { energyOutput: 10, droneEfficiency: 1.0 } },
   { id: 'pwr_2', tier: 2, mass: 180, rarity: 'Common', name: { RU: 'Свинцовый АКБ', EN: 'Lead Battery' }, description: { RU: '25 ед.', EN: '25 units.' }, cost: { copper: 150 }, baseStats: { energyOutput: 25, droneEfficiency: 1.05 } },
   { id: 'pwr_3', tier: 3, mass: 254, rarity: 'Common', name: { RU: 'Бензогенератор', EN: 'Gasoline Generator' }, description: { RU: '50 ед.', EN: '50 units.' }, cost: { iron: 300 }, baseStats: { energyOutput: 50, droneEfficiency: 1.1 } },
   { id: 'pwr_4', tier: 4, mass: 325, rarity: 'Rare', name: { RU: 'Солнечная панель', EN: 'Solar Panel' }, description: { RU: '80 ед.', EN: '80 units.' }, cost: { silver: 600 }, baseStats: { energyOutput: 80, droneEfficiency: 1.2 } },
@@ -210,7 +210,7 @@ export const POWER_CORES: PowerCorePart[] = [
 
 
 export const ARMORS: ArmorPart[] = [
-  { id: 'arm_1', tier: 1, mass: 150, rarity: 'Common', name: { RU: 'Фольга', EN: 'Foil' }, description: { RU: '1% защиты', EN: '1% defense' }, cost: { clay: 50 }, baseStats: { defense: 1, energyCost: 0, hazardResist: 0 } },
+  { id: 'arm_1', tier: 1, mass: 150, rarity: 'Common', name: { RU: 'Фольга', EN: 'Foil' }, description: { RU: 'Защита 1%. 0 энергии.', EN: 'Defense 1%. 0 energy.' }, cost: { clay: 50 }, baseStats: { defense: 1, energyCost: 0, hazardResist: 0 } },
   { id: 'arm_2', tier: 2, mass: 280, rarity: 'Common', name: { RU: 'Листы стали', EN: 'Steel Sheets' }, description: { RU: '5%', EN: '5%' }, cost: { iron: 200 }, baseStats: { defense: 5, energyCost: 2, hazardResist: 0 } },
   { id: 'arm_3', tier: 3, mass: 403, rarity: 'Common', name: { RU: 'Керамика', EN: 'Ceramics' }, description: { RU: 'Жар +10%', EN: 'Heat +10%' }, cost: { stone: 400 }, baseStats: { defense: 10, energyCost: 5, hazardResist: 5 } },
   { id: 'arm_4', tier: 4, mass: 522, rarity: 'Rare', name: { RU: 'Свинец', EN: 'Lead' }, description: { RU: 'Радиация +20%', EN: 'Radiation +20%' }, cost: { copper: 600 }, baseStats: { defense: 15, energyCost: 10, hazardResist: 10 } },
