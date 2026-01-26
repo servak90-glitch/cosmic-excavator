@@ -85,23 +85,23 @@ export const MarketView = () => {
     const canAfford = (resources.credits || 0) >= totalBuyCost;
 
     return (
-        <div className="flex-1 flex flex-col p-6 md:p-10 animate-in fade-in slide-in-from-bottom-8 duration-1000 h-full overflow-hidden relative z-10 font-technical">
+        <div className="flex-1 flex flex-col p-4 md:p-10 animate-in fade-in slide-in-from-bottom-8 duration-1000 h-full overflow-hidden relative z-10 font-technical">
             <div className="absolute inset-0 mesh-bg opacity-20 pointer-events-none" />
 
             {/* Header Hub Dashboard */}
-            <div className="max-w-7xl w-full mx-auto flex flex-col md:flex-row justify-between items-start md:items-end gap-6 md:gap-8 mb-8 md:mb-10 shrink-0">
+            <div className="max-w-7xl w-full mx-auto flex flex-col md:flex-row justify-between items-start md:items-end gap-4 md:gap-8 mb-4 md:mb-10 shrink-0">
                 <div className="w-full md:w-auto">
                     <div className="flex items-center gap-3 md:gap-4 mb-2 md:mb-3">
-                        <div className="p-2 md:p-3 glass-panel border-cyan-500/20 bg-cyan-500/5">
+                        <div className="p-2 md:p-3 glass-panel border-cyan-500/20 bg-cyan-500/5 hidden sm:block">
                             <ShoppingBag className="w-6 h-6 md:w-8 md:h-8 text-cyan-400" />
                         </div>
                         <div>
-                            <h1 className="text-3xl md:text-7xl font-black uppercase tracking-tighter italic text-white leading-none">
+                            <h1 className="text-xl md:text-7xl font-black uppercase tracking-tighter italic text-white leading-none">
                                 {t(TL.ui.market, lang)}
                             </h1>
                             <div className="flex items-center gap-2 md:gap-3 mt-1 md:mt-2">
-                                <MonitorDot className="w-2.5 h-2.5 md:w-3 md:h-3 text-cyan-400 animate-pulse" />
-                                <span className="text-[8px] md:text-[10px] font-black text-white/30 uppercase tracking-[0.3em]">
+                                <MonitorDot className="w-2 md:w-3 md:h-3 text-cyan-400 animate-pulse" />
+                                <span className="text-[7px] md:text-[10px] font-black text-white/30 uppercase tracking-[0.3em]">
                                     {t(TL.ui.tradingTerminal, lang)} v.4.2
                                 </span>
                             </div>
@@ -109,18 +109,18 @@ export const MarketView = () => {
                     </div>
                 </div>
 
-                <div className="w-full md:w-auto flex flex-row gap-3 md:gap-4">
+                <div className="w-full md:w-auto flex flex-row gap-2 md:gap-4">
                     {/* Credits Mini-Bento */}
-                    <div className="flex-1 md:flex-none glass-panel px-4 md:px-8 py-3 md:py-5 border-cyan-500/20 bg-cyan-500/5 flex flex-col group relative overflow-hidden">
-                        <div className="absolute -right-4 -top-4 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                    <div className="flex-1 md:flex-none glass-panel px-3 md:px-8 py-2 md:py-5 border-cyan-500/20 bg-cyan-500/5 flex flex-col group relative overflow-hidden">
+                        <div className="absolute -right-4 -top-4 p-4 opacity-5 group-hover:opacity-10 transition-opacity hidden sm:block">
                             <Gem className="w-12 h-12 md:w-16 md:h-16" />
                         </div>
-                        <span className="text-[7px] md:text-[9px] font-black text-white/30 uppercase tracking-widest mb-1 leading-none">{t(TL.ui.creditReserve, lang)}</span>
-                        <div className="flex items-center gap-2 md:gap-3">
-                            <div className="text-xl md:text-3xl font-black text-white tracking-tighter italic">
+                        <span className="text-[6px] md:text-[9px] font-black text-white/30 uppercase tracking-widest mb-0.5 md:mb-1 leading-none">{t(TL.ui.creditReserve, lang)}</span>
+                        <div className="flex items-center gap-1.5 md:gap-3">
+                            <div className="text-base md:text-3xl font-black text-white tracking-tighter italic">
                                 {Math.floor(resources.credits || 0).toLocaleString()}
                             </div>
-                            <span className="text-[8px] md:text-xs font-black text-cyan-400 px-1.5 py-0.5 glass-panel bg-cyan-500/10 border-cyan-500/20">CR</span>
+                            <span className="text-[7px] md:text-xs font-black text-cyan-400 px-1 py-0.5 glass-panel bg-cyan-500/10 border-cyan-500/20">CR</span>
                         </div>
                     </div>
 
@@ -134,11 +134,11 @@ export const MarketView = () => {
                 </div>
             </div>
 
-            <div className="max-w-7xl w-full mx-auto grid lg:grid-cols-12 gap-10 flex-1 min-h-0 relative">
+            <div className="max-w-7xl w-full mx-auto grid lg:grid-cols-12 gap-6 md:gap-10 flex-1 min-h-0 relative">
                 {/* MARKET LISTING */}
                 <div className="lg:col-span-8 flex flex-col gap-4 md:gap-6 min-h-0">
                     {/* Tabs Framework */}
-                    <div className="flex gap-1 md:gap-2 glass-panel p-1 md:p-2 border-white/5 bg-black/60 shrink-0 overflow-x-auto no-scrollbar">
+                    <div className="flex gap-1 md:gap-2 glass-panel p-1 md:p-2 border-white/5 bg-black/60 shrink-0 overflow-x-auto scrollbar-hide touch-pan-x">
                         <TabBtn active={activeTab === 'regular'} onClick={() => setActiveTab('regular')} icon={<BarChart3 className="w-3.5 h-3.5 md:w-4 md:h-4" />} label={TL.ui.market} lang={lang} color="cyan" />
                         {hasBlackMarket && <TabBtn active={activeTab === 'black_market'} onClick={() => setActiveTab('black_market')} icon={<Fingerprint className="w-3.5 h-3.5 md:w-4 md:h-4" />} label={TL.ui.shadow_network} lang={lang} color="purple" />}
                         <TabBtn active={activeTab === 'exchange'} onClick={() => setActiveTab('exchange')} icon={<RefreshCcw className="w-3.5 h-3.5 md:w-4 md:h-4" />} label={TL.ui.exchange} lang={lang} color="amber" />
@@ -165,7 +165,7 @@ export const MarketView = () => {
                                                 key={price.resource}
                                                 onClick={() => setSelectedResource(price.resource as any)}
                                                 className={`
-                                                glass-panel p-6 cursor-pointer transition-all duration-300 relative overflow-hidden group
+                                                glass-panel p-4 md:p-6 cursor-pointer transition-all duration-300 relative overflow-hidden group
                                                 ${isSelected ? 'border-cyan-500/50 bg-cyan-500/10 shadow-[0_0_40px_rgba(34,211,238,0.1)] scale-[1.02]' : 'border-white/5 bg-white/5 hover:border-white/20 hover:bg-white/10'}
                                             `}
                                             >
@@ -246,7 +246,7 @@ export const MarketView = () => {
                                             </div>
                                         </div>
                                     </div>
-                                    <div className="grid md:grid-cols-2 gap-5">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-5">
                                         {BLACK_MARKET_ITEMS.map((item, idx) => {
                                             const isOwned = item.type === 'BLUEPRINT' && item.targetId ? unlockedBlueprints.includes(item.targetId) : false;
                                             const canAffordItem = item.cost.every(c => (resources[c.resource] || 0) >= c.amount);
@@ -362,7 +362,7 @@ export const MarketView = () => {
 
                 {/* TRADE OPERATIONS PANEL (RIGHT) */}
                 <div className="lg:col-span-4 min-h-0">
-                    <div className="glass-panel border-white/10 bg-black/60 sticky top-0 flex flex-col p-8 overflow-hidden bento-glow min-h-[600px]">
+                    <div className="glass-panel border-white/10 bg-black/60 sticky top-0 flex flex-col p-6 md:p-8 overflow-hidden bento-glow min-h-0 md:min-h-[600px]">
                         <div className="absolute -top-32 -right-32 w-64 h-64 bg-cyan-500/5 rounded-full blur-[100px]" />
 
                         <div className="flex items-center gap-3 mb-10 relative z-10">
@@ -383,7 +383,7 @@ export const MarketView = () => {
                                                 type="number"
                                                 value={amount}
                                                 onChange={(e) => setAmount(Math.max(1, parseInt(e.target.value) || 1))}
-                                                className="flex-1 glass-panel bg-white/5 border-white/10 p-5 font-black text-white text-3xl italic tracking-tighter text-center focus:border-cyan-500 transition-all outline-none"
+                                                className="flex-1 glass-panel bg-white/5 border-white/10 p-3 md:p-5 font-black text-white text-xl md:text-3xl italic tracking-tighter text-center focus:border-cyan-500 transition-all outline-none"
                                             />
                                             <div className="flex flex-col gap-1">
                                                 <button onClick={() => setAmount(prev => prev + 10)} className="glass-panel px-3 py-2 bg-white/5 hover:bg-white/10 font-bold text-[10px]">+</button>
@@ -423,7 +423,7 @@ export const MarketView = () => {
                                         <button
                                             onClick={handleBuy}
                                             disabled={!canAfford}
-                                            className={`py-6 font-black text-sm uppercase tracking-[0.3em] flex flex-col items-center gap-2 group transition-all rounded-xl relative overflow-hidden
+                                            className={`py-4 md:py-6 font-black text-[10px] md:text-sm uppercase tracking-[0.3em] flex flex-col items-center gap-2 group transition-all rounded-xl relative overflow-hidden
                                                 ${canAfford ? 'bg-white text-black hover:bg-cyan-400 shadow-[0_0_40px_rgba(255,255,255,0.1)]' : 'bg-white/5 text-white/10 cursor-not-allowed border border-white/5'}
                                             `}
                                         >
@@ -432,7 +432,7 @@ export const MarketView = () => {
                                         <button
                                             onClick={handleSell}
                                             disabled={availableResource < amount}
-                                            className={`py-6 font-black text-sm uppercase tracking-[0.3em] flex flex-col items-center gap-2 group transition-all rounded-xl relative overflow-hidden
+                                            className={`py-4 md:py-6 font-black text-[10px] md:text-sm uppercase tracking-[0.3em] flex flex-col items-center gap-2 group transition-all rounded-xl relative overflow-hidden
                                                 ${availableResource >= amount ? 'bg-cyan-500 text-black hover:bg-cyan-300 shadow-[0_0_40px_rgba(34,211,238,0.2)]' : 'bg-white/5 text-white/10 cursor-not-allowed border border-white/5'}
                                             `}
                                         >

@@ -665,6 +665,7 @@ export interface GameEvent {
   rewardArtifactDefId?: string;
   forceArtifactDrop?: boolean;
   effectId?: string;
+  imageUrl?: string; // NEW: Phase 6.1
 
   // HARDCORE FIELDS (instant effects)
   instantDamage?: number; // 0.0 - 1.0 (% of Max Integrity)

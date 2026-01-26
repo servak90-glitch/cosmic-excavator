@@ -60,57 +60,53 @@ const TravelOverlay = ({ travel, lang }: { travel: any, lang: string }) => {
     }, [travel]);
 
     return (
-        <div className="absolute inset-0 z-[100] flex items-center justify-center bg-void/80 backdrop-blur-3xl animate-in fade-in duration-700">
-            <div className="absolute inset-0 mesh-bg opacity-30 pointer-events-none" />
+        <div className="w-full max-w-xl p-6 md:p-10 glass-panel border-cyan-500/20 relative overflow-hidden group shadow-[0_0_100px_rgba(34,211,238,0.1)] mx-4">
+            <div className="absolute -top-32 -left-32 w-64 h-64 bg-cyan-500/10 rounded-full blur-[100px] animate-pulse" />
+            <div className="absolute top-0 right-0 p-4 opacity-5">
+                <Satellite className="w-24 h-24 md:w-32 md:h-32" />
+            </div>
 
-            <div className="w-full max-w-xl p-10 glass-panel border-cyan-500/20 relative overflow-hidden group shadow-[0_0_100px_rgba(34,211,238,0.1)]">
-                <div className="absolute -top-32 -left-32 w-64 h-64 bg-cyan-500/10 rounded-full blur-[100px] animate-pulse" />
-                <div className="absolute top-0 right-0 p-4 opacity-5">
-                    <Satellite className="w-32 h-32" />
+            <div className="flex flex-col items-center relative z-10 text-center">
+                <div className="p-3 md:p-4 glass-panel border-cyan-500/30 bg-cyan-500/5 mb-4 md:mb-8 rounded-2xl pulse-glow-cyan">
+                    <Navigation className="w-8 h-8 md:w-10 md:h-10 text-cyan-400" />
                 </div>
 
-                <div className="flex flex-col items-center relative z-10">
-                    <div className="p-4 glass-panel border-cyan-500/30 bg-cyan-500/5 mb-8 rounded-2xl pulse-glow-cyan">
-                        <Navigation className="w-10 h-10 text-cyan-400" />
-                    </div>
+                <h3 className="text-xl md:text-3xl font-black font-technical text-white uppercase tracking-[0.2em] md:tracking-[0.3em] mb-2 md:mb-3 italic">
+                    {lang === 'RU' ? 'ТРАНСПОРТИРОВКА' : 'TRANSIT_PROTOCOL_ACTIVE'}
+                </h3>
 
-                    <h3 className="text-3xl font-black font-technical text-white uppercase tracking-[0.3em] mb-3 italic">
-                        {lang === 'RU' ? 'ТРАНСПОРТИРОВКА' : 'TRANSIT_PROTOCOL_ACTIVE'}
-                    </h3>
-
-                    <div className="flex items-center gap-6 text-white/30 font-technical text-[10px] mb-10 uppercase tracking-[0.2em]">
-                        <div className="flex items-center gap-2 glass-panel border-white/5 bg-white/5 py-1 px-3">
-                            <Activity className="w-3 h-3 text-cyan-400" />
-                            <span>Dist: <span className="text-white font-bold">{travel.distance} KM</span></span>
-                        </div>
-                        <div className="flex items-center gap-2 glass-panel border-white/5 bg-white/5 py-1 px-3">
-                            <Clock className="w-3 h-3 text-purple-400" />
-                            <span>ETA: <span className="text-white font-bold">{timeLeft}S</span></span>
-                        </div>
+                <div className="flex flex-wrap justify-center items-center gap-3 md:gap-6 text-white/30 font-technical text-[8px] md:text-[10px] mb-6 md:mb-10 uppercase tracking-[0.2em]">
+                    <div className="flex items-center gap-2 glass-panel border-white/5 bg-white/5 py-1 px-3">
+                        <Activity className="w-3 h-3 text-cyan-400" />
+                        <span>Dist: <span className="text-white font-bold">{travel.distance}</span></span>
                     </div>
-
-                    <div className="w-full space-y-2 mb-10">
-                        <div className="flex justify-between text-[8px] font-black font-technical text-cyan-400/60 uppercase tracking-widest px-1">
-                            <span>Phase_Optimization</span>
-                            <span>{Math.floor(progress)}%</span>
-                        </div>
-                        <div className="w-full h-3 bg-black/40 rounded-full overflow-hidden p-0.5 border border-white/5 relative">
-                            <motion.div
-                                className="h-full bg-gradient-to-r from-cyan-600 to-cyan-400 rounded-full shadow-[0_0_20px_rgba(34,211,238,0.5)] relative"
-                                style={{ width: `${progress}%` }}
-                            >
-                                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer" />
-                            </motion.div>
-                        </div>
+                    <div className="flex items-center gap-2 glass-panel border-white/5 bg-white/5 py-1 px-3">
+                        <Clock className="w-3 h-3 text-purple-400" />
+                        <span>ETA: <span className="text-white font-bold">{timeLeft}S</span></span>
                     </div>
+                </div>
 
-                    <div className="flex flex-col items-center gap-3">
-                        <div className="flex items-center gap-3 glass-panel border-rose-500/20 bg-rose-500/5 py-2 px-6 text-[9px] font-black font-technical text-rose-400 uppercase tracking-[0.2em]">
-                            <AlertTriangle className="w-3.5 h-3.5" />
-                            <span>Mass-Dependent Physics Applied</span>
-                        </div>
-                        <span className="text-[8px] text-white/20 font-technical uppercase italic">Void-Piercer Guidance System v.4.0</span>
+                <div className="w-full space-y-2 mb-6 md:mb-10">
+                    <div className="flex justify-between text-[7px] md:text-[8px] font-black font-technical text-cyan-400/60 uppercase tracking-widest px-1">
+                        <span>Optimization</span>
+                        <span>{Math.floor(progress)}%</span>
                     </div>
+                    <div className="w-full h-2 md:h-3 bg-black/40 rounded-full overflow-hidden p-0.5 border border-white/5 relative">
+                        <motion.div
+                            className="h-full bg-gradient-to-r from-cyan-600 to-cyan-400 rounded-full shadow-[0_0_20px_rgba(34,211,238,0.5)] relative"
+                            style={{ width: `${progress}%` }}
+                        >
+                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer" />
+                        </motion.div>
+                    </div>
+                </div>
+
+                <div className="flex flex-col items-center gap-2 md:gap-3">
+                    <div className="flex items-center gap-2 md:gap-3 glass-panel border-rose-500/20 bg-rose-500/5 py-1.5 md:py-2 px-4 md:px-6 text-[7px] md:text-[9px] font-black font-technical text-rose-400 uppercase tracking-[0.2em]">
+                        <AlertTriangle className="w-3 h-3 md:w-3.5 md:h-3.5" />
+                        <span>Mass-Dependent Physics</span>
+                    </div>
+                    <span className="text-[7px] md:text-[8px] text-white/20 font-technical uppercase italic">Guidance System v.4.0</span>
                 </div>
             </div>
         </div>
@@ -162,39 +158,39 @@ export const GlobalMapView = () => {
             </AnimatePresence>
 
             {/* HEADER HUB BENTO */}
-            <div className="max-w-7xl w-full mx-auto p-6 md:p-10 flex flex-col gap-8 relative z-10 shrink-0">
-                <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-10">
-                    <div className="flex-1">
-                        <div className="flex items-center gap-4 mb-3">
-                            <div className="p-3 glass-panel border-cyan-500/20 bg-cyan-500/5 hidden md:block">
+            <div className="max-w-7xl w-full mx-auto p-4 md:p-10 flex flex-col gap-4 md:gap-8 relative z-10 shrink-0">
+                <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6 md:gap-10">
+                    <div className="flex-1 w-full md:w-auto">
+                        <div className="flex items-center gap-3 md:gap-4 mb-2 md:mb-3">
+                            <div className="p-2 md:p-3 glass-panel border-cyan-500/20 bg-cyan-500/5 hidden md:block">
                                 <Satellite className="w-8 h-8 text-cyan-400" />
                             </div>
-                            <div className="flex flex-col">
-                                <h1 className="text-3xl md:text-7xl font-black font-technical uppercase tracking-tighter italic text-white leading-none">
+                            <div className="flex flex-col min-w-0">
+                                <h1 className="text-2xl md:text-7xl font-black font-technical uppercase tracking-tighter italic text-white leading-none truncate">
                                     {t(TL.ui.map, lang)}
                                 </h1>
-                                <div className="flex items-center gap-3 mt-2">
-                                    <div className="glass-panel px-3 py-1 border-white/10 bg-white/5 flex items-center gap-2">
-                                        <span className="text-[8px] font-black font-technical text-white/30 uppercase tracking-widest">{t(TL.ui.sectorId, lang)}</span>
-                                        <span className="text-[10px] md:text-xs font-black font-technical text-cyan-400">AEGIS_CORE_7</span>
+                                <div className="flex items-center gap-2 mt-1 md:mt-2">
+                                    <div className="glass-panel px-2 py-0.5 border-white/10 bg-white/5 flex items-center gap-1.5 md:gap-2">
+                                        <span className="text-[7px] md:text-[8px] font-black font-technical text-white/30 uppercase tracking-widest truncate">{t(TL.ui.sectorId, lang)}</span>
+                                        <span className="text-[9px] md:text-xs font-black font-technical text-cyan-400">AEGIS_CORE_7</span>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <div className="flex flex-wrap items-center gap-6 text-[10px] font-black font-technical uppercase tracking-[0.2em] text-white/30">
-                            <div className="flex items-center gap-2 text-emerald-400 glass-panel px-3 py-1 border-emerald-500/20 bg-emerald-500/5">
-                                <Activity className="w-3.5 h-3.5 animate-pulse" />
-                                <span>{t(TL.ui.scanningActive, lang)}</span>
+                        <div className="flex flex-wrap items-center gap-4 md:gap-6 text-[8px] md:text-[10px] font-black font-technical uppercase tracking-widest md:tracking-[0.2em] text-white/30">
+                            <div className="flex items-center gap-1.5 md:gap-2 text-emerald-400 glass-panel px-2 py-0.5 border-emerald-500/20 bg-emerald-500/5">
+                                <Activity className="w-3 h-3 md:w-3.5 md:h-3.5 animate-pulse" />
+                                <span className="truncate">{t(TL.ui.scanningActive, lang)}</span>
                             </div>
-                            <div className="flex items-center gap-4 border-l border-white/5 pl-6">
-                                <span>{t(TL.ui.authClearance, lang)}</span>
-                                <div className="flex gap-2">
+                            <div className="flex items-center gap-3 md:gap-4 border-l border-white/5 pl-4 md:pl-6">
+                                <span className="truncate">{t(TL.ui.authClearance, lang)}</span>
+                                <div className="flex gap-1.5 md:gap-2">
                                     {(['green', 'yellow', 'red'] as const).map(zone => (
-                                        <div key={zone} className={`w-3 h-3 rounded-full border border-black/40 transition-shadow duration-500 ${unlockedLicenses.includes(zone)
-                                            ? zone === 'green' ? 'bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.8)]'
-                                                : zone === 'yellow' ? 'bg-amber-400 shadow-[0_0_12px_rgba(245,158,11,0.8)]'
-                                                    : 'bg-rose-500 shadow-[0_0_12px_rgba(239,68,68,0.8)]'
+                                        <div key={zone} className={`w-2 h-2 md:w-3 md:h-3 rounded-full border border-black/40 transition-shadow duration-500 ${unlockedLicenses.includes(zone)
+                                            ? zone === 'green' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]'
+                                                : zone === 'yellow' ? 'bg-amber-400 shadow-[0_0_8px_rgba(245,158,11,0.8)]'
+                                                    : 'bg-rose-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]'
                                             : 'bg-white/5 grayscale border-white/5'
                                             }`} />
                                     ))}
@@ -204,7 +200,7 @@ export const GlobalMapView = () => {
                     </div>
 
                     {/* NAV DECK TABS */}
-                    <div className="w-full lg:w-auto flex glass-panel p-1 md:p-2 border-white/5 bg-black/40 overflow-x-auto no-scrollbar shrink-0 relative">
+                    <div className="w-full lg:w-auto flex glass-panel p-0.5 md:p-2 border-white/5 bg-black/40 overflow-x-auto scrollbar-hide shrink-0 relative touch-pan-x">
                         <div className="absolute inset-0 bg-gradient-to-r from-white/[0.02] to-transparent pointer-events-none" />
                         {tabs.map(tab => (
                             <button
@@ -228,7 +224,7 @@ export const GlobalMapView = () => {
             </div>
 
             {/* MAIN DASHBOARD SCENE */}
-            <div className="max-w-7xl w-full mx-auto px-6 md:px-10 mt-4 flex-1 flex flex-col gap-8 overflow-y-auto min-h-0 pb-32 scrollbar-hide relative z-10">
+            <div className="max-w-7xl w-full mx-auto px-4 md:px-10 mt-2 md:mt-4 flex-1 flex flex-col gap-4 md:gap-8 overflow-y-auto min-h-0 pb-24 md:pb-32 scrollbar-hide relative z-10 font-technical">
                 <AnimatePresence mode="wait">
                     {activeTab === 'map' && (
                         <motion.div
@@ -238,11 +234,11 @@ export const GlobalMapView = () => {
                         >
                             {/* LEFT WING: TELEMETRY & STATUS */}
                             <div className="lg:col-span-4 flex flex-col gap-6">
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-2 gap-3 md:gap-4">
                                     <BentoStat icon={<Activity className="text-cyan-400" />} label={t(TL.ui.currentSector, lang)} val={t(TL.regions[currentRegion] || currentRegionData.name, lang)} />
                                     <BentoStat icon={<Package className={isOverloaded ? 'text-rose-500' : 'text-emerald-400'} />} label={t(TL.ui.cargoLoad, lang)} val={`${Math.floor(currentCargoWeight)}/${Math.floor(maxCapacity)}`} urgent={isOverloaded} />
-                                    <BentoStat icon={<Fuel className="text-amber-400" />} label={t(TL.ui.carbonUnits, lang)} val={resources[ResourceType.COAL]} />
-                                    <BentoStat icon={<ArrowUpCircle className="text-purple-400" />} label={t(TL.ui.expDegree, lang)} val={`Rank_${level}`} />
+                                    <BentoStat icon={<Fuel className="text-amber-400" />} label={t(TL.ui.carbonUnits, lang)} val={formatVal(Math.floor(resources[ResourceType.COAL] || 0))} />
+                                    <BentoStat icon={<ArrowUpCircle className="text-purple-400" />} label={t(TL.ui.expDegree, lang)} val={`RANK_${level}`} />
                                 </div>
 
                                 {/* SCANNER INTERFACE */}
@@ -367,11 +363,11 @@ export const GlobalMapView = () => {
                             {/* CENTER STAGE: ISOMETRIC SCANNER */}
                             <div className="lg:col-span-8 glass-panel border-white/10 bg-black/60 relative overflow-hidden flex flex-col bento-glow shadow-[inset_0_0_100px_rgba(0,0,0,0.8)] min-h-[400px] md:min-h-0 order-first md:order-none">
                                 <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03] pointer-events-none" />
-                                <div className="absolute top-4 left-4 md:top-6 md:left-6 z-20 flex items-center gap-4">
-                                    <div className="px-3 py-1.5 md:px-4 md:py-2 glass-panel border-cyan-500/30 bg-black/60 flex items-center gap-2 md:gap-3">
+                                <div className="absolute top-3 left-3 md:top-6 md:left-6 z-20 flex items-center gap-3">
+                                    <div className="px-2 py-1 md:px-4 md:py-2 glass-panel border-cyan-500/30 bg-black/60 flex items-center gap-2 md:gap-3">
                                         <div className="flex flex-col">
-                                            <span className="text-[7px] md:text-[8px] font-black font-technical text-white/30 uppercase tracking-widest">{t(TL.ui.globalCoordLink, lang)}</span>
-                                            <span className="text-[9px] md:text-[10px] font-black font-technical text-cyan-400 uppercase">{t(TL.ui.syncOk, lang)} // 84.192.X</span>
+                                            <span className="text-[6px] md:text-[8px] font-black font-technical text-white/30 uppercase tracking-widest">{t(TL.ui.globalCoordLink, lang)}</span>
+                                            <span className="text-[8px] md:text-[10px] font-black font-technical text-cyan-400 uppercase leading-none">{t(TL.ui.syncOk, lang)} <span className="hidden sm:inline">// 84.192.X</span></span>
                                         </div>
                                     </div>
                                 </div>
@@ -485,14 +481,14 @@ export const GlobalMapView = () => {
 };
 
 const BentoStat = ({ icon, label, val, urgent = false }: { icon: any, label: string, val: any, urgent?: boolean }) => (
-    <div className={`glass-panel p-5 bg-white/[0.03] border-white/10 flex flex-col relative overflow-hidden transition-all duration-300 hover:bg-white/[0.05]
+    <div className={`glass-panel p-3 md:p-5 bg-white/[0.03] border-white/10 flex flex-col relative overflow-hidden transition-all duration-300 hover:bg-white/[0.05]
         ${urgent ? 'border-rose-500/50 bg-rose-500/5' : ''}
     `}>
-        <div className="flex items-center gap-3 mb-3 text-white/30">
-            <div className="p-1.5 glass-panel border-white/10 bg-white/5">{icon}</div>
-            <span className="text-[9px] font-black font-technical uppercase tracking-[0.2em]">{label}</span>
+        <div className="flex items-center gap-2 md:gap-3 mb-2 md:mb-3 text-white/30 shrink-0">
+            <div className="p-1 glass-panel border-white/10 bg-white/5 [&>svg]:w-3 [&>svg]:h-3 md:[&>svg]:w-4 md:[&>svg]:h-4">{icon}</div>
+            <span className="text-[7px] md:text-[9px] font-black font-technical uppercase tracking-widest truncate">{label}</span>
         </div>
-        <div className={`text-sm md:text-base font-black font-technical text-white uppercase truncate ${urgent ? 'text-rose-400' : ''}`}>{val}</div>
-        {urgent && <div className="absolute top-0 right-0 p-2 text-rose-500 animate-pulse"><AlertTriangle className="w-3 h-3" /></div>}
+        <div className={`text-[10px] md:text-base font-black font-technical text-white uppercase truncate ${urgent ? 'text-rose-400' : ''}`}>{val}</div>
+        {urgent && <div className="absolute top-0 right-0 p-1 md:p-2 text-rose-500 animate-pulse"><AlertTriangle className="w-2.5 h-2.5 md:w-3 md:h-3" /></div>}
     </div>
 );

@@ -86,13 +86,32 @@ const EventModal: React.FC<EventModalProps> = ({ event, onOptionSelect }) => {
           <div className="absolute inset-0 pointer-events-none opacity-10 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[length:100%_4px,3px_100%] z-0" />
 
           <div className="relative z-10 flex flex-col items-center text-center">
-            <motion.div
-              className={`text-4xl mb-4`}
-              animate={isAnomaly ? { rotate: [0, -10, 10, -10, 0], scale: [1, 1.2, 1] } : { scale: [1, 1.1, 1] }}
-              transition={{ repeat: Infinity, duration: isAnomaly ? 0.5 : 2 }}
-            >
-              {icon}
-            </motion.div>
+            {event.imageUrl ? (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="w-full mb-6 relative group"
+              >
+                <div className="absolute -inset-1 bg-gradient-to-b from-cyan-500/20 to-transparent blur opacity-50" />
+                <img
+                  src={event.imageUrl}
+                  alt={t(event.title, lang)}
+                  className={`w-full aspect-video object-cover border-2 ${borderColor} shadow-lg shadow-black/40`}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                {isAnomaly && (
+                  <div className="absolute inset-0 bg-red-500/10 animate-pulse pointer-events-none" />
+                )}
+              </motion.div>
+            ) : (
+              <motion.div
+                className={`text-4xl mb-4`}
+                animate={isAnomaly ? { rotate: [0, -10, 10, -10, 0], scale: [1, 1.2, 1] } : { scale: [1, 1.1, 1] }}
+                transition={{ repeat: Infinity, duration: isAnomaly ? 0.5 : 2 }}
+              >
+                {icon}
+              </motion.div>
+            )}
 
             <h2 className={`pixel-text text-lg md:text-xl font-black mb-4 uppercase tracking-widest ${textColor}`}>
               {t(event.title, lang)}
