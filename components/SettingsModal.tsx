@@ -154,7 +154,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                     </button>
                 </div>
 
-                <div className="p-6 overflow-y-auto scrollbar-hide space-y-8 bg-black/20">
+                <div className="p-6 overflow-y-auto scrollbar-hide space-y-8 bg-black/20 max-h-[calc(100vh-150px)] md:max-h-[calc(90vh-120px)]">
 
                     {/* BLACK BOX - DATA CONTROL */}
                     <section className="glass-panel p-5 border-emerald-500/20 bg-emerald-500/5">

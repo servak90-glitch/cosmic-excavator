@@ -481,10 +481,10 @@ export const GlobalMapView = () => {
 };
 
 const BentoStat = ({ icon, label, val, urgent = false }: { icon: any, label: string, val: any, urgent?: boolean }) => (
-    <div className={`glass-panel p-3 md:p-5 bg-white/[0.03] border-white/10 flex flex-col relative overflow-hidden transition-all duration-300 hover:bg-white/[0.05]
+    <div className={`glass-panel p-2 md:p-5 bg-white/[0.03] border-white/10 flex flex-col relative overflow-hidden transition-all duration-300 hover:bg-white/[0.05]
         ${urgent ? 'border-rose-500/50 bg-rose-500/5' : ''}
     `}>
-        <div className="flex items-center gap-2 md:gap-3 mb-2 md:mb-3 text-white/30 shrink-0">
+        <div className="flex items-center gap-1.5 md:gap-3 mb-1.5 md:mb-3 text-white/30 shrink-0">
             <div className="p-1 glass-panel border-white/10 bg-white/5 [&>svg]:w-3 [&>svg]:h-3 md:[&>svg]:w-4 md:[&>svg]:h-4">{icon}</div>
             <span className="text-[7px] md:text-[9px] font-black font-technical uppercase tracking-widest truncate">{label}</span>
         </div>

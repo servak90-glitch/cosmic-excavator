@@ -217,7 +217,7 @@ export const BaseView: React.FC<BaseViewProps> = ({ baseId, onClose }) => {
                                         <h3 className="text-xs font-black uppercase tracking-[0.3em] text-white/60">{t(TL.ui.baseStoredMatrix, lang)}</h3>
                                         <div className="h-px bg-white/5 flex-1" />
                                     </div>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 min-h-[300px] content-start">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 min-h-[300px] max-h-[400px] overflow-y-auto scrollbar-hide content-start">
                                         {Object.entries(base.storedResources).map(([res, amount]) => (amount || 0) > 0 && (
                                             <ResourceTransferCard
                                                 key={res}
@@ -245,7 +245,7 @@ export const BaseView: React.FC<BaseViewProps> = ({ baseId, onClose }) => {
                                         <h3 className="text-xs font-black uppercase tracking-[0.3em] text-white/60">{t(TL.ui.drillCargoPayload, lang)}</h3>
                                         <div className="h-px bg-white/5 flex-1" />
                                     </div>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 min-h-[300px] content-start">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 min-h-[300px] max-h-[400px] overflow-y-auto scrollbar-hide content-start">
                                         {Object.entries(resources).map(([res, amount]) => (amount || 0) > 0 && res !== 'credits' && (
                                             <ResourceTransferCard
                                                 key={res}
@@ -325,7 +325,7 @@ export const BaseView: React.FC<BaseViewProps> = ({ baseId, onClose }) => {
                     {activeTab === 'facilities' && (
                         <motion.div
                             key="facilities-tab" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }}
-                            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+                            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
                         >
                             {Object.values(BASE_FACILITIES).map(facility => {
                                 const isBuilt = base.facilities.includes(facility.id);
@@ -393,7 +393,7 @@ export const BaseView: React.FC<BaseViewProps> = ({ baseId, onClose }) => {
                     {activeTab === 'workshop' && (
                         <motion.div
                             key="workshop-tab" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}
-                            className="grid grid-cols-1 lg:grid-cols-2 gap-6"
+                            className="grid grid-cols-1 gap-6"
                         >
                             {CRAFTING_RECIPES.map(recipe => {
                                 const hasFacility = !recipe.requiredFacility || base.facilities.includes(recipe.requiredFacility);
@@ -502,7 +502,7 @@ export const BaseView: React.FC<BaseViewProps> = ({ baseId, onClose }) => {
                                     </div>
                                 )}
 
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
                                     {(Object.keys(DEFENSE_UNITS) as DefenseUnitType[]).map(type => {
                                         const unit = DEFENSE_UNITS[type];
                                         const canAfford = Object.entries(unit.cost).every(([res, amount]) => (resources[res as keyof Resources] || 0) >= (amount || 0));

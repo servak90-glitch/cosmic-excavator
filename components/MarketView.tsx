@@ -149,7 +149,7 @@ export const MarketView = () => {
                             {activeTab === 'regular' && (
                                 <motion.div
                                     key="regular-market" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }}
-                                    className="grid md:grid-cols-2 gap-5"
+                                    className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-5"
                                 >
                                     {marketPrices.map(price => {
                                         const illegalResources = ['nanoSwarm', 'ancientTech'];
@@ -312,7 +312,7 @@ export const MarketView = () => {
                                             <p className="text-[10px] text-amber-500/60 font-black uppercase tracking-[0.4em]">{t(TL.ui.directExchangeDesc, lang)}</p>
                                         </div>
 
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                                        <div className="grid grid-cols-1 gap-6 md:gap-10">
                                             <div className="space-y-6">
                                                 <label className="text-[10px] font-black text-white/30 uppercase tracking-[0.3em] block italic">{t(TL.ui.selectFeedstock, lang)}</label>
                                                 <div className="grid grid-cols-2 gap-3">

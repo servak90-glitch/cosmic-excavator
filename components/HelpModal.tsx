@@ -44,7 +44,7 @@ const HelpModal: React.FC<HelpModalProps> = ({ onClose }) => {
                     </div>
 
                     {/* CONTENT SCROLL AREA */}
-                    <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 font-mono text-xs md:text-sm text-zinc-300 z-10 scrollbar-hide touch-pan-y">
+                    <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 font-mono text-xs md:text-sm text-zinc-300 z-10 scrollbar-hide touch-pan-y max-h-[calc(100vh-200px)] md:max-h-[calc(85vh-150px)]">
 
                         {/* 1. OBJECTIVE */}
                         <section>

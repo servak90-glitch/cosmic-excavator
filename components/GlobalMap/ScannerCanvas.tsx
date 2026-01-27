@@ -96,11 +96,22 @@ export const ScannerCanvas: React.FC<ScannerCanvasProps> = ({
             mainScrollContainer.addChild(overlayLayer);
             app.stage.addChild(mainScrollContainer);
 
-            const REGION_HEIGHT = 400;
             const sortedRegionIds = [...REGION_IDS].sort((a, b) => REGIONS[a].tierLimit - REGIONS[b].tierLimit);
+
+            // Адаптивная высота регионов для мобильных устройств
+            const calculateRegionHeight = () => {
+                const screenHeight = app.screen.height;
+                const availableHeight = screenHeight - 200; // отступы сверху/снизу
+                const calculatedHeight = Math.floor(availableHeight / sortedRegionIds.length);
+                return Math.max(150, Math.min(400, calculatedHeight)); // мин 150px, макс 400px
+            };
+
+            let REGION_HEIGHT = calculateRegionHeight();
+            const isMobile = () => app.screen.width < 768;
 
             const redrawAll = () => {
                 const width = app.screen.width;
+                REGION_HEIGHT = calculateRegionHeight(); // Пересчитываем при resize
                 backgroundLayer.removeChildren();
 
                 const grid = new PIXI.Graphics();
@@ -137,7 +148,7 @@ export const ScannerCanvas: React.FC<ScannerCanvasProps> = ({
                     // --- 4. Technical Labels ---
                     const tierText = new PIXI.Text({
                         text: `SYST_LVL::00${REGIONS[id].tierLimit}`,
-                        style: { fontFamily: 'Share Tech Mono, monospace', fontSize: 10, fill: color }
+                        style: { fontFamily: 'Share Tech Mono, monospace', fontSize: isMobile() ? 8 : 10, fill: color }
                     });
                     tierText.alpha = 0.4;
                     tierText.x = x + 15;
@@ -146,7 +157,7 @@ export const ScannerCanvas: React.FC<ScannerCanvasProps> = ({
 
                     const coordText = new PIXI.Text({
                         text: `COORD::${REGIONS[id].coordinates.x}.${REGIONS[id].coordinates.y}`,
-                        style: { fontFamily: 'Share Tech Mono, monospace', fontSize: 10, fill: color }
+                        style: { fontFamily: 'Share Tech Mono, monospace', fontSize: isMobile() ? 8 : 10, fill: color }
                     });
                     coordText.alpha = 0.4;
                     coordText.x = x + w - 120;
@@ -157,7 +168,8 @@ export const ScannerCanvas: React.FC<ScannerCanvasProps> = ({
                 regionsLayer.removeChildren();
                 sortedRegionIds.forEach((id, index) => {
                     const region = REGIONS[id];
-                    const y = index * REGION_HEIGHT + 100;
+                    const spacing = isMobile() ? 50 : 100; // Уменьшенные отступы на мобильных
+                    const y = index * REGION_HEIGHT + spacing;
                     const color = id === RegionId.RUST_VALLEY ? 0x38BDF8 :
                         id === RegionId.CRYSTAL_WASTES ? 0xA855F7 :
                             id === RegionId.IRON_GATES ? 0xEAB308 :
@@ -218,10 +230,10 @@ export const ScannerCanvas: React.FC<ScannerCanvasProps> = ({
                         text: `${t(region.name, lang).toUpperCase()}`,
                         style: {
                             fontFamily: 'Share Tech Mono, monospace',
-                            fontSize: 18,
+                            fontSize: isMobile() ? 14 : 18, // Уменьшенный шрифт на мобильных
                             fill: color,
                             fontWeight: '900',
-                            letterSpacing: 4,
+                            letterSpacing: isMobile() ? 2 : 4, // Уменьшенный letter-spacing на мобильных
                             dropShadow: { color: 0x000000, alpha: 0.8, distance: 2, blur: 4 }
                         }
                     });

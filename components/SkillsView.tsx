@@ -50,18 +50,18 @@ const SkillsView: React.FC = () => {
       <div className="absolute top-0 left-0 right-0 h-64 bg-gradient-to-b from-cyan-500/5 to-transparent pointer-events-none" />
 
       {/* HEADER HUD */}
-      <div className="relative z-10 glass-panel border-x-0 border-t-0 rounded-none pb-6 mb-2 flex flex-col md:flex-row justify-between items-start md:items-end p-6 gap-4 bg-black/40">
+      <div className="relative z-10 glass-panel border-x-0 border-t-0 rounded-none pb-4 md:pb-6 mb-2 flex flex-col md:flex-row justify-between items-start md:items-end p-4 md:p-6 gap-3 md:gap-4 bg-black/40">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <BrainCircuit className="w-5 h-5 text-cyan-400" />
-            <h2 className="text-xl md:text-2xl font-black font-technical tracking-tighter text-white uppercase italic">{t(TL.ui.neuroCoreInterface, lang)}</h2>
+            <BrainCircuit className="w-4 h-4 md:w-5 md:h-5 text-cyan-400" />
+            <h2 className="text-lg md:text-2xl font-black font-technical tracking-tighter text-white uppercase italic">{t(TL.ui.neuroCoreInterface, lang)}</h2>
           </div>
-          <p className="text-[10px] text-white/30 font-technical uppercase tracking-[0.3em]">{t(TL.ui.syncProtocol, lang)}</p>
+          <p className="text-[8px] md:text-[10px] text-white/30 font-technical uppercase tracking-[0.3em]">{t(TL.ui.syncProtocol, lang)}</p>
         </div>
 
-        <div className="glass-panel py-3 px-6 border-cyan-500/20 bg-cyan-400/5 flex flex-col items-center md:items-end">
-          <span className="text-[9px] text-cyan-400/60 font-technical font-black uppercase tracking-widest mb-1">{t(TL.ui.neuralBuffer, lang)}</span>
-          <div className="text-2xl md:text-3xl font-black font-technical text-cyan-400 neon-text-cyan tabular-nums leading-none">
+        <div className="glass-panel py-2 px-4 md:py-3 md:px-6 border-cyan-500/20 bg-cyan-400/5 flex flex-col items-center md:items-end self-end md:self-auto">
+          <span className="text-[8px] md:text-[9px] text-cyan-400/60 font-technical font-black uppercase tracking-widest mb-1">{t(TL.ui.neuralBuffer, lang)}</span>
+          <div className="text-xl md:text-3xl font-black font-technical text-cyan-400 neon-text-cyan tabular-nums leading-none">
             {Math.floor(xp).toLocaleString()} <span className="text-xs opacity-50">{t(TL.ui.units, lang)}</span>
           </div>
         </div>
@@ -75,14 +75,14 @@ const SkillsView: React.FC = () => {
       </div>
 
       {/* SKILLS GRID - SCROLL CONTAINER */}
-      <div className="flex-1 overflow-y-auto relative z-10 px-6 pb-32 pt-4 scrollbar-hide space-y-12">
+      <div className="flex-1 overflow-y-auto relative z-10 px-4 md:px-6 pb-24 md:pb-32 pt-2 md:pt-4 scrollbar-hide space-y-8 md:space-y-12">
         {categories.map(cat => {
           const categorySkills = SKILLS.filter(s => s.category === cat.id);
 
           return (
             <div key={cat.id} className="relative group/cat">
               {/* Category Header (Bento Style) */}
-              <div className="flex flex-col md:flex-row items-start md:items-center gap-4 mb-6 sticky top-0 bg-void/80 backdrop-blur-3xl py-3 z-20 border-b border-white/5 mx-[-1rem] px-4">
+              <div className="flex flex-col md:flex-row items-start md:items-center gap-2 md:gap-4 mb-4 md:mb-6 sticky top-0 bg-void/90 backdrop-blur-3xl py-3 z-20 border-b border-white/5 mx-[-1rem] px-4 md:px-6">
                 <div className={`p-2 glass-panel border-inherit bg-inherit flex items-center justify-center ${cat.color} opacity-80`}>
                   {cat.icon}
                 </div>
@@ -121,7 +121,7 @@ const SkillsView: React.FC = () => {
                   return (
                     <div
                       key={skill.id}
-                      className={`glass-panel p-4 flex flex-col justify-between min-h-[180px] transition-all duration-300 group/card relative
+                      className={`glass-panel p-3 md:p-4 flex flex-col justify-between min-h-[160px] md:min-h-[180px] transition-all duration-300 group/card relative
                           ${locked ? 'border-white/5 opacity-40 grayscale pointer-events-none' :
                           canAfford && !isMaxed ? 'border-white/10 bg-white/[0.03] hover:bg-white/[0.07] hover:border-white/20' :
                             'border-white/5 bg-void/40'}

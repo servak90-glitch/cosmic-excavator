@@ -78,7 +78,7 @@ const EventModal: React.FC<EventModalProps> = ({ event, onOptionSelect }) => {
         exit="exit"
       >
         <motion.div
-          className={`relative max-w-md w-full border-4 p-6 shadow-[0_0_50px_rgba(0,0,0,0.8)] ${borderColor} ${bgColor} overflow-hidden`}
+          className={`relative max-w-md w-full border-4 p-4 md:p-6 shadow-[0_0_50px_rgba(0,0,0,0.8)] max-h-[90vh] overflow-y-auto scrollbar-hide ${borderColor} ${bgColor} overflow-hidden`}
           variants={modalVariants}
         >
 
