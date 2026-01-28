@@ -151,7 +151,7 @@ export const InteractiveWorldMap: React.FC<InteractiveWorldMapProps> = ({
             {/* Карта */}
             <div
                 ref={mapRef}
-                className="absolute inset-0 transition-transform duration-100"
+                className="w-full h-full flex items-center justify-center transition-transform duration-100"
                 style={{
                     transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`,
                     transformOrigin: 'center center'
@@ -159,66 +159,70 @@ export const InteractiveWorldMap: React.FC<InteractiveWorldMapProps> = ({
                 onMouseDown={handleMouseDown}
                 onTouchStart={handleTouchStart}
             >
-                {/* Изображение карты */}
-                <img
-                    src="/assets/world-map.jpg"
-                    alt="World Map"
-                    className="w-full h-full object-contain pointer-events-none select-none"
-                    draggable={false}
-                />
+                {/* Контейнер изображения и маркеров */}
+                <div className="relative w-full">
+                    {/* Изображение карты */}
+                    <img
+                        src="/assets/world-map.jpg"
+                        alt="World Map"
+                        className="w-full h-auto object-cover pointer-events-none select-none"
+                        style={{ aspectRatio: '1024/576' }}
+                        draggable={false}
+                    />
 
-                {/* Маркеры регионов */}
-                {Object.entries(REGION_MARKERS).map(([regionId, coords]) => {
-                    const region = REGIONS[regionId as RegionId];
-                    const isActive = regionId === activeRegion;
-                    const isHovered = regionId === hoveredRegion;
+                    {/* Маркеры регионов */}
+                    {Object.entries(REGION_MARKERS).map(([regionId, coords]) => {
+                        const region = REGIONS[regionId as RegionId];
+                        const isActive = regionId === activeRegion;
+                        const isHovered = regionId === hoveredRegion;
 
-                    return (
-                        <button
-                            key={regionId}
-                            className="region-marker absolute transform -translate-x-1/2 -translate-y-1/2 group"
-                            style={{
-                                left: `${coords.x}%`,
-                                top: `${coords.y}%`,
-                                pointerEvents: 'auto'
-                            }}
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                onRegionSelect(regionId as RegionId);
-                            }}
-                            onMouseEnter={() => setHoveredRegion(regionId as RegionId)}
-                            onMouseLeave={() => setHoveredRegion(null)}
-                        >
-                            {/* Пульсирующая точка */}
-                            <div className="relative">
-                                <div
-                                    className={`w-4 h-4 md:w-6 md:h-6 rounded-full transition-all duration-300 ${isActive
-                                        ? 'bg-cyan-400 shadow-[0_0_20px_rgba(34,211,238,0.8)]'
-                                        : 'bg-white/60 group-hover:bg-cyan-400 group-hover:shadow-[0_0_15px_rgba(34,211,238,0.6)]'
-                                        }`}
-                                />
-                                {isActive && (
-                                    <div className="absolute inset-0 w-4 h-4 md:w-6 md:h-6 rounded-full bg-cyan-400 animate-ping opacity-75" />
-                                )}
-                                <MapPin
-                                    className={`absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-3 h-3 md:w-4 md:h-4 transition-colors ${isActive ? 'text-black' : 'text-black/60 group-hover:text-black'
-                                        }`}
-                                />
-                            </div>
-
-                            {/* Название региона при наведении */}
-                            {(isHovered || isActive) && (
-                                <div className="absolute top-full mt-2 left-1/2 transform -translate-x-1/2 whitespace-nowrap pointer-events-none">
-                                    <div className="glass-panel px-3 py-1.5 border-cyan-500/30 bg-black/90">
-                                        <span className="text-[10px] md:text-xs font-black text-cyan-400 uppercase tracking-wider">
-                                            {t(region.name, lang)}
-                                        </span>
-                                    </div>
+                        return (
+                            <button
+                                key={regionId}
+                                className="region-marker absolute transform -translate-x-1/2 -translate-y-1/2 group"
+                                style={{
+                                    left: `${coords.x}%`,
+                                    top: `${coords.y}%`,
+                                    pointerEvents: 'auto'
+                                }}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onRegionSelect(regionId as RegionId);
+                                }}
+                                onMouseEnter={() => setHoveredRegion(regionId as RegionId)}
+                                onMouseLeave={() => setHoveredRegion(null)}
+                            >
+                                {/* Пульсирующая точка */}
+                                <div className="relative">
+                                    <div
+                                        className={`w-4 h-4 md:w-6 md:h-6 rounded-full transition-all duration-300 ${isActive
+                                            ? 'bg-cyan-400 shadow-[0_0_20px_rgba(34,211,238,0.8)]'
+                                            : 'bg-white/60 group-hover:bg-cyan-400 group-hover:shadow-[0_0_15px_rgba(34,211,238,0.6)]'
+                                            }`}
+                                    />
+                                    {isActive && (
+                                        <div className="absolute inset-0 w-4 h-4 md:w-6 md:h-6 rounded-full bg-cyan-400 animate-ping opacity-75" />
+                                    )}
+                                    <MapPin
+                                        className={`absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-3 h-3 md:w-4 md:h-4 transition-colors ${isActive ? 'text-black' : 'text-black/60 group-hover:text-black'
+                                            }`}
+                                    />
                                 </div>
-                            )}
-                        </button>
-                    );
-                })}
+
+                                {/* Название региона при наведении */}
+                                {(isHovered || isActive) && (
+                                    <div className="absolute top-full mt-2 left-1/2 transform -translate-x-1/2 whitespace-nowrap pointer-events-none">
+                                        <div className="glass-panel px-3 py-1.5 border-cyan-500/30 bg-black/90">
+                                            <span className="text-[10px] md:text-xs font-black text-cyan-400 uppercase tracking-wider">
+                                                {t(region.name, lang)}
+                                            </span>
+                                        </div>
+                                    </div>
+                                )}
+                            </button>
+                        );
+                    })}
+                </div>
             </div>
 
             {/* Элементы управления */}
