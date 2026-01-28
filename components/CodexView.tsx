@@ -109,7 +109,7 @@ const CodexView: React.FC<CodexViewProps> = ({ discoveredArtifacts }) => {
             </div>
 
             {/* SCROLLABLE GRID */}
-            <div className="flex-1 overflow-y-auto relative z-10 px-6 py-8 scrollbar-hide pb-32">
+            <div className="flex-1 overflow-y-auto relative z-10 px-6 py-8 scrollbar-hide pb-4 md:pb-8">
                 <AnimatePresence mode="wait">
                     {tab === 'artifacts' ? (
                         <motion.div
