@@ -5,7 +5,7 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import { useGameStore } from '../store/gameStore';
-import { ScannerCanvas } from './GlobalMap/ScannerCanvas';
+import { InteractiveWorldMap } from './GlobalMap/InteractiveWorldMap';
 import { REGIONS, REGION_IDS } from '../constants/regions';
 import { RegionId, ResourceType } from '../types';
 import { CaravanPanel } from './CaravanPanel';
@@ -372,18 +372,13 @@ export const GlobalMapView = () => {
                                     </div>
                                 </div>
 
-                                <div className="absolute inset-0 pointer-events-none touch-pan-y">
-                                    <ScannerCanvas
-                                        regions={REGION_IDS}
-                                        activeRegion={selectedRegion || currentRegion}
-                                        bases={playerBases}
-                                        caravans={caravans}
-                                        onRegionSelect={(id) => {
-                                            if (selectedRegion === id && id === currentRegion) setHubRegionId(id);
-                                            setSelectedRegion(id);
-                                        }}
-                                    />
-                                </div>
+                                <InteractiveWorldMap
+                                    activeRegion={selectedRegion || currentRegion}
+                                    onRegionSelect={(id) => {
+                                        if (selectedRegion === id && id === currentRegion) setHubRegionId(id);
+                                        setSelectedRegion(id);
+                                    }}
+                                />
 
                                 {/* BASES QUICK ACCESS BOTTOM OVERLAY */}
                                 <div className="absolute bottom-4 left-4 right-4 md:bottom-6 md:left-6 md:right-6 z-20 flex justify-between items-end pointer-events-none">
