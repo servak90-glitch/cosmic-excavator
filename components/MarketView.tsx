@@ -32,6 +32,7 @@ import {
     ScrollText
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { MobileTransactionModal } from './Market/MobileTransactionModal';
 
 export const MarketView = () => {
     const currentRegion = useGameStore(s => s.currentRegion);
@@ -48,6 +49,7 @@ export const MarketView = () => {
     const [selectedResource, setSelectedResource] = useState<keyof Resources | null>(null);
     const [amount, setAmount] = useState<number>(1);
     const [activeTab, setActiveTab] = useState<'regular' | 'black_market' | 'exchange'>('regular');
+    const [showMobileModal, setShowMobileModal] = useState<boolean>(false);
 
     useEffect(() => {
         audioEngine.playUIPanelOpen();
@@ -67,6 +69,7 @@ export const MarketView = () => {
             buyFromMarket(selectedResource, amount);
             audioEngine.playMarketTrade();
             setAmount(1);
+            setShowMobileModal(false);
         }
     };
 
@@ -75,6 +78,7 @@ export const MarketView = () => {
             sellToMarket(selectedResource, amount);
             audioEngine.playMarketTrade();
             setAmount(1);
+            setShowMobileModal(false);
         }
     };
 
@@ -163,7 +167,13 @@ export const MarketView = () => {
                                         return (
                                             <div
                                                 key={price.resource}
-                                                onClick={() => setSelectedResource(price.resource as any)}
+                                                onClick={() => {
+                                                    setSelectedResource(price.resource as any);
+                                                    // На мобильных открываем модальное окно
+                                                    if (window.innerWidth < 768) {
+                                                        setShowMobileModal(true);
+                                                    }
+                                                }}
                                                 className={`
                                                 glass-panel p-5 md:p-6 cursor-pointer transition-all duration-300 relative overflow-hidden group min-h-[120px]
                                                 ${isSelected ? 'border-cyan-500/50 bg-cyan-500/10 shadow-[0_0_40px_rgba(34,211,238,0.1)] scale-[1.02]' : 'border-white/5 bg-white/5 hover:border-white/20 hover:bg-white/10'}
@@ -458,6 +468,27 @@ export const MarketView = () => {
                 </div>
             </div>
         </div>
+
+
+
+
+        {/* Мобильное модальное окно транзакций */ }
+    {
+        showMobileModal && selectedResource && selectedPrice && (
+            <MobileTransactionModal
+                resource={selectedResource}
+                buyPrice={selectedPrice.finalPrice}
+                sellPrice={Math.floor(selectedPrice.finalPrice * 0.8)}
+                availableAmount={availableResource}
+                credits={resources.credits || 0}
+                amount={amount}
+                onAmountChange={setAmount}
+                onBuy={handleBuy}
+                onSell={handleSell}
+                onClose={() => setShowMobileModal(false)}
+                lang={lang}
+            />
+        )}
     );
 };
 
@@ -483,3 +514,5 @@ const TabBtn = ({ active, onClick, icon, label, lang, color }: { active: boolean
         </button>
     );
 };
+
+
