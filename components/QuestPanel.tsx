@@ -62,9 +62,9 @@ const QuestPanel: React.FC = () => {
     const allAvailable = [...availableStoryQuests, ...dynamicQuests];
 
     return (
-        <div className="flex flex-col flex-1 h-full min-h-0 relative font-technical overflow-hidden pb-12">
+        <div className="flex flex-col flex-1 h-full min-h-0 relative font-technical overflow-hidden pb-0 md:pb-12">
             {/* HEADER HUB: GLASSMOPHISM 2.0 */}
-            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6 md:gap-8 mb-6 md:mb-10 shrink-0 relative z-10 p-4 md:p-0">
+            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-4 md:gap-8 mb-0 md:mb-10 shrink-0 relative z-10 p-0 md:p-0">
                 <div className="group">
                     <div className="flex items-center gap-4 mb-2 md:mb-3">
                         <div className="p-2 md:p-3 bg-cyan-500/10 border border-cyan-500/20 backdrop-blur-md">

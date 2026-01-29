@@ -59,11 +59,11 @@ const FactionPanel: React.FC = () => {
     const progress = Math.min(100, Math.max(0, ((currentRep - prevTierMin) / (nextTierMin - prevTierMin)) * 100));
 
     return (
-        <div className="flex flex-col flex-1 min-h-0 bg-void/20 p-6 md:p-10 rounded-none pointer-events-auto h-full overflow-hidden relative font-technical">
+        <div className="flex flex-col flex-1 min-h-0 bg-void/20 p-0 md:p-10 rounded-none pointer-events-auto h-full overflow-hidden relative font-technical">
             <div className="absolute inset-0 mesh-bg opacity-10 pointer-events-none" />
 
             {/* FACTION SELECTOR HUD */}
-            <div className="flex gap-2 md:gap-4 mb-6 md:mb-10 overflow-x-auto pb-4 no-scrollbar shrink-0 relative z-10">
+            <div className="flex gap-2 md:gap-4 mb-0 md:mb-10 overflow-x-auto pb-2 md:pb-4 no-scrollbar shrink-0 relative z-10">
                 {factions.map(fid => (
                     <button
                         key={fid}

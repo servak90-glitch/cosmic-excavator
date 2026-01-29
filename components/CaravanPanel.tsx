@@ -64,7 +64,7 @@ export const CaravanPanel = () => {
     };
 
     return (
-        <div className="flex-1 flex flex-col gap-10 font-technical text-white overflow-y-auto pr-4 scrollbar-hide">
+        <div className="flex-1 flex flex-col gap-0 md:gap-10 font-technical text-white overflow-y-auto pr-0 md:pr-4 scrollbar-hide">
 
             {/* UNLOCK OVERLAY / LOCK SCREEN */}
             <AnimatePresence>

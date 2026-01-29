@@ -150,7 +150,7 @@ export const GlobalMapView = () => {
     const formatVal = (v: number) => v >= 1000 ? (v / 1000).toFixed(1) + 'k' : v;
 
     return (
-        <div className="flex-1 flex flex-col bg-void text-white pb-20 md:pb-4 relative overflow-hidden h-full">
+        <div className="flex-1 flex flex-col bg-void text-white pb-0 md:pb-4 relative overflow-hidden h-full">
             <div className="absolute inset-0 mesh-bg opacity-20 pointer-events-none" />
             <AnimatePresence>
                 {travel && <TravelOverlay travel={travel} lang={lang} />}
@@ -224,13 +224,13 @@ export const GlobalMapView = () => {
             </div>
 
             {/* MAIN DASHBOARD SCENE */}
-            <div className="max-w-7xl w-full mx-auto px-4 md:px-10 mt-2 md:mt-4 flex-1 flex flex-col gap-4 md:gap-8 overflow-y-auto min-h-0 pb-4 md:pb-32 scrollbar-hide relative z-10 font-technical">
+            <div className="max-w-7xl w-full mx-auto px-4 md:px-10 mt-0 md:mt-4 flex-1 flex flex-col gap-0 md:gap-8 overflow-y-auto min-h-0 pb-0 md:pb-32 scrollbar-hide relative z-10 font-technical">
                 <AnimatePresence mode="wait">
                     {activeTab === 'map' && (
                         <motion.div
                             key="map-scene"
                             initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }}
-                            className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8 h-full min-h-0 md:min-h-[660px]"
+                            className="grid grid-cols-1 lg:grid-cols-12 gap-0 md:gap-8 h-full min-h-0 md:min-h-[660px]"
                         >
                             {/* LEFT WING: TELEMETRY & STATUS */}
                             <div className="lg:col-span-4 flex flex-col gap-6">
@@ -361,7 +361,7 @@ export const GlobalMapView = () => {
                             </div>
 
                             {/* CENTER STAGE: ISOMETRIC SCANNER */}
-                            <div className="lg:col-span-8 glass-panel border-white/10 bg-black/60 relative overflow-hidden flex flex-col bento-glow shadow-[inset_0_0_100px_rgba(0,0,0,0.8)] min-h-[400px] md:min-h-0 order-first md:order-none">
+                            <div className="lg:col-span-8 glass-panel border-white/10 bg-black/60 relative overflow-hidden flex flex-col bento-glow shadow-[inset_0_0_100px_rgba(0,0,0,0.8)] min-h-[150px] md:min-h-0 order-first md:order-none">
                                 <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03] pointer-events-none" />
                                 <div className="absolute top-3 left-3 md:top-6 md:left-6 z-20 flex items-center gap-3">
                                     <div className="px-2 py-1 md:px-4 md:py-2 glass-panel border-cyan-500/30 bg-black/60 flex items-center gap-2 md:gap-3">
