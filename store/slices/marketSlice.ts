@@ -26,12 +26,7 @@ export const createMarketSlice: SliceCreator<MarketActions> = (set, get) => ({
     buyFromMarket: (resource, amount) => {
         const state = get();
 
-        // Проверка: игрок в Station?
-        const currentBase = state.playerBases.find(b => b.regionId === state.currentRegion);
-        if (!currentBase || currentBase.type !== 'station') {
-            console.warn('❌ Market доступен только в Station!');
-            return;
-        }
+        // Рынок доступен через Терминал Хаба (глобальный доступ)
 
         const activePerks = getActivePerkIds(state.reputation);
 
@@ -83,12 +78,7 @@ export const createMarketSlice: SliceCreator<MarketActions> = (set, get) => ({
     sellToMarket: (resource, amount) => {
         const state = get();
 
-        // Проверка: игрок в Station?
-        const currentBase = state.playerBases.find(b => b.regionId === state.currentRegion);
-        if (!currentBase || currentBase.type !== 'station') {
-            console.warn('❌ Market доступен только в Station!');
-            return;
-        }
+        // Рынок доступен через Терминал Хаба (глобальный доступ)
 
         // Проверка наличия ресурсов
         if ((state.resources[resource] || 0) < amount) {

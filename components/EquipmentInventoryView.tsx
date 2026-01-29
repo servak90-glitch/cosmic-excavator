@@ -6,7 +6,7 @@ import { WeightBar } from './equipment/WeightBar';
 import { EquipmentDoll } from './equipment/EquipmentDoll';
 import { DrillSlot, InventoryItem } from '../types';
 import { ARTIFACTS, getArtifactColor } from '../services/artifactRegistry';
-import { t, TL } from '../services/localization';
+import { t, TL, Language } from '../services/localization';
 import { ArtifactTooltip } from './ArtifactTooltip';
 
 interface EquipmentInventoryViewProps {

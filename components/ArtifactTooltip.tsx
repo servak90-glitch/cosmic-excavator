@@ -8,7 +8,7 @@ interface ArtifactTooltipProps {
     isIdentified: boolean;
     isAnalyzing: boolean;
     targetRef: React.RefObject<HTMLElement>;
-    lang: 'ru' | 'en';
+    lang: 'RU' | 'EN';
     colorScheme?: 'cyan' | 'green';
 }
 

@@ -621,7 +621,7 @@ export const TEXT_IDS = {
 
 // Тип для ключей TEXT_IDS
 type TextIdKey = keyof typeof TEXT_IDS;
-type Language = 'RU' | 'EN';
+export type Language = 'RU' | 'EN';
 
 // Функция локализации с поддержкой языка
 export const t = (textId: { RU: string; EN: string } | string | undefined | null, lang: Language = 'RU'): string => {
