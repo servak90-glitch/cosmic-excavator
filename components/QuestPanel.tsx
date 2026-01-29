@@ -272,7 +272,7 @@ const QuestCard = ({ quest, lang, onAction, actionLabel, isReady = false, showOb
                 </div>
 
                 {/* OBJECTIVES: PRECISION TRACKING */}
-                {(showObjectives || isReady) && (
+                {quest.objectives && quest.objectives.length > 0 && (
                     <div className="space-y-4 mt-auto">
                         <div className="h-px bg-white/5" />
                         <div className="space-y-4">
@@ -283,7 +283,11 @@ const QuestCard = ({ quest, lang, onAction, actionLabel, isReady = false, showOb
                                     <div key={obj.id} className="space-y-2">
                                         <div className="flex justify-between text-[8px] font-black uppercase tracking-widest italic font-mono">
                                             <span className={done ? 'text-emerald-400' : 'text-zinc-500'}>{t(obj.description, lang)}</span>
-                                            <span className={done ? 'text-emerald-400 shadow-[0_0_8px_#22c55e]' : 'text-white'}>{obj.current} <span className="opacity-20">/</span> {obj.required}</span>
+                                            {showObjectives || isReady ? (
+                                                <span className={done ? 'text-emerald-400 shadow-[0_0_8px_#22c55e]' : 'text-white'}>{obj.current} <span className="opacity-20">/</span> {obj.required}</span>
+                                            ) : (
+                                                <span className="text-white/40">{obj.required}</span>
+                                            )}
                                         </div>
                                         <div className="h-0.5 bg-white/5 relative overflow-hidden">
                                             <div

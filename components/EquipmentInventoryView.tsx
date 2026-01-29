@@ -194,7 +194,7 @@ export const EquipmentInventoryView: React.FC<EquipmentInventoryViewProps> = ({ 
                                             )}
 
                                             {/* Tooltip */}
-                                            <div className="hidden group-hover:block absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 bg-zinc-950 border border-zinc-700 p-3 rounded shadow-2xl pointer-events-none">
+                                            <div className="hidden group-hover:block absolute z-[100] top-full left-1/2 -translate-x-1/2 mt-2 w-48 bg-zinc-950 border border-zinc-700 p-3 rounded shadow-2xl pointer-events-none">
                                                 {item.isIdentified ? (
                                                     <>
                                                         <p className="text-[10px] font-bold text-cyan-400 mb-1 uppercase">{t(def.name, lang)}</p>
