@@ -103,7 +103,6 @@ const OverlayManager: React.FC<OverlayManagerProps> = ({
                 onClose={onCloseRare}
                 resources={resources}
                 lang={lang}
-                discoveredArtifactsCount={discoveredArtifacts.length}
             />
         </>
     );

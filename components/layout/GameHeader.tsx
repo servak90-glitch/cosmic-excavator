@@ -121,8 +121,7 @@ export const RareResourcesMenu: React.FC<{
     onClose: () => void;
     resources: any;
     lang: Language;
-    discoveredArtifactsCount: number;
-}> = ({ isOpen, onClose, resources, lang, discoveredArtifactsCount }) => {
+}> = ({ isOpen, onClose, resources, lang }) => {
     if (!isOpen) return null;
 
     return (
@@ -153,19 +152,19 @@ export const RareResourcesMenu: React.FC<{
                 </div>
 
                 <div className="flex-1 overflow-y-auto scrollbar-hide py-2 px-1 space-y-6 md:space-y-4">
-                    {/* 1. DISCOVERIES (Artifacts) */}
+                    {/* 1. CREDITS (Кредиты) */}
                     <div className="px-4 md:px-3">
                         <div className="flex items-center gap-2 mb-3 opacity-30">
-                            <Sparkles className="w-3 h-3" />
-                            <span className="text-[9px] font-black uppercase tracking-[0.3em] font-technical">Discoveries</span>
+                            <Coins className="w-3 h-3" />
+                            <span className="text-[9px] font-black uppercase tracking-[0.3em] font-technical">{lang === 'RU' ? 'ВАЛЮТА' : 'CURRENCY'}</span>
                         </div>
                         <div className="grid grid-cols-1 gap-2">
-                            <div className="flex justify-between items-center p-3 glass-panel border-white/5 bg-white/5 hover:bg-white/10 transition-colors">
+                            <div className="flex justify-between items-center p-4 glass-panel border-cyan-500/20 bg-cyan-500/5 hover:bg-cyan-500/10 transition-colors">
                                 <div className="flex items-center gap-3">
-                                    <Trophy className="w-4 h-4 text-amber-400" />
-                                    <span className="text-xs font-technical text-white/60 uppercase">{lang === 'RU' ? 'АРТЕФАКТЫ' : 'ARTIFACTS'}</span>
+                                    <Coins className="w-5 h-5 text-cyan-400" />
+                                    <span className="text-sm font-technical text-white/80 uppercase tracking-wider">{lang === 'RU' ? 'КРЕДИТЫ' : 'CREDITS'}</span>
                                 </div>
-                                <span className="text-sm font-technical font-black text-white">{discoveredArtifactsCount}</span>
+                                <span className="text-xl font-technical font-black text-cyan-400">{formatCompactNumber(resources.credits || 0)}</span>
                             </div>
                         </div>
                     </div>

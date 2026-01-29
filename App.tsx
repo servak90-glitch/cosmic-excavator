@@ -678,7 +678,6 @@ const App: React.FC = () => {
                 onClose={() => setIsRareOpen(false)}
                 resources={resources}
                 lang={lang}
-                discoveredArtifactsCount={discoveredArtifacts.length}
             />
         </div>
     );
