@@ -43,7 +43,7 @@ export const EquipmentDoll: React.FC<EquipmentDollProps> = ({ selectedSlot, onSl
                 )}
             </div>
 
-            <div className="flex-1 grid grid-cols-6 gap-2">
+            <div className="flex-1 grid grid-cols-4 sm:grid-cols-6 gap-2">
                 {slots.map(slot => (
                     <DrillSlotItem
                         key={slot}

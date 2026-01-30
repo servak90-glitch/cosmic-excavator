@@ -73,14 +73,14 @@ export const DrillSlotItem: React.FC<DrillSlotItemProps> = ({ slotType, isSelect
                         iconPath={iconPath}
                         name={part.name}
                         tier={part.tier}
-                        size={48}
+                        size={56}
                         className="rounded"
                     />
                 </div>
             </div>
 
             {/* Имя детали */}
-            <div className="text-[9px] md:text-[11px] font-bold text-white text-center leading-tight truncate w-full uppercase">
+            <div className="text-[10px] md:text-[11px] font-bold text-white text-center leading-tight truncate w-full uppercase">
                 {t(part.name, lang)}
             </div>
 

@@ -163,8 +163,8 @@ export const EquipmentInventoryView: React.FC<EquipmentInventoryViewProps> = ({ 
                     </button>
                 </div>
 
-                {/* ⬆️ ЗОНА 1: Кукла бура (35% высоты на десктопе) */}
-                <div className="h-[30%] md:h-[35%] mb-4 border border-gray-700/50 rounded-lg p-3 bg-gray-900/20 shrink-0">
+                {/* ⬆️ ЗОНА 1: Кукла бура (Авто-высота на мобильных) */}
+                <div className="h-auto md:h-[35%] mb-4 border border-gray-700/50 rounded-lg p-2 bg-gray-900/20 shrink-0">
                     <EquipmentDoll
                         selectedSlot={selectedSlot}
                         onSlotClick={(s) => {
@@ -174,8 +174,8 @@ export const EquipmentInventoryView: React.FC<EquipmentInventoryViewProps> = ({ 
                     />
                 </div>
 
-                {/* ↔️ ЗОНА 2: Quick Access (8% высоты на десктопе) */}
-                <div className="h-[12%] md:h-[8%] mb-4 border border-gray-700/30 rounded-lg p-2 bg-gray-900/10 shrink-0">
+                {/* ↔️ ЗОНА 2: Quick Access */}
+                <div className="h-auto md:h-[8%] mb-4 border border-gray-700/30 rounded-lg p-2 bg-gray-900/10 shrink-0">
                     <div className="text-[10px] text-gray-500 mb-1 uppercase tracking-widest font-bold">
                         {t(TL.ui.quickAccess, lang)} (Q | E | R | F)
                     </div>
