@@ -51,8 +51,9 @@ import { EquipmentInventoryView } from './components/EquipmentInventoryView';
 import { QuickAccessBar } from './components/QuickAccessBar';
 import { PredictionAlert } from './components/PredictionAlert';
 import { DrillStatsPanel } from './components/DrillStatsPanel';
+import { StartupBackground } from './components/StartupBackground';
 
-const GAME_VERSION = "v5.1.0 (VISUAL REVOLUTION)";
+const GAME_VERSION = "v5.6.0 (HUB_ONLY_QUESTS)";
 
 const TravelProgressMini = ({ travel, lang }: { travel: any, lang: string }) => {
     const [progress, setProgress] = useState(0);
@@ -600,9 +601,7 @@ const App: React.FC = () => {
                 />
             </RootLayout>
 
-            {/* --- LAYER 3: OVERLAYS (Z-50+) --- */}
-            {combatMinigame && combatMinigame.active && <CombatMinigameOverlay type={combatMinigame.type} difficulty={combatMinigame.difficulty} onComplete={completeCombatMinigame} />}
-            {eventQueue.length > 0 && <EventModal event={eventQueue[0]} onOptionSelect={handleEventOption} />}
+            {/* --- LAYER 3: OVERLAYS (Z-50+) managed by OverlayManager --- */}
 
             {/* MENUS */}
             <MenuOverlay
@@ -641,6 +640,13 @@ const App: React.FC = () => {
             {/* Splash Screens */}
             {!isGameActive && (
                 <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-void overflow-hidden">
+                    <StartupBackground />
+                    {/* Эффект матового стекла и виньетка */}
+                    <div className="absolute inset-0 backdrop-blur-md bg-black/40 pointer-events-none" />
+                    <div
+                        className="absolute inset-0 pointer-events-none opacity-60"
+                        style={{ background: 'radial-gradient(circle, transparent 20%, rgba(0,0,0,1) 100%)' }}
+                    />
                     <div className="relative z-10 flex flex-col items-center">
                         <h1 className="text-5xl md:text-8xl font-black text-center leading-[0.85] font-technical tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-white via-white to-white/20 drop-shadow-[0_0_30px_rgba(255,255,255,0.1)]">
                             COSMIC<br /><span className="neon-text-cyan tracking-[-0.05em]">EXCAVATOR</span>
@@ -652,6 +658,26 @@ const App: React.FC = () => {
                                 {t(TEXT_IDS.INIT_BUTTON, lang)}
                             </span>
                         </button>
+
+                        {/* Telegram Community Button */}
+                        <a
+                            href="https://t.me/cosmic_excavator"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="mt-8 flex flex-col items-center group transition-all hover:scale-105 active:scale-95"
+                        >
+                            <div className="relative w-16 h-16 mb-2">
+                                <div className="absolute inset-0 bg-cyan-500/20 rounded-full blur-xl group-hover:bg-cyan-500/40 transition-colors" />
+                                <img
+                                    src="/telegram-icon.png"
+                                    alt="Telegram"
+                                    className="relative w-full h-full object-contain drop-shadow-[0_0_10px_rgba(6,182,212,0.5)]"
+                                />
+                            </div>
+                            <span className="text-cyan-400/80 group-hover:text-cyan-300 font-technical text-xs tracking-widest uppercase transition-colors">
+                                Вступай в союз бурильщиков!
+                            </span>
+                        </a>
                     </div>
                 </div>
             )}

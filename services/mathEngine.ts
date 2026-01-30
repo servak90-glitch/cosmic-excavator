@@ -72,40 +72,44 @@ export function calculateCraftTime(tier: number): number {
  * @param partId - ID детали (например: "bit_5", "engine_12")
  * @returns Масса детали в кг, или 0 если не найдена
  */
+/**
+ * Централизованный расчёт массы детали.
+ * Используется как основной источник логики масштабирования массы в ядре.
+ */
 function getEquipmentMassById(partId: string): number {
-    // TODO: Временная реализация, заменить на реальные данные из constants
-    // После добавления поля mass в constants.tsx это будет брать оттуда
-
-    // Парсим ID
+    // Парсим ID для определения типа и тира
     const match = partId.match(/^(\w+)_(\d+)$/);
-    if (!match) return 0;
+    if (!match) {
+        // Поддержка специальных ID (например, fusion)
+        if (partId.startsWith('fus_eng_')) return Math.round(584 + (parseInt(partId.split('_').pop() || '0') - 12) * 40);
+        return 0;
+    }
 
     const [, type, tierStr] = match;
     const tier = parseInt(tierStr, 10);
 
-    // Временные формулы (пока mass не добавлен в constants.tsx)
+    // Формулы расчёта массы (Централизованная логика масштабирования)
     const formulas: Record<string, (t: number) => number> = {
         bit: (t) => Math.round(10 * Math.pow(t, 0.75)),
-        engine: (t) => Math.round(80 * Math.pow(t, 0.8)),
-        cooling: (t) => Math.round(30 * Math.pow(t, 0.7)),
+        eng: (t) => Math.round(80 * Math.pow(t, 0.8)),
+        cool: (t) => Math.round(30 * Math.pow(t, 0.7)),
         hull: (t) => Math.round(500 * Math.pow(t, 0.875)),
-        logic: (t) => Math.round(5 * Math.pow(t, 0.6)),
-        control: (t) => Math.round(8 * Math.pow(t, 0.65)),
-        gearbox: (t) => Math.round(50 * Math.pow(t, 0.8)),
-        power: (t) => Math.round(100 * Math.pow(t, 0.85)),
-        armor: (t) => Math.round(150 * Math.pow(t, 0.9)),
-        cargoBay: (t) => Math.round(200 * Math.pow(t, 0.85))
+        cpu: (t) => Math.round(5 * Math.pow(t, 0.6)),
+        ctrl: (t) => Math.round(8 * Math.pow(t, 0.65)),
+        gear: (t) => Math.round(50 * Math.pow(t, 0.8)),
+        pwr: (t) => Math.round(100 * Math.pow(t, 0.85)),
+        arm: (t) => Math.round(150 * Math.pow(t, 0.9)),
+        shd: (t) => Math.round(20 * Math.pow(t, 1.3)),
+        cargo: (t) => Math.round(200 * Math.pow(t, 0.85))
     };
 
-    const formula = formulas[type];
+    const formula = formulas[type] || formulas[type.substring(0, 3)];
     return formula ? formula(tier) : 0;
 }
 
 /**
- * Рассчитывает полную массу установленного на бур оборудования
- * 
- * @param drill - Текущее состояние бура (DrillState)
- * @returns Общая масса всех установленных деталей (кг)
+ * Рассчитывает полную массу установленного на бур оборудования.
+ * Является единственной точкой входа для получения массы в ядре.
  */
 export function calculateDrillMass(drill: DrillState): number {
     let totalMass = 0;
@@ -120,12 +124,14 @@ export function calculateDrillMass(drill: DrillState): number {
         drill.gearbox,
         drill.power,
         drill.armor,
+        drill.shield,
         drill.cargoBay
     ];
 
     for (const part of parts) {
         if (part) {
-            // Используем поле mass если оно есть, иначе падаем на формулу
+            // Приоритизируем прямой пропс mass из данных (constants), 
+            // но ядро (getEquipmentMassById) остается хозяином логики.
             totalMass += (part as any).mass ?? getEquipmentMassById(part.id);
         }
     }

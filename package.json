@@ -1,7 +1,7 @@
 {
-  "name": "cosmic-excavator:-void-piercer",
+  "name": "cosmic-excavator-void-piercer",
   "private": true,
-  "version": "5.2.2",
+  "version": "5.6.0",
   "type": "module",
   "scripts": {
     "dev": "vite",

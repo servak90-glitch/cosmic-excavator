@@ -10,7 +10,6 @@ import { REGIONS, REGION_IDS } from '../constants/regions';
 import { RegionId, ResourceType } from '../types';
 import { CaravanPanel } from './CaravanPanel';
 import { MarketView } from './MarketView';
-import QuestPanel from './QuestPanel';
 import FactionPanel from './FactionPanel';
 import { BuildBaseModal } from './BuildBaseModal';
 import { BaseView } from './BaseView';
@@ -143,7 +142,6 @@ export const GlobalMapView = () => {
         { id: 'map', label: TL.ui.map, icon: <MapIcon className="w-4 h-4" />, color: 'text-cyan-400' },
         { id: 'market', label: TL.ui.market, icon: <ShoppingBag className="w-4 h-4" />, color: 'text-amber-400', locked: !hasStationAccess },
         { id: 'caravans', label: TL.ui.caravans, icon: <Truck className="w-4 h-4" />, color: 'text-purple-400', locked: !hasCaravanAccess },
-        { id: 'quests', label: TL.ui.quests, icon: <ScrollText className="w-4 h-4" />, color: 'text-rose-400' },
         { id: 'factions', label: TL.ui.factions, icon: <Crown className="w-4 h-4" />, color: 'text-emerald-400' },
     ];
 
@@ -436,11 +434,6 @@ export const GlobalMapView = () => {
                         </motion.div>
                     )}
 
-                    {activeTab === 'quests' && (
-                        <motion.div key="quests-scene" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} className="h-full flex flex-col">
-                            <QuestPanel />
-                        </motion.div>
-                    )}
 
                     {activeTab === 'factions' && (
                         <motion.div key="factions-scene" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} className="h-full flex flex-col">
