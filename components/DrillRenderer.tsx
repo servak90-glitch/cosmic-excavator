@@ -780,6 +780,27 @@ const DrillRenderer: React.FC<DrillRendererProps> = React.memo(() => {
                     ctx.fillStyle = theme.highlight; ctx.beginPath(); ctx.arc(x, y, 5, 0, Math.PI * 2); ctx.fill();
                 }
             };
+            drawLights();
+
+            // [PHASE 6] OVERLOAD RADIANCE
+            const drawOverloadEffect = () => {
+                const isOverloadActive = activeEffects.some(e => e.id === 'OVERLOAD' || e.id.startsWith('ability_OVERLOAD'));
+                if (!isOverloadActive) return;
+
+                const pulse = Math.sin(tick * 0.15) * 0.5 + 0.5;
+                ctx.save();
+                ctx.globalCompositeOperation = 'screen';
+                const gOverload = ctx.createRadialGradient(0, 0, 100, 0, 0, 400);
+                gOverload.addColorStop(0, `rgba(239, 35, 60, ${0.4 * pulse})`); // Red-ish glow
+                gOverload.addColorStop(1, 'transparent');
+                ctx.fillStyle = gOverload;
+                ctx.beginPath();
+                ctx.arc(0, 0, 400, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            };
+            drawOverloadEffect();
+
             // 2.8 ENERGY SHIELD (Phase 4.2 Professional 3D Visuals)
             const drawShield = () => {
                 if (!isShielding) return;
