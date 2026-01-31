@@ -100,7 +100,7 @@ const CityView: React.FC<CityViewProps> = ({
   };
 
   return (
-    <div className="flex-1 flex flex-col bg-[#050505] relative h-full pointer-events-auto overflow-y-auto md:overflow-hidden no-scrollbar scroll-smooth">
+    <div className="flex-1 flex flex-col bg-[#050505] relative md:h-full pointer-events-auto overflow-y-auto md:overflow-hidden no-scrollbar scroll-smooth">
       {/* PREMIUM BACKGROUND EFFECTS */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-cyan-500/10 blur-[150px] rounded-full animate-pulse" />

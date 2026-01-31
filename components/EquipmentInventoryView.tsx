@@ -145,7 +145,7 @@ export const EquipmentInventoryView: React.FC<EquipmentInventoryViewProps> = ({ 
     return (
         <div className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center z-[200] p-0 md:p-4 overflow-y-auto overscroll-contain touch-auto [webkit-overflow-scrolling:touch] custom-scrollbar">
             <div
-                className="bg-[#0a0e17] md:border-2 md:border-[#3b82f6] md:rounded-lg p-3 md:p-6 w-full min-h-full md:min-h-0 md:max-w-6xl md:h-[90vh] flex flex-col md:overflow-hidden shadow-[0_0_60px_rgba(59,130,246,0.3)]"
+                className="bg-[#0a0e17] md:border-2 md:border-[#3b82f6] md:rounded-lg pt-3 p-3 md:p-6 w-full min-h-full md:min-h-0 md:max-w-6xl md:h-[90vh] flex flex-col md:overflow-hidden shadow-[0_0_60px_rgba(59,130,246,0.3)]"
             >
                 {/* Header (Sticky on mobile) */}
                 <div className="flex justify-between items-center mb-4 md:mb-4 shrink-0 md:sticky md:top-0 bg-[#0a0e17] z-10 py-3 md:py-1">
