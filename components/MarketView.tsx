@@ -86,48 +86,33 @@ export const MarketView = () => {
         <div className="flex-1 flex flex-col p-0 md:p-10 animate-in fade-in slide-in-from-bottom-8 duration-1000 md:h-full md:overflow-hidden relative z-10 font-technical">
             <div className="absolute inset-0 mesh-bg opacity-20 pointer-events-none" />
 
-            {/* Header Hub Dashboard */}
-            <div className="max-w-7xl w-full mx-auto flex flex-col md:flex-row justify-between items-start md:items-end gap-4 md:gap-8 mb-4 md:mb-10 shrink-0">
-                <div className="w-full md:w-auto">
-                    <div className="flex items-center gap-3 md:gap-4 mb-2 md:mb-3">
-                        <div className="p-2 md:p-3 glass-panel border-cyan-500/20 bg-cyan-500/5 hidden sm:block">
-                            <ShoppingBag className="w-6 h-6 md:w-8 md:h-8 text-cyan-400" />
-                        </div>
-                        <div>
-                            <h1 className="text-xl md:text-7xl font-black uppercase tracking-tighter italic text-white leading-none">
-                                {t(TL.ui.market, lang)}
-                            </h1>
-                            <div className="flex items-center gap-2 md:gap-3 mt-1 md:mt-2">
-                                <MonitorDot className="w-2 md:w-3 md:h-3 text-cyan-400 animate-pulse" />
-                                <span className="text-[7px] md:text-[10px] font-black text-white/30 uppercase tracking-[0.3em]">
-                                    {t(TL.ui.tradingTerminal, lang)} v.4.2
-                                </span>
-                            </div>
+            {/* Header Hub Dashboard - compact on mobile */}
+            <div className="max-w-7xl w-full mx-auto flex flex-row justify-between items-center gap-2 md:gap-8 mb-2 md:mb-10 shrink-0 px-3 md:px-0 pt-2 md:pt-0">
+                <div className="flex items-center gap-2 md:gap-4">
+                    <div className="p-1.5 md:p-3 glass-panel border-cyan-500/20 bg-cyan-500/5">
+                        <ShoppingBag className="w-4 h-4 md:w-8 md:h-8 text-cyan-400" />
+                    </div>
+                    <div>
+                        <h1 className="text-lg md:text-7xl font-black uppercase tracking-tighter italic text-white leading-none">
+                            {t(TL.ui.market, lang)}
+                        </h1>
+                        <div className="hidden md:flex items-center gap-2 md:gap-3 mt-1 md:mt-2">
+                            <MonitorDot className="w-2 md:w-3 md:h-3 text-cyan-400 animate-pulse" />
+                            <span className="text-[7px] md:text-[10px] font-black text-white/30 uppercase tracking-[0.3em]">
+                                {t(TL.ui.tradingTerminal, lang)} v.4.2
+                            </span>
                         </div>
                     </div>
                 </div>
 
-                <div className="w-full md:w-auto flex flex-row gap-2 md:gap-4">
-                    {/* Credits Mini-Bento */}
-                    <div className="flex-1 md:flex-none glass-panel px-3 md:px-8 py-2 md:py-5 border-cyan-500/20 bg-cyan-500/5 flex flex-col group relative overflow-hidden">
-                        <div className="absolute -right-4 -top-4 p-4 opacity-5 group-hover:opacity-10 transition-opacity hidden sm:block">
-                            <Gem className="w-12 h-12 md:w-16 md:h-16" />
+                {/* Credits Mini-Bento - always visible */}
+                <div className="glass-panel px-2 md:px-8 py-1.5 md:py-5 border-cyan-500/20 bg-cyan-500/5 flex flex-col group relative overflow-hidden">
+                    <span className="text-[6px] md:text-[9px] font-black text-white/30 uppercase tracking-widest mb-0.5 md:mb-1 leading-none">{t(TL.ui.creditReserve, lang)}</span>
+                    <div className="flex items-center gap-1 md:gap-3">
+                        <div className="text-sm md:text-3xl font-black text-white tracking-tighter italic">
+                            {Math.floor(resources.credits || 0).toLocaleString()}
                         </div>
-                        <span className="text-[6px] md:text-[9px] font-black text-white/30 uppercase tracking-widest mb-0.5 md:mb-1 leading-none">{t(TL.ui.creditReserve, lang)}</span>
-                        <div className="flex items-center gap-1.5 md:gap-3">
-                            <div className="text-base md:text-3xl font-black text-white tracking-tighter italic">
-                                {Math.floor(resources.credits || 0).toLocaleString()}
-                            </div>
-                            <span className="text-[7px] md:text-xs font-black text-cyan-400 px-1 py-0.5 glass-panel bg-cyan-500/10 border-cyan-500/20">CR</span>
-                        </div>
-                    </div>
-
-                    {/* Region Info */}
-                    <div className="hidden sm:flex glass-panel px-4 md:px-6 py-3 md:py-5 border-white/5 bg-black/40 flex-col justify-center">
-                        <span className="text-[7px] md:text-[9px] font-black text-white/20 uppercase tracking-widest mb-1 italic">{t(TL.ui.currentRegion, lang)}</span>
-                        <span className="text-xs md:text-base font-black text-cyan-400 uppercase tracking-widest">
-                            {t(TL.regions[currentRegion], lang) || currentRegion}
-                        </span>
+                        <span className="text-[6px] md:text-xs font-black text-cyan-400 px-1 py-0.5 glass-panel bg-cyan-500/10 border-cyan-500/20">CR</span>
                     </div>
                 </div>
             </div>
@@ -142,7 +127,7 @@ export const MarketView = () => {
                         <TabBtn active={activeTab === 'exchange'} onClick={() => setActiveTab('exchange')} icon={<RefreshCcw className="w-3.5 h-3.5 md:w-4 md:h-4" />} label={TL.ui.exchange} lang={lang} color="amber" />
                     </div>
 
-                    <div className="flex-1 md:overflow-y-auto pr-0 md:pr-4 scrollbar-hide space-y-4 md:space-y-6">
+                    <div className="flex-1 overflow-y-auto pr-0 md:pr-4 scrollbar-hide space-y-4 md:space-y-6 pb-24">
                         <AnimatePresence mode="wait">
                             {activeTab === 'regular' && (
                                 <motion.div
