@@ -95,6 +95,7 @@ export const EVENTS: GameEvent[] = [
         id: 'GOLD_VEIN',
         type: 'NOTIFICATION',
         weight: 30,
+        minDepth: 1000,
         title: 'Золотая жила',
         description: 'Блеск золота в породе!',
         triggers: [EventTrigger.DRILLING],
@@ -111,6 +112,7 @@ export const EVENTS: GameEvent[] = [
         id: 'FOSSIL_FIND',
         type: 'NOTIFICATION',
         weight: 20,
+        minDepth: 500,
         title: 'Находка окаменелости',
         description: 'Древний артефакт обнаружен в породе.',
         triggers: [EventTrigger.DRILLING],
@@ -127,6 +129,7 @@ export const EVENTS: GameEvent[] = [
         id: 'QUANTUM_FLUCTUATION',
         type: 'ANOMALY',
         weight: 15,
+        minDepth: 5000,
         title: 'Квантовая флуктуация',
         description: 'Пространство вокруг вас искажается...',
         triggers: [EventTrigger.DRILLING],
@@ -217,10 +220,11 @@ export const EVENTS: GameEvent[] = [
         description: 'Сканеры фиксируют необычную частоту в боковом ответвлении.',
         triggers: [EventTrigger.DRILLING],
         weight: 15,
+        minDepth: 2000,
         cooldown: 300,
         options: [
             {
-                actionId: 'TUNNEL_CRYSTAL',
+                actionId: 'tunnel_crystal',
                 label: '💎 Исследовать кристальный туннель',
                 risk: 'MEDIUM'
             },
@@ -237,16 +241,38 @@ export const EVENTS: GameEvent[] = [
         description: 'Вы наткнулись на заброшенную систему вентиляции.',
         triggers: [EventTrigger.DRILLING],
         weight: 15,
+        minDepth: 1000,
         cooldown: 300,
         options: [
             {
-                actionId: 'TUNNEL_MINE',
+                actionId: 'tunnel_mine',
                 label: '🔦 Спуститься в шахту',
                 risk: 'HIGH'
             },
             {
                 actionId: 'encounter_ignore',
                 label: 'Игнорировать'
+            }
+        ]
+    },
+    {
+        id: 'TUNNEL_NEST_FIND',
+        type: 'NOTIFICATION',
+        title: 'Гнездо Чужих',
+        description: 'Биосканеры зашкаливают! Впереди органическое образование.',
+        triggers: [EventTrigger.DRILLING],
+        weight: 10,
+        minDepth: 3000,
+        cooldown: 600,
+        options: [
+            {
+                actionId: 'tunnel_nest',
+                label: '🥚 Изучить гнездо',
+                risk: 'EXTREME'
+            },
+            {
+                actionId: 'encounter_ignore',
+                label: 'Отступить'
             }
         ]
     }
@@ -272,7 +298,10 @@ export function rollRandomEvent(
     }
 
     // 2. Обычные события
-    const availableEvents = EVENTS.filter(e => !recentEventIds.includes(e.id));
+    const availableEvents = EVENTS.filter(e =>
+        !recentEventIds.includes(e.id) &&
+        (e.minDepth === undefined || depth >= e.minDepth)
+    );
 
     if (availableEvents.length === 0) {
         return null;

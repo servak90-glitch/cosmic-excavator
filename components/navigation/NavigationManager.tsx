@@ -44,6 +44,21 @@ const NavigationManager: React.FC<NavigationManagerProps> = ({
 
     return (
         <div key={activeView} className="w-full h-full animate-fadeIn pointer-events-auto">
+            {activeView === View.CITY && (
+                <CityView
+                    biome={currentBiome}
+                    resources={resources}
+                    heat={heat}
+                    integrity={integrity}
+                    maxIntegrity={maxIntegrity}
+                    xp={xp}
+                    depth={depth}
+                    onTrade={onTrade}
+                    onHeal={onHeal}
+                    onRepair={onRepair}
+                />
+            )}
+            {activeView === View.FORGE && <ForgeView />}
             {activeView === View.SKILLS && <SkillsView />}
             {activeView === View.CODEX && <CodexView discoveredArtifacts={discoveredArtifacts} />}
             {activeView === View.GLOBAL_MAP && <GlobalMapView />}

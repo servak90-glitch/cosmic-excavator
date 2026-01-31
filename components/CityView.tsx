@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useGameStore } from '../store/gameStore';
-import { Biome, Resources, Quest } from '../types';
+import { View, Biome, Resources, Quest } from '../types';
 import { BIOMES } from '../constants';
 import { audioEngine } from '../services/audioEngine';
 import QuestPanel from './QuestPanel';
@@ -115,7 +115,7 @@ const CityView: React.FC<CityViewProps> = ({
       </div>
 
       {/* HEADER: SCI-FI GLASSMOPHISM 2.0 */}
-      <div className="p-4 md:p-6 border-b border-white/10 bg-black/40 backdrop-blur-xl z-10 relative flex justify-between items-end">
+      <div className="p-4 md:p-6 border-b border-white/10 bg-black/40 backdrop-blur-xl z-10 relative flex justify-between items-start">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-3 mb-1">
             <div className="h-1 w-12 bg-cyan-500 shadow-[0_0_10px_#06b6d4]" />
@@ -126,18 +126,28 @@ const CityView: React.FC<CityViewProps> = ({
           </h2>
         </div>
 
-        <div className="text-right hidden md:block">
-          <div className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest mb-1">Station Telemetry</div>
-          <div className="flex items-center gap-4 bg-white/5 border border-white/10 px-3 py-1.5 rounded-sm">
-            <div className="flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-green-500 shadow-[0_0_5px_#22c55e]" />
-              <span className="text-[10px] text-zinc-300 font-bold">ONLINE</span>
-            </div>
-            <div className="h-4 w-px bg-white/10" />
-            <div className="text-[10px] text-zinc-400 font-mono">
-              LOC: <span className="text-white">{biome.depth < 1000 ? 'RUST_VALLEY' : 'DEEP_VOID'}</span>
+        <div className="flex items-center gap-4">
+          <div className="text-right hidden md:block">
+            <div className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest mb-1">Station Telemetry</div>
+            <div className="flex items-center gap-4 bg-white/5 border border-white/10 px-3 py-1.5 rounded-sm">
+              <div className="flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-green-500 shadow-[0_0_5px_#22c55e]" />
+                <span className="text-[10px] text-zinc-300 font-bold">ONLINE</span>
+              </div>
+              <div className="h-4 w-px bg-white/10" />
+              <div className="text-[10px] text-zinc-400 font-mono">
+                LOC: <span className="text-white">{biome.depth < 1000 ? 'RUST_VALLEY' : 'DEEP_VOID'}</span>
+              </div>
             </div>
           </div>
+
+          <button
+            onClick={() => useGameStore.getState().setView(View.DRILL)}
+            className="p-2 md:p-3 bg-white/5 border border-white/10 text-white/40 hover:text-white hover:bg-white/10 transition-all rounded-lg active:scale-95"
+            aria-label="Exit Hub"
+          >
+            <span className="text-xl md:text-2xl font-bold">✕</span>
+          </button>
         </div>
       </div>
 

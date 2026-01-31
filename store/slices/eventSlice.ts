@@ -261,7 +261,10 @@ export const createEventSlice: SliceCreator<EventActions> = (set, get) => ({
 
     rollEventByTrigger: (trigger: EventTrigger) => {
         const s = get();
-        const available = EVENTS.filter(e => e.triggers?.includes(trigger));
+        const available = EVENTS.filter(e =>
+            e.triggers?.includes(trigger) &&
+            (e.minDepth === undefined || s.depth >= e.minDepth)
+        );
         if (available.length === 0) return null;
 
         // Простой weighted random
