@@ -108,7 +108,7 @@ const ForgeView: React.FC = () => {
     };
 
     return (
-        <div className="flex-1 flex flex-col min-h-0 h-full bg-void">
+        <div className="flex-1 flex flex-col min-h-0 min-h-full md:h-full bg-void md:overflow-hidden">
             {/* TABS HUD */}
             <div className="flex glass-panel border-x-0 border-t-0 rounded-none overflow-x-auto scrollbar-hide whitespace-nowrap min-h-[56px] touch-pan-x bg-black/40">
                 {TABS.map(tab => (
@@ -172,7 +172,7 @@ const ForgeView: React.FC = () => {
             )}
 
             {/* MAIN CONTENT AREA */}
-            <div className="flex-1 p-4 md:p-8 overflow-y-auto scrollbar-hide pb-4 md:pb-8 bg-[radial-gradient(circle_at_top,rgba(34,211,238,0.05)_0%,transparent_50%)]">
+            <div className="flex-1 p-4 md:p-8 md:overflow-y-auto scrollbar-hide pb-4 md:pb-8 bg-[radial-gradient(circle_at_top,rgba(34,211,238,0.05)_0%,transparent_50%)]">
                 {renderActiveTab()}
             </div>
         </div>

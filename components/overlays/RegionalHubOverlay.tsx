@@ -126,7 +126,7 @@ export const RegionalHubOverlay: React.FC<RegionalHubOverlayProps> = ({ regionId
                             <motion.div
                                 key="market"
                                 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
-                                className="h-full"
+                                className="h-full flex-1 overflow-y-auto scrollbar-hide touch-pan-y"
                             >
                                 <MarketView />
                             </motion.div>
@@ -135,24 +135,22 @@ export const RegionalHubOverlay: React.FC<RegionalHubOverlayProps> = ({ regionId
                             <motion.div
                                 key="forge"
                                 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
-                                className="h-full flex flex-col"
+                                className="h-full flex-1 overflow-y-auto scrollbar-hide touch-pan-y"
                             >
                                 <div className="absolute top-4 right-8 z-10 flex items-center gap-2 px-4 py-2 bg-rose-500/10 border border-rose-500/30 rounded text-[10px] font-bold text-rose-400">
                                     <AlertTriangle className="w-4 h-4" />
                                     <span>{lang === 'RU' ? `ЛИМИТ ТИРА: ${region.tierLimit}` : `TIER LIMIT: ${region.tierLimit}`}</span>
                                 </div>
-                                <div className="flex-1 overflow-y-auto">
-                                    <ForgeView />
-                                </div>
+                                <ForgeView />
                             </motion.div>
                         )}
                         {activeTab === 'CONTRACTS' && (
-                            <motion.div key="contracts" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="h-full flex-1 overflow-y-auto">
+                            <motion.div key="contracts" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="h-full flex-1 overflow-y-auto scrollbar-hide touch-pan-y">
                                 <QuestPanel />
                             </motion.div>
                         )}
                         {activeTab === 'SERVICES' && (
-                            <motion.div key="services" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="h-full flex-1 overflow-y-auto p-4 md:p-8">
+                            <motion.div key="services" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="h-full flex-1 overflow-y-auto scrollbar-hide touch-pan-y p-4 md:p-8">
                                 <ServiceTab
                                     resources={resources}
                                     depth={stats_depth}
@@ -165,7 +163,7 @@ export const RegionalHubOverlay: React.FC<RegionalHubOverlayProps> = ({ regionId
                             </motion.div>
                         )}
                         {activeTab === 'JEWELER' && (
-                            <motion.div key="jeweler" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="h-full flex-1 overflow-y-auto p-4 md:p-8">
+                            <motion.div key="jeweler" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="h-full flex-1 overflow-y-auto scrollbar-hide touch-pan-y p-4 md:p-8">
                                 <JewelerTab
                                     resources={resources}
                                     depth={stats_depth}
@@ -174,7 +172,7 @@ export const RegionalHubOverlay: React.FC<RegionalHubOverlayProps> = ({ regionId
                             </motion.div>
                         )}
                         {activeTab === 'BAR' && (
-                            <motion.div key="bar" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="h-full flex-1 overflow-y-auto p-4 md:p-8">
+                            <motion.div key="bar" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="h-full flex-1 overflow-y-auto scrollbar-hide touch-pan-y p-4 md:p-8">
                                 <BarTab
                                     resources={resources}
                                     depth={stats_depth}
@@ -185,7 +183,7 @@ export const RegionalHubOverlay: React.FC<RegionalHubOverlayProps> = ({ regionId
                             <motion.div
                                 key="drones"
                                 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
-                                className="h-full"
+                                className="h-full flex-1 overflow-y-auto scrollbar-hide touch-pan-y"
                             >
                                 {currentBase ? (
                                     <BaseView baseId={currentBase.id} onClose={() => { }} />

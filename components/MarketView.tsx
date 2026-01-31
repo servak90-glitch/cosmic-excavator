@@ -83,7 +83,7 @@ export const MarketView = () => {
     const canAfford = (resources.credits || 0) >= totalBuyCost;
 
     return (
-        <div className="flex-1 flex flex-col p-0 md:p-10 animate-in fade-in slide-in-from-bottom-8 duration-1000 h-full overflow-hidden relative z-10 font-technical">
+        <div className="flex-1 flex flex-col p-0 md:p-10 animate-in fade-in slide-in-from-bottom-8 duration-1000 min-h-full md:h-full md:overflow-hidden relative z-10 font-technical">
             <div className="absolute inset-0 mesh-bg opacity-20 pointer-events-none" />
 
             {/* Header Hub Dashboard - compact on mobile */}
@@ -127,7 +127,7 @@ export const MarketView = () => {
                         <TabBtn active={activeTab === 'exchange'} onClick={() => setActiveTab('exchange')} icon={<RefreshCcw className="w-3.5 h-3.5 md:w-4 md:h-4" />} label={TL.ui.exchange} lang={lang} color="amber" />
                     </div>
 
-                    <div className="flex-1 overflow-y-auto pr-0 md:pr-4 scrollbar-hide space-y-4 md:space-y-6 pb-24 touch-pan-y">
+                    <div className="flex-1 md:overflow-y-auto pr-0 md:pr-4 scrollbar-hide space-y-4 md:space-y-6 pb-24 touch-pan-y">
                         <AnimatePresence mode="wait">
                             {activeTab === 'regular' && (
                                 <motion.div
