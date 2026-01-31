@@ -79,7 +79,7 @@ const TradeTab: React.FC<TradeTabProps> = ({ resources, onTrade }) => {
                                 <h3 className="text-sm font-black text-zinc-400 tracking-[0.3em] uppercase italic">{t(TL.ui.industrialCrusher, lang)}</h3>
                             </div>
 
-                            <div className="space-y-3 max-h-[300px] overflow-y-auto no-scrollbar pr-1">
+                            <div className="space-y-3 md:max-h-[300px] md:overflow-y-auto no-scrollbar pr-1">
                                 {REVERSE_TRADES.map((trade, idx) => {
                                     const canSee = resources[trade.source] > 0 || resources[trade.target] > 100;
                                     if (!canSee) return null;
